@@ -1,241 +1,383 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduPulse AI | Student Engagement Agent</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>EduStudent Sight | AI Academic Intelligence</title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Bootstrap Icons -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
 
     <link rel="stylesheet" href="style.css">
+
 </head>
+
 
 <body>
 
-<!-- ================= LOGIN PAGE ================= -->
+
+<!-- =====================================================
+     LOGIN
+===================================================== -->
 
 <div id="loginPage" class="login-page">
 
-    <div class="login-left">
+    <div class="login-box">
 
-        <div class="login-brand">
-            <div class="brand-icon">✦</div>
+        <div class="brand-login">
+
+            <div class="brand-logo">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
 
             <div>
-                <h2>EduPulse</h2>
-                <span>AI Student Agent</span>
+                <h1>EduStudent Sight</h1>
+                <p>AI Academic Intelligence</p>
             </div>
+
         </div>
 
-        <div class="login-content">
 
-            <span class="eyebrow">AI-POWERED EDUCATION</span>
+        <div class="login-title">
 
-            <h1>
-                Turn student signals
-                <span>into timely action.</span>
-            </h1>
+            <span>WELCOME BACK</span>
+
+            <h2>Sign in to your dashboard</h2>
 
             <p>
-                Analyze attendance, assessments, assignments and LMS
-                activity to identify students who need attention.
+                Monitor student engagement, academic health
+                and AI-driven interventions.
             </p>
-
-            <div class="login-features">
-                <div>✓ Predictive insights</div>
-                <div>✓ Explainable AI</div>
-                <div>✓ Personalized interventions</div>
-                <div>✓ Privacy-first</div>
-            </div>
 
         </div>
 
-    </div>
 
+        <form id="loginForm">
 
-    <div class="login-right">
+            <label>Email address</label>
 
-        <form id="loginForm" class="login-card">
+            <div class="input-box">
 
-            <div class="mobile-logo">
-                ✦ EduPulse
-            </div>
+                <i class="bi bi-envelope"></i>
 
-            <span class="eyebrow">FACULTY PORTAL</span>
-
-            <h2>Welcome back</h2>
-
-            <p class="subtitle">
-                Sign in to access your student intelligence dashboard.
-            </p>
-
-
-            <label>
-                Work Email
                 <input
                     type="email"
                     id="loginEmail"
-                    placeholder="mentor@college.edu"
+                    placeholder="Enter your email"
                     required
                 >
-            </label>
+
+            </div>
 
 
-            <label>
-                Password
+            <label>Password</label>
 
-                <div class="password-box">
+            <div class="input-box">
 
-                    <input
-                        type="password"
-                        id="loginPassword"
-                        placeholder="Enter your password"
-                        required
-                    >
+                <i class="bi bi-lock"></i>
 
-                    <button
-                        type="button"
-                        id="showPassword"
-                    >
-                        Show
-                    </button>
+                <input
+                    type="password"
+                    id="loginPassword"
+                    placeholder="Enter password"
+                    required
+                >
 
-                </div>
-
-            </label>
-
-
-            <div class="login-options">
-
-                <label class="remember">
-                    <input type="checkbox">
-                    Remember me
-                </label>
-
-                <button type="button" class="link-button">
-                    Forgot password?
+                <button
+                    type="button"
+                    class="password-toggle"
+                    id="passwordToggle"
+                >
+                    <i class="bi bi-eye"></i>
                 </button>
 
             </div>
 
 
-            <button class="primary-button full-width">
-                Sign In →
-            </button>
+            <div class="remember-row">
 
+                <label class="remember">
 
-            <div class="divider">
-                <span>OR</span>
+                    <input
+                        type="checkbox"
+                        id="rememberMe"
+                    >
+
+                    <span>Remember me</span>
+
+                </label>
+
+                <span class="demo-text">
+                    Demo access
+                </span>
+
             </div>
 
 
             <button
-                type="button"
-                class="secondary-button full-width"
-                id="ssoButton"
+                type="submit"
+                class="login-btn"
             >
-                Continue with College SSO
+
+                Sign in
+
+                <i class="bi bi-arrow-right"></i>
+
             </button>
 
-            <p class="demo-text">
-                Demo mode: use any valid email and password.
-            </p>
+
+            <div
+                id="loginError"
+                class="login-error"
+            ></div>
 
         </form>
+
+
+        <div class="demo-login">
+
+            <span>Demo credentials</span>
+
+            <strong>info@vignan.ac.in</strong>
+
+            <strong>vucse</strong>
+
+        </div>
 
     </div>
 
 </div>
 
 
-<!-- ================= MAIN APPLICATION ================= -->
 
-<div id="app" class="app hidden">
+<!-- =====================================================
+     APPLICATION
+===================================================== -->
+
+<div
+    id="app"
+    class="app d-none"
+>
 
 
-    <!-- SIDEBAR -->
+    <!-- =================================================
+         SIDEBAR
+    ================================================= -->
 
-    <aside class="sidebar">
+    <aside
+        id="sidebar"
+        class="sidebar"
+    >
 
-        <div class="logo">
+        <div class="sidebar-brand">
 
-            <div class="brand-icon">✦</div>
+            <div class="sidebar-logo">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
 
             <div>
-                <strong>EduPulse</strong>
-                <small>AI Student Agent</small>
+
+                <h2>EduStudent Sight</h2>
+
+                <span>
+                    AI Academic Intelligence
+                </span>
+
             </div>
 
         </div>
 
 
-        <div class="menu-title">
-            WORKSPACE
+        <div class="sidebar-scroll">
+
+            <div class="nav-label">
+                MAIN
+            </div>
+
+
+            <button
+                class="nav-item active"
+                data-page="dashboard"
+            >
+
+                <i class="bi bi-grid-1x2"></i>
+
+                <span>Dashboard</span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="students"
+            >
+
+                <i class="bi bi-people"></i>
+
+                <span>Students</span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="analytics"
+            >
+
+                <i class="bi bi-bar-chart"></i>
+
+                <span>Analytics</span>
+
+            </button>
+
+
+            <div class="nav-label">
+                INTELLIGENCE
+            </div>
+
+
+            <button
+                class="nav-item"
+                data-page="engagement"
+            >
+
+                <i class="bi bi-activity"></i>
+
+                <span>Engagement</span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="mentor"
+            >
+
+                <i class="bi bi-person-check"></i>
+
+                <span>Mentor Priority</span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="anomalies"
+            >
+
+                <i class="bi bi-stars"></i>
+
+                <span>AI Anomalies</span>
+
+                <b class="nav-badge">5</b>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="student360"
+            >
+
+                <i class="bi bi-person-vcard"></i>
+
+                <span>Student 360°</span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="aiagent"
+            >
+
+                <i class="bi bi-robot"></i>
+
+                <span>AI Agent</span>
+
+            </button>
+
+
+            <div class="nav-label">
+                MANAGEMENT
+            </div>
+
+
+            <button
+                class="nav-item"
+                data-page="notifications"
+            >
+
+                <i class="bi bi-bell"></i>
+
+                <span>Notifications</span>
+
+                <b class="nav-badge red">3</b>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="reports"
+            >
+
+                <i class="bi bi-file-earmark-bar-graph"></i>
+
+                <span>Reports</span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="settings"
+            >
+
+                <i class="bi bi-gear"></i>
+
+                <span>Settings</span>
+
+            </button>
+
         </div>
-
-
-        <nav>
-
-            <button class="nav-item active" data-page="dashboard">
-                <span>▦</span>
-                Dashboard
-            </button>
-
-            <button class="nav-item" data-page="students">
-                <span>♙</span>
-                Students
-                <b id="studentCountBadge">0</b>
-            </button>
-
-            <button class="nav-item" data-page="analytics">
-                <span>◒</span>
-                Risk Analytics
-            </button>
-
-            <button class="nav-item" data-page="interventions">
-                <span>✓</span>
-                Interventions
-            </button>
-
-            <button class="nav-item" data-page="ai">
-                <span>✦</span>
-                AI Agent
-            </button>
-
-            <button class="nav-item" data-page="reports">
-                <span>▤</span>
-                Reports
-            </button>
-
-            <button class="nav-item" data-page="settings">
-                <span>⚙</span>
-                Settings
-            </button>
-
-        </nav>
 
 
         <div class="sidebar-bottom">
 
-            <div class="privacy-box">
-                🔒
-                <div>
-                    <strong>Privacy Protected</strong>
-                    <small>Role-based access enabled</small>
-                </div>
-            </div>
+            <div class="system-status">
 
-
-            <div class="user-box">
-
-                <div class="avatar">
-                    U
-                </div>
+                <span class="status-dot"></span>
 
                 <div>
-                    <strong>Faculty Admin</strong>
-                    <small>Mentor account</small>
-                </div>
 
-                <button id="logoutButton">⋮</button>
+                    <strong>AI Agent Online</strong>
+
+                    <small>Monitoring active</small>
+
+                </div>
 
             </div>
 
@@ -244,47 +386,85 @@
     </aside>
 
 
-    <!-- MAIN -->
 
-    <main class="main">
+    <!-- =================================================
+         MAIN AREA
+    ================================================= -->
+
+    <main class="main-area">
 
 
-        <!-- TOP BAR -->
+        <!-- TOPBAR -->
 
         <header class="topbar">
 
-            <div>
+            <button
+                id="sidebarToggle"
+                class="toggle-btn"
+            >
 
-                <span class="breadcrumb">
-                    EduPulse / <b id="currentPageName">Dashboard</b>
-                </span>
+                <i class="bi bi-list"></i>
 
-                <h1 id="pageTitle">
-                    Good morning, Mentor 👋
-                </h1>
+            </button>
+
+
+            <div class="top-search">
+
+                <i class="bi bi-search"></i>
+
+                <input
+                    type="text"
+                    id="globalSearch"
+                    placeholder="Search students, subjects..."
+                >
+
+                <kbd>Ctrl K</kbd>
 
             </div>
 
 
             <div class="top-actions">
 
-                <button class="notification-button">
-                    🔔
-                    <i>3</i>
-                </button>
 
                 <button
-                    class="ai-button"
-                    onclick="showPage('ai')"
+                    class="icon-btn"
+                    id="notificationButton"
                 >
-                    Ask AI ✦
+
+                    <i class="bi bi-bell"></i>
+
+                    <span class="notification-dot">
+                        3
+                    </span>
+
                 </button>
 
+
+                <div class="administrator">
+
+                    <div class="admin-avatar">
+                        👨🏻‍💼
+                    </div>
+
+                    <div>
+
+                        <strong>Administrator</strong>
+
+                        <small>Admin</small>
+
+                    </div>
+
+                </div>
+
+
                 <button
-                    class="logout-top"
-                    onclick="logout()"
+                    id="logoutBtn"
+                    class="logout-btn"
+                    title="Logout"
                 >
-                    Logout
+
+                    <i class="bi bi-box-arrow-right"></i>
+
                 </button>
 
             </div>
@@ -292,934 +472,68 @@
         </header>
 
 
-        <!-- ================= DASHBOARD ================= -->
 
-        <section
-            id="dashboard"
-            class="page active-page"
-        >
+        <!-- PAGE CONTENT -->
 
-            <div class="page-header">
+        <div
+            id="pageContent"
+            class="page-content"
+        ></div>
 
-                <div>
 
-                    <span class="eyebrow">
-                        OVERVIEW • THIS WEEK
-                    </span>
+        <!-- FOOTER -->
 
-                    <h2>
-                        Student engagement at a glance
-                    </h2>
+        <footer class="site-footer">
 
-                    <p>
-                        AI has reviewed attendance, assessments,
-                        assignments and LMS activity.
-                    </p>
+            <span>
+                © 2026 EduStudent Sight
+            </span>
 
-                </div>
+            <span>
+                AI Academic Intelligence Platform
+            </span>
 
-                <button
-                    class="primary-button"
-                    onclick="openAddStudentModal()"
-                >
-                    + Add Student
-                </button>
+            <span>
+                Built for Student Success
+            </span>
 
-            </div>
+        </footer>
 
-
-            <!-- STAT CARDS -->
-
-            <div class="stats-grid">
-
-                <div class="stat-card">
-
-                    <div class="stat-icon purple">
-                        ♙
-                    </div>
-
-                    <div>
-                        <span>Total Students</span>
-                        <strong id="totalStudents">0</strong>
-                        <small>Currently monitored</small>
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-icon red">
-                        ⚠
-                    </div>
-
-                    <div>
-                        <span>High Risk</span>
-                        <strong id="highRisk">0</strong>
-                        <small>Needs attention now</small>
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-icon yellow">
-                        ◐
-                    </div>
-
-                    <div>
-                        <span>Medium Risk</span>
-                        <strong id="mediumRisk">0</strong>
-                        <small>Watch closely</small>
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-icon green">
-                        ▥
-                    </div>
-
-                    <div>
-                        <span>Average Attendance</span>
-                        <strong id="averageAttendance">0%</strong>
-                        <small>Across all students</small>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- DASHBOARD GRID -->
-
-            <div class="dashboard-grid">
-
-
-                <!-- ATTENTION -->
-
-                <div class="panel">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <h3>Students Needing Attention</h3>
-                            <p>Prioritized by AI risk score</p>
-                        </div>
-
-                        <button
-                            class="text-button"
-                            onclick="showPage('students')"
-                        >
-                            View All →
-                        </button>
-
-                    </div>
-
-
-                    <div id="attentionStudents">
-                    </div>
-
-                </div>
-
-
-                <!-- HEALTH -->
-
-                <div class="panel">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <h3>Engagement Health</h3>
-                            <p>Current student population</p>
-                        </div>
-
-                        <span class="live">
-                            ● LIVE
-                        </span>
-
-                    </div>
-
-
-                    <div class="health-container">
-
-                        <div class="donut">
-
-                            <div>
-                                <strong id="lowRiskPercent">
-                                    0%
-                                </strong>
-
-                                <small>
-                                    Low Risk
-                                </small>
-                            </div>
-
-                        </div>
-
-
-                        <div class="legend">
-
-                            <div>
-                                <i class="green-dot"></i>
-                                Low Risk
-                                <b id="lowRisk">0</b>
-                            </div>
-
-                            <div>
-                                <i class="yellow-dot"></i>
-                                Medium Risk
-                                <b id="mediumRiskLegend">0</b>
-                            </div>
-
-                            <div>
-                                <i class="red-dot"></i>
-                                High Risk
-                                <b id="highRiskLegend">0</b>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="ai-insight">
-
-                        <span>✦</span>
-
-                        <div>
-
-                            <strong>AI Insight</strong>
-
-                            <p id="dashboardInsight">
-                                Analyzing student engagement...
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- RECENT ACTIVITY -->
-
-            <div class="panel">
-
-                <div class="panel-header">
-
-                    <div>
-                        <h3>Recent Student Activity</h3>
-                        <p>Latest monitored changes</p>
-                    </div>
-
-                    <button
-                        class="text-button"
-                        onclick="showPage('analytics')"
-                    >
-                        Open Analytics →
-                    </button>
-
-                </div>
-
-
-                <div class="table-wrapper">
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-                                <th>Student</th>
-                                <th>Attendance</th>
-                                <th>Marks</th>
-                                <th>Assignments</th>
-                                <th>LMS</th>
-                                <th>Risk</th>
-                                <th>Trend</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="recentStudents">
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= STUDENTS ================= -->
-
-        <section
-            id="students"
-            class="page"
-        >
-
-            <div class="page-header">
-
-                <div>
-                    <h2>Student Directory</h2>
-                    <p>
-                        Manage students and monitor their engagement.
-                    </p>
-                </div>
-
-                <button
-                    class="primary-button"
-                    onclick="openAddStudentModal()"
-                >
-                    + Add Student
-                </button>
-
-            </div>
-
-
-            <div class="filters">
-
-                <div class="search-box">
-
-                    🔍
-
-                    <input
-                        id="studentSearch"
-                        type="text"
-                        placeholder="Search name, ID, department..."
-                    >
-
-                </div>
-
-
-                <select id="riskFilter">
-
-                    <option value="All">All Risk</option>
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-
-                </select>
-
-
-                <button class="filter-button">
-                    ⚙ Filters
-                </button>
-
-                <button
-                    class="filter-button"
-                    onclick="exportStudents()"
-                >
-                    ⇩ Export
-                </button>
-
-            </div>
-
-
-            <div class="panel no-padding">
-
-                <div class="table-wrapper">
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-                                <th>Student</th>
-                                <th>Department</th>
-                                <th>Attendance</th>
-                                <th>Marks</th>
-                                <th>Assignments</th>
-                                <th>LMS</th>
-                                <th>Risk</th>
-                                <th>Action</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="studentTable">
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= ANALYTICS ================= -->
-
-        <section
-            id="analytics"
-            class="page"
-        >
-
-            <div class="page-header">
-
-                <div>
-
-                    <h2>Risk Analytics</h2>
-
-                    <p>
-                        Explainable signals behind student risk.
-                    </p>
-
-                </div>
-
-                <span class="date-badge">
-                    Last 30 Days
-                </span>
-
-            </div>
-
-
-            <div class="analytics-grid">
-
-                <div class="panel">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <h3>Signal Performance</h3>
-                            <p>College-wide average</p>
-                        </div>
-
-                    </div>
-
-
-                    <div id="signalBars">
-                    </div>
-
-                </div>
-
-
-                <div class="panel">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <h3>Risk Distribution</h3>
-                            <p>Current population</p>
-                        </div>
-
-                    </div>
-
-
-                    <div class="risk-cards">
-
-                        <div class="risk-card high">
-                            <strong id="analyticsHigh">0</strong>
-                            <span>High</span>
-                            <small>Immediate review</small>
-                        </div>
-
-                        <div class="risk-card medium">
-                            <strong id="analyticsMedium">0</strong>
-                            <span>Medium</span>
-                            <small>Monitor closely</small>
-                        </div>
-
-                        <div class="risk-card low">
-                            <strong id="analyticsLow">0</strong>
-                            <span>Low</span>
-                            <small>Healthy</small>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="panel">
-
-                <div class="panel-header">
-
-                    <div>
-                        <h3>Why Students Are Flagged</h3>
-                        <p>AI-generated contributing factors</p>
-                    </div>
-
-                </div>
-
-                <div id="riskReasons">
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= INTERVENTIONS ================= -->
-
-        <section
-            id="interventions"
-            class="page"
-        >
-
-            <div class="page-header">
-
-                <div>
-
-                    <h2>Intervention Center</h2>
-
-                    <p>
-                        Turn AI insights into trackable mentor actions.
-                    </p>
-
-                </div>
-
-                <button
-                    class="secondary-button"
-                    onclick="generateReport()"
-                >
-                    Generate Report
-                </button>
-
-            </div>
-
-
-            <div class="intervention-stats">
-
-                <div>
-                    <strong id="openInterventions">0</strong>
-                    <span>Open Interventions</span>
-                </div>
-
-                <div>
-                    <strong id="completedInterventions">0</strong>
-                    <span>Completed</span>
-                </div>
-
-                <div>
-                    <strong id="followupInterventions">0</strong>
-                    <span>Needs Follow-up</span>
-                </div>
-
-            </div>
-
-
-            <div class="panel">
-
-                <div class="panel-header">
-
-                    <div>
-                        <h3>Recommended Actions</h3>
-                        <p>
-                            Prioritized using current student signals.
-                        </p>
-                    </div>
-
-                </div>
-
-                <div id="interventionList">
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= AI AGENT ================= -->
-
-        <section
-            id="ai"
-            class="page"
-        >
-
-            <div class="ai-header">
-
-                <div class="ai-logo">
-                    ✦
-                </div>
-
-                <div>
-
-                    <h2>EduPulse AI Agent</h2>
-
-                    <p>
-                        Academic engagement copilot • Ready
-                    </p>
-
-                </div>
-
-                <span class="ai-online">
-                    ● Online
-                </span>
-
-            </div>
-
-
-            <div class="ai-layout">
-
-                <div class="panel chat-panel">
-
-                    <div
-                        id="chatMessages"
-                        class="chat-messages"
-                    >
-
-                        <div class="message ai-message">
-
-                            <div class="message-icon">
-                                ✦
-                            </div>
-
-                            <div class="message-bubble">
-
-                                Hello! I'm EduPulse AI.
-                                I can analyze student engagement,
-                                explain academic risk and recommend
-                                personalized interventions.
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="quick-prompts">
-
-                        <button
-                            onclick="askAI('Who needs attention today?')"
-                        >
-                            Who needs attention today?
-                        </button>
-
-                        <button
-                            onclick="askAI('Why is Rahul high risk?')"
-                        >
-                            Why is Rahul high risk?
-                        </button>
-
-                        <button
-                            onclick="askAI('Give me intervention suggestions')"
-                        >
-                            Give me intervention suggestions
-                        </button>
-
-                        <button
-                            onclick="askAI('Give me weekly summary')"
-                        >
-                            Weekly summary
-                        </button>
-
-                    </div>
-
-
-                    <form
-                        id="aiForm"
-                        class="ai-input"
-                    >
-
-                        <input
-                            id="aiInput"
-                            placeholder="Ask about students, risks, trends..."
-                        >
-
-                        <button>
-                            ↑
-                        </button>
-
-                    </form>
-
-                </div>
-
-
-                <div class="panel">
-
-                    <h3>AI Capabilities</h3>
-
-                    <div class="capability">
-                        ✓ Detect engagement changes
-                    </div>
-
-                    <div class="capability">
-                        ✓ Explain risk factors
-                    </div>
-
-                    <div class="capability">
-                        ✓ Prioritize students
-                    </div>
-
-                    <div class="capability">
-                        ✓ Recommend interventions
-                    </div>
-
-                    <div class="capability">
-                        ✓ Create mentor summaries
-                    </div>
-
-                    <div class="capability">
-                        ✓ Track outcomes
-                    </div>
-
-                    <div class="ai-context">
-
-                        <strong>Current Context</strong>
-
-                        <p id="aiContext">
-                            Loading...
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= REPORTS ================= -->
-
-        <section
-            id="reports"
-            class="page"
-        >
-
-            <div class="page-header">
-
-                <div>
-
-                    <h2>Reports</h2>
-
-                    <p>
-                        Generate mentor-ready reports.
-                    </p>
-
-                </div>
-
-                <button
-                    class="primary-button"
-                    onclick="window.print()"
-                >
-                    ⇩ Print / Save PDF
-                </button>
-
-            </div>
-
-
-            <div class="report-grid">
-
-                <div class="report-card">
-
-                    <span>WEEKLY SUMMARY</span>
-
-                    <strong>
-                        <span id="reportStudents">0</span>
-                        students monitored
-                    </strong>
-
-                    <p id="weeklyReport">
-                    </p>
-
-                    <button
-                        class="text-button"
-                        onclick="generateReport()"
-                    >
-                        Open Report →
-                    </button>
-
-                </div>
-
-
-                <div class="report-card">
-
-                    <span>INTERVENTION REPORT</span>
-
-                    <strong>
-                        AI Recommended Actions
-                    </strong>
-
-                    <p>
-                        Review the latest AI recommendations
-                        and follow-up priorities.
-                    </p>
-
-                    <button
-                        class="text-button"
-                        onclick="showPage('interventions')"
-                    >
-                        Open Report →
-                    </button>
-
-                </div>
-
-
-                <div class="report-card">
-
-                    <span>ENGAGEMENT REPORT</span>
-
-                    <strong id="reportAverageMarks">
-                        0% Average Marks
-                    </strong>
-
-                    <p>
-                        Compare academic performance against
-                        attendance and LMS engagement.
-                    </p>
-
-                    <button
-                        class="text-button"
-                        onclick="showPage('analytics')"
-                    >
-                        Open Report →
-                    </button>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= SETTINGS ================= -->
-
-        <section
-            id="settings"
-            class="page"
-        >
-
-            <div class="page-header">
-
-                <div>
-
-                    <h2>Settings</h2>
-
-                    <p>
-                        Configure your workspace and privacy.
-                    </p>
-
-                </div>
-
-                <button
-                    class="primary-button"
-                    onclick="showToast('Settings saved successfully')"
-                >
-                    Save Changes
-                </button>
-
-            </div>
-
-
-            <div class="settings-grid">
-
-                <div class="panel">
-
-                    <h3>Workspace</h3>
-
-                    <label class="setting">
-                        Institution
-                        <input value="Vignan University">
-                    </label>
-
-                    <label class="setting">
-                        Department
-                        <input value="Computer Science & Engineering">
-                    </label>
-
-                    <label class="setting">
-                        Academic Year
-                        <input value="2026 - 27">
-                    </label>
-
-                </div>
-
-
-                <div class="panel">
-
-                    <h3>Notifications</h3>
-
-                    <div class="toggle-row">
-                        High-risk alerts
-                        <input type="checkbox" checked>
-                    </div>
-
-                    <div class="toggle-row">
-                        Weekly mentor summary
-                        <input type="checkbox" checked>
-                    </div>
-
-                    <div class="toggle-row">
-                        Intervention reminders
-                        <input type="checkbox" checked>
-                    </div>
-
-                </div>
-
-
-                <div class="panel">
-
-                    <h3>Privacy & Access</h3>
-
-                    <div class="toggle-row">
-                        Role-based access
-                        <input type="checkbox" checked>
-                    </div>
-
-                    <div class="toggle-row">
-                        Audit activity
-                        <input type="checkbox" checked>
-                    </div>
-
-                    <div class="toggle-row">
-                        Mask contact details
-                        <input type="checkbox">
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
 
     </main>
 
 </div>
 
 
-<!-- ================= ADD STUDENT MODAL ================= -->
+
+<!-- =====================================================
+     MODAL
+===================================================== -->
 
 <div
-    id="addStudentModal"
-    class="modal-overlay hidden"
+    id="studentModal"
+    class="modal-overlay"
 >
 
-    <div class="modal">
+    <div class="student-modal">
 
-        <div class="modal-header">
+        <div class="modal-head">
 
             <div>
 
-                <span class="eyebrow">
-                    STUDENT MANAGEMENT
-                </span>
+                <span>STUDENT MANAGEMENT</span>
 
-                <h2>Add New Student</h2>
-
-                <p>
-                    Enter student academic and engagement details.
-                </p>
+                <h2>Add Student</h2>
 
             </div>
 
             <button
-                class="close-button"
-                onclick="closeAddStudentModal()"
+                id="closeModal"
+                class="modal-close"
             >
-                ×
+
+                <i class="bi bi-x"></i>
+
             </button>
 
         </div>
@@ -1229,134 +543,212 @@
 
             <div class="form-grid">
 
-                <label>
-                    Full Name
-                    <input id="studentName" required>
-                </label>
+                <div class="form-group">
 
-                <label>
-                    College Email
-                    <input id="studentEmail" type="email" required>
-                </label>
+                    <label>Student name</label>
 
-                <label>
-                    Phone
-                    <input id="studentPhone">
-                </label>
+                    <input
+                        id="studentName"
+                        required
+                        placeholder="Full name"
+                    >
 
-                <label>
-                    Department
+                </div>
 
-                    <select id="studentDepartment">
-                        <option>CSE</option>
-                        <option>ECE</option>
-                        <option>IT</option>
-                        <option>EEE</option>
-                        <option>MECH</option>
+
+                <div class="form-group">
+
+                    <label>Student ID</label>
+
+                    <input
+                        id="studentId"
+                        required
+                        placeholder="25CS001"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Gender</label>
+
+                    <select id="studentGender">
+
+                        <option value="Male">
+                            Male
+                        </option>
+
+                        <option value="Female">
+                            Female
+                        </option>
+
                     </select>
 
-                </label>
+                </div>
 
-                <label>
-                    Year
+
+                <div class="form-group">
+
+                    <label>Course</label>
+
+                    <input
+                        id="studentCourse"
+                        value="CSE"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Year</label>
 
                     <select id="studentYear">
+
                         <option>1st Year</option>
                         <option>2nd Year</option>
                         <option>3rd Year</option>
                         <option>4th Year</option>
+
                     </select>
 
-                </label>
+                </div>
 
-                <label>
-                    Section
 
-                    <select id="studentSection">
-                        <option>A</option>
-                        <option>B</option>
-                        <option>C</option>
-                        <option>D</option>
-                    </select>
+                <div class="form-group">
 
-                </label>
+                    <label>CGPA</label>
 
-                <label>
-                    Attendance %
+                    <input
+                        id="studentCGPA"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="10"
+                        value="8.2"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Attendance %</label>
+
                     <input
                         id="studentAttendance"
                         type="number"
                         min="0"
                         max="100"
-                        value="75"
+                        value="82"
                     >
-                </label>
 
-                <label>
-                    Average Marks %
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Credits</label>
+
                     <input
-                        id="studentMarks"
+                        id="studentCredits"
                         type="number"
-                        min="0"
-                        max="100"
-                        value="60"
+                        value="24"
                     >
-                </label>
 
-                <label>
-                    Assignments Submitted
-                    <input
-                        id="studentAssignments"
-                        type="number"
-                        min="0"
-                        value="4"
-                    >
-                </label>
+                </div>
 
-                <label>
-                    Total Assignments
-                    <input
-                        id="studentTotalAssignments"
-                        type="number"
-                        min="1"
-                        value="6"
-                    >
-                </label>
 
-                <label>
-                    LMS Activity %
-                    <input
-                        id="studentLMS"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value="60"
-                    >
-                </label>
+                <div class="form-group">
 
-                <label>
-                    Mentor
+                    <label>Father's name</label>
+
                     <input
-                        id="studentMentor"
-                        value="Dr. Priya"
+                        id="fatherName"
+                        placeholder="Father's name"
                     >
-                </label>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Mother's name</label>
+
+                    <input
+                        id="motherName"
+                        placeholder="Mother's name"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Mother tongue</label>
+
+                    <input
+                        id="motherTongue"
+                        placeholder="Telugu"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Place</label>
+
+                    <input
+                        id="studentPlace"
+                        placeholder="Hyderabad"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Region</label>
+
+                    <input
+                        id="studentRegion"
+                        placeholder="South India"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Country</label>
+
+                    <input
+                        id="studentCountry"
+                        value="India"
+                    >
+
+                </div>
 
             </div>
 
 
-            <div class="modal-footer">
+            <div class="modal-actions">
 
                 <button
                     type="button"
-                    class="secondary-button"
-                    onclick="closeAddStudentModal()"
+                    id="cancelModal"
+                    class="secondary-btn"
                 >
                     Cancel
                 </button>
 
-                <button class="primary-button">
-                    Add Student & Analyze ✦
+                <button
+                    type="submit"
+                    class="primary-btn"
+                >
+                    Add Student
                 </button>
 
             </div>
@@ -1368,33 +760,9 @@
 </div>
 
 
-<!-- ================= STUDENT DETAILS MODAL ================= -->
-
-<div
-    id="studentModal"
-    class="modal-overlay hidden"
->
-
-    <div class="modal student-modal">
-
-        <div
-            id="studentDetails"
-        >
-        </div>
-
-    </div>
-
-</div>
-
-
-<div
-    id="toast"
-    class="toast hidden"
->
-</div>
-
 
 <script src="app.js"></script>
 
 </body>
+
 </html>

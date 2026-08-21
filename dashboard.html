@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>StudentIQ | Dashboard</title>
+
+<!-- Bootstrap -->
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+rel="stylesheet"
+>
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Icons -->
+<link
+rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<!-- MOBILE NAV -->
+
+<nav class="mobile-nav d-lg-none">
+
+    <div class="mobile-brand">
+
+        <div class="brand-logo small">
+            <i class="bi bi-stars"></i>
+        </div>
+
+        <b>StudentIQ</b>
+
+    </div>
+
+    <button
+        data-bs-toggle="offcanvas"
+        data-bs-target="#mobileMenu"
+    >
+        <i class="bi bi-list"></i>
+    </button>
+
+</nav>
+
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+    <div class="sidebar-brand">
+
+        <div class="brand-logo">
+            <i class="bi bi-stars"></i>
+        </div>
+
+        <div>
+
+            <h3>StudentIQ</h3>
+
+            <span>AGENTIC AI</span>
+
+        </div>
+
+    </div>
+
+
+    <div class="menu-label">
+        INTELLIGENCE
+    </div>
+
+
+    <nav class="sidebar-menu">
+
+        <button
+            class="side-link active"
+            data-page="dashboard"
+        >
+            <i class="bi bi-grid-1x2-fill"></i>
+            Dashboard
+        </button>
+
+
+        <button
+            class="side-link"
+            data-page="students"
+        >
+            <i class="bi bi-people-fill"></i>
+            Students
+            <span
+                class="menu-count"
+                id="studentCountSide"
+            >
+                0
+            </span>
+        </button>
+
+
+        <button
+            class="side-link"
+            data-page="analytics"
+        >
+            <i class="bi bi-bar-chart-fill"></i>
+            Analytics
+        </button>
+
+
+        <button
+            class="side-link"
+            data-page="interventions"
+        >
+            <i class="bi bi-shield-check"></i>
+            Interventions
+        </button>
+
+
+        <button
+            class="side-link"
+            data-page="agent"
+        >
+            <i class="bi bi-stars"></i>
+            AI Agent
+            <span class="ai-badge">
+                AI
+            </span>
+        </button>
+
+
+        <button
+            class="side-link"
+            data-page="reports"
+        >
+            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+            Reports
+        </button>
+
+    </nav>
+
+
+    <div class="menu-label mt-5">
+        WORKSPACE
+    </div>
+
+
+    <nav class="sidebar-menu">
+
+        <button
+            class="side-link"
+            data-page="settings"
+        >
+            <i class="bi bi-gear-fill"></i>
+            Settings
+        </button>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <div class="sidebar-ai">
+
+            <div class="online-dot"></div>
+
+            <div>
+
+                <b>AI Agent Online</b>
+
+                <small>
+                    Monitoring students
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <div class="sidebar-user">
+
+            <div class="user-avatar">
+                <span id="userInitial">U</span>
+            </div>
+
+            <div>
+
+                <b id="userName">
+                    Faculty User
+                </b>
+
+                <small>
+                    Administrator
+                </small>
+
+            </div>
+
+            <button
+                onclick="logout()"
+                title="Logout"
+            >
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- MOBILE MENU -->
+
+<div
+class="offcanvas offcanvas-start mobile-menu"
+id="mobileMenu"
+>
+
+<div class="offcanvas-header">
+
+    <h5>StudentIQ</h5>
+
+    <button
+        class="btn-close btn-close-white"
+        data-bs-dismiss="offcanvas"
+    ></button>
+
+</div>
+
+
+<div class="offcanvas-body">
+
+    <button
+        class="side-link active"
+        data-page="dashboard"
+    >
+        <i class="bi bi-grid-1x2-fill"></i>
+        Dashboard
+    </button>
+
+    <button
+        class="side-link"
+        data-page="students"
+    >
+        <i class="bi bi-people-fill"></i>
+        Students
+    </button>
+
+    <button
+        class="side-link"
+        data-page="analytics"
+    >
+        <i class="bi bi-bar-chart-fill"></i>
+        Analytics
+    </button>
+
+    <button
+        class="side-link"
+        data-page="interventions"
+    >
+        <i class="bi bi-shield-check"></i>
+        Interventions
+    </button>
+
+    <button
+        class="side-link"
+        data-page="agent"
+    >
+        <i class="bi bi-stars"></i>
+        AI Agent
+    </button>
+
+    <button
+        class="side-link"
+        data-page="reports"
+    >
+        <i class="bi bi-file-earmark-bar-graph"></i>
+        Reports
+    </button>
+
+</div>
+
+</div>
+
+
+<!-- MAIN -->
+
+<main class="main-content">
+
+
+<!-- TOPBAR -->
+
+<header class="topbar">
+
+    <div>
+
+        <div class="breadcrumb">
+            StudentIQ
+            <span>/</span>
+            <b id="breadcrumb">
+                Dashboard
+            </b>
+        </div>
+
+        <h1 id="pageTitle">
+            Academic Intelligence Center
+        </h1>
+
+    </div>
+
+
+    <div class="top-actions">
+
+        <div class="live-status">
+
+            <span></span>
+
+            SYSTEM LIVE
+
+        </div>
+
+
+        <button
+            class="notification-button"
+            onclick="toggleNotifications()"
+        >
+
+            <i class="bi bi-bell"></i>
+
+            <span id="notificationCount">
+                0
+            </span>
+
+        </button>
+
+
+        <button
+            class="agent-button"
+            onclick="openPage('agent')"
+        >
+
+            <i class="bi bi-stars"></i>
+
+            Ask AI
+
+        </button>
+
+    </div>
+
+</header>
+
+
+<!-- NOTIFICATION PANEL -->
+
+<div
+id="notificationPanel"
+class="notification-panel d-none"
+>
+
+    <div class="notification-head">
+
+        <b>AI Notifications</b>
+
+        <button onclick="clearNotifications()">
+            Clear
+        </button>
+
+    </div>
+
+    <div id="notificationList"></div>
+
+</div>
+
+
+<!-- PAGE CONTENT -->
+
+<div class="content-container">
+
+
+<!-- =========================================
+ DASHBOARD
+========================================= -->
+
+<section
+id="page-dashboard"
+class="page-section active"
+>
+
+
+<div class="welcome-section">
+
+    <div>
+
+        <div class="section-tag">
+            ✦ INTELLIGENT ACADEMIC MONITORING
+        </div>
+
+        <h2>
+            Turn student data into
+            <span>intelligent action.</span>
+        </h2>
+
+        <p>
+            StudentIQ continuously analyzes academic,
+            attendance and engagement signals to identify
+            students who need support.
+        </p>
+
+    </div>
+
+
+    <div class="welcome-actions">
+
+        <button
+            class="btn-secondary-custom"
+            onclick="openPage('agent')"
+        >
+
+            <i class="bi bi-stars"></i>
+
+            Talk to AI
+
+        </button>
+
+
+        <button
+            class="btn-primary-custom"
+            onclick="openStudentModal()"
+        >
+
+            <i class="bi bi-plus-lg"></i>
+
+            Add Student
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- KPI -->
+
+<div class="row g-3 mb-4">
+
+    <div class="col-xl-3 col-md-6">
+
+        <div class="stat-card">
+
+            <div class="stat-icon cyan">
+                <i class="bi bi-people"></i>
+            </div>
+
+            <div>
+
+                <small>
+                    STUDENTS MONITORED
+                </small>
+
+                <strong id="totalStudents">
+                    0
+                </strong>
+
+                <span>
+                    Active profiles
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-xl-3 col-md-6">
+
+        <div class="stat-card">
+
+            <div class="stat-icon red">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+
+            <div>
+
+                <small>
+                    HIGH RISK
+                </small>
+
+                <strong id="highRisk">
+                    0
+                </strong>
+
+                <span>
+                    Immediate attention
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-xl-3 col-md-6">
+
+        <div class="stat-card">
+
+            <div class="stat-icon orange">
+                <i class="bi bi-activity"></i>
+            </div>
+
+            <div>
+
+                <small>
+                    MEDIUM RISK
+                </small>
+
+                <strong id="mediumRisk">
+                    0
+                </strong>
+
+                <span>
+                    Requires monitoring
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-xl-3 col-md-6">
+
+        <div class="stat-card">
+
+            <div class="stat-icon green">
+                <i class="bi bi-mortarboard"></i>
+            </div>
+
+            <div>
+
+                <small>
+                    AVERAGE CGPA
+                </small>
+
+                <strong id="averageCGPA">
+                    0.00
+                </strong>
+
+                <span id="averageCredits">
+                    0 average credits
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- PRIORITY -->
+
+<div class="row g-3">
+
+    <div class="col-lg-7">
+
+        <div class="dashboard-card">
+
+            <div class="card-header-custom">
+
+                <div>
+
+                    <span>
+                        AI PRIORITY QUEUE
+                    </span>
+
+                    <h3>
+                        Students needing attention
+                    </h3>
+
+                </div>
+
+                <button
+                    onclick="openPage('students')"
+                >
+                    View all →
+                </button>
+
+            </div>
+
+            <div id="priorityList"></div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-lg-5">
+
+        <div class="dashboard-card">
+
+            <div class="card-header-custom">
+
+                <div>
+
+                    <span>
+                        ACADEMIC HEALTH
+                    </span>
+
+                    <h3>
+                        Student population
+                    </h3>
+
+                </div>
+
+                <div class="live-pill">
+                    LIVE
+                </div>
+
+            </div>
+
+
+            <div class="health-wrapper">
+
+                <div class="health-circle">
+
+                    <div>
+
+                        <strong id="healthyPercent">
+                            0%
+                        </strong>
+
+                        <small>
+                            Healthy
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <div class="health-list">
+
+                    <p>
+                        <i class="green-dot"></i>
+                        Low Risk
+                        <b id="lowRisk">
+                            0
+                        </b>
+                    </p>
+
+                    <p>
+                        <i class="orange-dot"></i>
+                        Medium Risk
+                        <b id="mediumRisk2">
+                            0
+                        </b>
+                    </p>
+
+                    <p>
+                        <i class="red-dot"></i>
+                        High Risk
+                        <b id="highRisk2">
+                            0
+                        </b>
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="ai-insight">
+
+                <div class="ai-small-icon">
+                    <i class="bi bi-stars"></i>
+                </div>
+
+                <div>
+
+                    <b>AI Insight</b>
+
+                    <p id="dashboardInsight">
+                        Analyzing...
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- TABLE -->
+
+<div class="dashboard-card mt-3">
+
+    <div class="card-header-custom">
+
+        <div>
+
+            <span>
+                STUDENT INTELLIGENCE
+            </span>
+
+            <h3>
+                Recent student profiles
+            </h3>
+
+        </div>
+
+        <button
+            onclick="openPage('students')"
+        >
+            Manage students →
+        </button>
+
+    </div>
+
+
+    <div class="table-responsive">
+
+        <table class="custom-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>STUDENT</th>
+
+                    <th>ATTENDANCE</th>
+
+                    <th>CGPA</th>
+
+                    <th>CREDITS</th>
+
+                    <th>LMS</th>
+
+                    <th>RISK</th>
+
+                    <th>ACTION</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="dashboardTable"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+</section>
+
+
+<!-- =========================================
+ STUDENTS
+========================================= -->
+
+<section
+id="page-students"
+class="page-section"
+>
+
+<div class="page-heading">
+
+    <div>
+
+        <div class="section-tag">
+            STUDENT MANAGEMENT
+        </div>
+
+        <h2>
+            Student Directory
+        </h2>
+
+        <p>
+            Add, analyze, edit and remove student profiles.
+        </p>
+
+    </div>
+
+
+    <button
+        class="btn-primary-custom"
+        onclick="openStudentModal()"
+    >
+        <i class="bi bi-plus-lg"></i>
+        Add Student
+    </button>
+
+</div>
+
+
+<div class="filter-bar">
+
+    <div class="search-wrapper">
+
+        <i class="bi bi-search"></i>
+
+        <input
+            id="studentSearch"
+            placeholder="Search by name, ID or department..."
+        >
+
+    </div>
+
+
+    <select id="riskFilter">
+
+        <option>All Risk</option>
+
+        <option>High</option>
+
+        <option>Medium</option>
+
+        <option>Low</option>
+
+    </select>
+
+
+    <select id="departmentFilter">
+
+        <option>All Departments</option>
+
+        <option>CSE</option>
+
+        <option>ECE</option>
+
+        <option>IT</option>
+
+        <option>EEE</option>
+
+        <option>MECH</option>
+
+    </select>
+
+
+    <button
+        class="btn-secondary-custom"
+        onclick="exportCSV()"
+    >
+        <i class="bi bi-download"></i>
+        Export
+    </button>
+
+</div>
+
+
+<div class="dashboard-card p-0 overflow-hidden">
+
+    <div class="table-responsive">
+
+        <table class="custom-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>STUDENT</th>
+
+                    <th>DEPARTMENT</th>
+
+                    <th>ATTENDANCE</th>
+
+                    <th>CGPA</th>
+
+                    <th>CREDITS</th>
+
+                    <th>MARKS</th>
+
+                    <th>LMS</th>
+
+                    <th>RISK</th>
+
+                    <th>ACTIONS</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="studentsTable"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =========================================
+ ANALYTICS
+========================================= -->
+
+<section
+id="page-analytics"
+class="page-section"
+>
+
+<div class="page-heading">
+
+    <div>
+
+        <div class="section-tag">
+            EXPLAINABLE AI
+        </div>
+
+        <h2>
+            Risk Analytics
+        </h2>
+
+        <p>
+            Understand the signals behind AI predictions.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="row g-3">
+
+    <div class="col-lg-7">
+
+        <div class="dashboard-card">
+
+            <div class="card-header-custom">
+
+                <div>
+
+                    <span>
+                        ACADEMIC SIGNALS
+                    </span>
+
+                    <h3>
+                        Population performance
+                    </h3>
+
+                </div>
+
+            </div>
+
+            <div id="analyticsBars"></div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-lg-5">
+
+        <div class="dashboard-card">
+
+            <div class="card-header-custom">
+
+                <div>
+
+                    <span>
+                        RISK DISTRIBUTION
+                    </span>
+
+                    <h3>
+                        Current population
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="risk-grid">
+
+                <div class="risk-box high">
+
+                    <strong id="analyticsHigh">
+                        0
+                    </strong>
+
+                    <span>
+                        High Risk
+                    </span>
+
+                </div>
+
+
+                <div class="risk-box medium">
+
+                    <strong id="analyticsMedium">
+                        0
+                    </strong>
+
+                    <span>
+                        Medium
+                    </span>
+
+                </div>
+
+
+                <div class="risk-box low">
+
+                    <strong id="analyticsLow">
+                        0
+                    </strong>
+
+                    <span>
+                        Low Risk
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="dashboard-card mt-3">
+
+    <div class="card-header-custom">
+
+        <div>
+
+            <span>
+                EXPLAINABLE AI
+            </span>
+
+            <h3>
+                Why students are flagged
+            </h3>
+
+        </div>
+
+    </div>
+
+    <div id="riskReasons"></div>
+
+</div>
+
+</section>
+
+
+<!-- =========================================
+ INTERVENTIONS
+========================================= -->
+
+<section
+id="page-interventions"
+class="page-section"
+>
+
+<div class="page-heading">
+
+    <div>
+
+        <div class="section-tag">
+            AI → ACTION
+        </div>
+
+        <h2>
+            Intervention Center
+        </h2>
+
+        <p>
+            Convert AI recommendations into mentor actions.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="row g-3 mb-3">
+
+    <div class="col-md-3">
+
+        <div class="mini-stat">
+
+            <strong id="openInterventions">
+                0
+            </strong>
+
+            <span>
+                Open interventions
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-md-3">
+
+        <div class="mini-stat">
+
+            <strong id="completedInterventions">
+                0
+            </strong>
+
+            <span>
+                Completed
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-md-3">
+
+        <div class="mini-stat">
+
+            <strong id="followUps">
+                0
+            </strong>
+
+            <span>
+                Follow-ups
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-md-3">
+
+        <div class="mini-stat">
+
+            <strong id="successRate">
+                0%
+            </strong>
+
+            <span>
+                Success rate
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="dashboard-card">
+
+    <div class="card-header-custom">
+
+        <div>
+
+            <span>
+                AI RECOMMENDATIONS
+            </span>
+
+            <h3>
+                Intervention queue
+            </h3>
+
+        </div>
+
+    </div>
+
+    <div id="interventionList"></div>
+
+</div>
+
+</section>
+
+
+<!-- =========================================
+ AI AGENT
+========================================= -->
+
+<section
+id="page-agent"
+class="page-section"
+>
+
+<div class="agent-page-heading">
+
+    <div class="agent-orb">
+        <i class="bi bi-stars"></i>
+    </div>
+
+    <div>
+
+        <div class="section-tag">
+            AUTONOMOUS ACADEMIC AGENT
+        </div>
+
+        <h2>
+            StudentIQ AI
+        </h2>
+
+        <p>
+            Observe → Reason → Recommend → Act → Learn
+        </p>
+
+    </div>
+
+    <div class="agent-online">
+        ● ONLINE
+    </div>
+
+</div>
+
+
+<div class="row g-3">
+
+    <div class="col-lg-8">
+
+        <div class="chat-card">
+
+            <div
+                id="chatMessages"
+                class="chat-messages"
+            >
+
+                <div class="ai-message">
+
+                    <div class="chat-avatar">
+                        <i class="bi bi-stars"></i>
+                    </div>
+
+                    <div>
+
+                        <b>StudentIQ AI</b>
+
+                        <p>
+
+                            Hello! I'm your academic intelligence
+                            agent.
+
+                            <br><br>
+
+                            I can identify at-risk students,
+                            explain why they are flagged and
+                            recommend interventions.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="quick-actions">
+
+                <button
+                    onclick="askAI('Who needs attention?')"
+                >
+                    Who needs attention?
+                </button>
+
+                <button
+                    onclick="askAI('Explain highest risk student')"
+                >
+                    Highest risk
+                </button>
+
+                <button
+                    onclick="askAI('Give intervention suggestions')"
+                >
+                    Intervention plan
+                </button>
+
+                <button
+                    onclick="askAI('Give weekly summary')"
+                >
+                    Weekly summary
+                </button>
+
+            </div>
+
+
+            <form
+                id="chatForm"
+                class="chat-input"
+            >
+
+                <input
+                    id="chatInput"
+                    placeholder="Ask StudentIQ anything..."
+                >
+
+                <button>
+
+                    <i class="bi bi-arrow-up"></i>
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-lg-4">
+
+        <div class="dashboard-card agent-capabilities">
+
+            <span>
+                AGENT CAPABILITIES
+            </span>
+
+            <h3>
+                What the AI can do
+            </h3>
+
+
+            <div>
+                <i class="bi bi-check-circle-fill"></i>
+                Detect academic risk
+            </div>
+
+            <div>
+                <i class="bi bi-check-circle-fill"></i>
+                Explain predictions
+            </div>
+
+            <div>
+                <i class="bi bi-check-circle-fill"></i>
+                Prioritize students
+            </div>
+
+            <div>
+                <i class="bi bi-check-circle-fill"></i>
+                Recommend interventions
+            </div>
+
+            <div>
+                <i class="bi bi-check-circle-fill"></i>
+                Track intervention outcomes
+            </div>
+
+            <div>
+                <i class="bi bi-check-circle-fill"></i>
+                Generate reports
+            </div>
+
+
+            <div class="agent-context">
+
+                <b>LIVE CONTEXT</b>
+
+                <p id="agentContext">
+                    Loading...
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =========================================
+ REPORTS
+========================================= -->
+
+<section
+id="page-reports"
+class="page-section"
+>
+
+<div class="page-heading">
+
+    <div>
+
+        <div class="section-tag">
+            DECISION INTELLIGENCE
+        </div>
+
+        <h2>
+            Academic Reports
+        </h2>
+
+        <p>
+            Decision-ready academic summaries.
+        </p>
+
+    </div>
+
+
+    <button
+        class="btn-primary-custom"
+        onclick="window.print()"
+    >
+
+        <i class="bi bi-printer"></i>
+
+        Print Report
+
+    </button>
+
+</div>
+
+
+<div class="row g-3">
+
+    <div class="col-md-4">
+
+        <div class="report-card">
+
+            <span>
+                STUDENTS
+            </span>
+
+            <strong id="reportStudents">
+                0
+            </strong>
+
+            <p>
+                Students currently monitored.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <div class="report-card">
+
+            <span>
+                AVERAGE CGPA
+            </span>
+
+            <strong id="reportCGPA">
+                0.00
+            </strong>
+
+            <p>
+                Average academic performance.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <div class="report-card">
+
+            <span>
+                INTERVENTION SUCCESS
+            </span>
+
+            <strong id="reportSuccess">
+                0%
+            </strong>
+
+            <p>
+                Completed intervention percentage.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =========================================
+ SETTINGS
+========================================= -->
+
+<section
+id="page-settings"
+class="page-section"
+>
+
+<div class="page-heading">
+
+    <div>
+
+        <div class="section-tag">
+            WORKSPACE
+        </div>
+
+        <h2>
+            Settings
+        </h2>
+
+        <p>
+            Configure your StudentIQ workspace.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="row g-3">
+
+    <div class="col-lg-6">
+
+        <div class="dashboard-card">
+
+            <span class="card-label">
+                INSTITUTION
+            </span>
+
+            <h3>
+                Workspace
+            </h3>
+
+
+            <label class="setting-label">
+                Institution
+
+                <input
+                    value="Vignan University"
+                >
+
+            </label>
+
+
+            <label class="setting-label">
+                Department
+
+                <input
+                    value="Computer Science & Engineering"
+                >
+
+            </label>
+
+
+            <label class="setting-label">
+                Academic Year
+
+                <input
+                    value="2026 - 27"
+                >
+
+            </label>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-lg-6">
+
+        <div class="dashboard-card">
+
+            <span class="card-label">
+                AI ENGINE
+            </span>
+
+            <h3>
+                Agent Configuration
+            </h3>
+
+
+            <div class="setting-toggle">
+
+                <span>
+                    Risk Monitoring
+                </span>
+
+                <input
+                    type="checkbox"
+                    checked
+                >
+
+            </div>
+
+
+            <div class="setting-toggle">
+
+                <span>
+                    AI Notifications
+                </span>
+
+                <input
+                    type="checkbox"
+                    checked
+                >
+
+            </div>
+
+
+            <div class="setting-toggle">
+
+                <span>
+                    Live Monitoring
+                </span>
+
+                <input
+                    type="checkbox"
+                    checked
+                >
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+
+</div>
+
+</main>
+
+
+<!-- =========================================
+ ADD STUDENT MODAL
+========================================= -->
+
+<div
+class="modal fade"
+id="studentModal"
+tabindex="-1"
+>
+
+<div class="modal-dialog modal-lg modal-dialog-centered">
+
+<div class="modal-content custom-modal">
+
+<div class="modal-header">
+
+    <div>
+
+        <span>
+            STUDENT ONBOARDING
+        </span>
+
+        <h5>
+            Add Student
+        </h5>
+
+    </div>
+
+    <button
+        class="btn-close btn-close-white"
+        data-bs-dismiss="modal"
+    ></button>
+
+</div>
+
+
+<form id="studentForm">
+
+<div class="modal-body">
+
+<div class="row g-3">
+
+    <div class="col-md-6">
+
+        <label>
+            Full Name
+        </label>
+
+        <input
+            id="studentName"
+            required
+        >
+
+    </div>
+
+
+    <div class="col-md-6">
+
+        <label>
+            Email
+        </label>
+
+        <input
+            id="studentEmail"
+            type="email"
+            required
+        >
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <label>
+            Department
+        </label>
+
+        <select id="studentDepartment">
+
+            <option>CSE</option>
+            <option>ECE</option>
+            <option>IT</option>
+            <option>EEE</option>
+            <option>MECH</option>
+
+        </select>
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <label>
+            Year
+        </label>
+
+        <select id="studentYear">
+
+            <option>1st Year</option>
+            <option>2nd Year</option>
+            <option>3rd Year</option>
+            <option>4th Year</option>
+
+        </select>
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <label>
+            Section
+        </label>
+
+        <input
+            id="studentSection"
+            value="A"
+        >
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <label>
+            CGPA
+        </label>
+
+        <input
+            id="studentCGPA"
+            type="number"
+            min="0"
+            max="10"
+            step="0.01"
+            value="7.5"
+        >
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <label>
+            Credits
+        </label>
+
+        <input
+            id="studentCredits"
+            type="number"
+            value="24"
+        >
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <label>
+            Attendance %
+        </label>
+
+        <input
+            id="studentAttendance"
+            type="number"
+            min="0"
+            max="100"
+            value="75"
+        >
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <label>
+            Average Marks %
+        </label>
+
+        <input
+            id="studentMarks"
+            type="number"
+            min="0"
+            max="100"
+            value="65"
+        >
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <label>
+            LMS Activity %
+        </label>
+
+        <input
+            id="studentLMS"
+            type="number"
+            min="0"
+            max="100"
+            value="70"
+        >
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <label>
+            Assignments
+        </label>
+
+        <input
+            id="studentAssignments"
+            type="number"
+            value="5"
+        >
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <label>
+            Total Assignments
+        </label>
+
+        <input
+            id="studentTotalAssignments"
+            type="number"
+            value="6"
+        >
+
+    </div>
+
+</div>
+
+</div>
+
+
+<div class="modal-footer">
+
+    <button
+        type="button"
+        class="btn-secondary-custom"
+        data-bs-dismiss="modal"
+    >
+        Cancel
+    </button>
+
+    <button
+        class="btn-primary-custom"
+    >
+        Add Student + Analyze
+    </button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- PROFILE MODAL -->
+
+<div
+class="modal fade"
+id="profileModal"
+tabindex="-1"
+>
+
+<div class="modal-dialog modal-lg modal-dialog-centered">
+
+<div
+class="modal-content custom-modal"
+id="profileContent"
+></div>
+
+</div>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div
+id="toast"
+class="custom-toast"
+>
+</div>
+
+
+<!-- Bootstrap JS -->
+
+<script
+src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+></script>
+
+<script src="dashboard.js"></script>
+
+</body>
+</html>

@@ -1,769 +1,769 @@
 /* =====================================================
-   EDUPULSE AI
-   Student Attendance, Engagement & Intervention Agent
+   EDU STUDENT SIGHT
+   COMPLETE JAVASCRIPT
 ===================================================== */
 
 
-/* ================= SAMPLE STUDENTS ================= */
+/* =====================================================
+   STUDENT DATA
+===================================================== */
 
 let students = JSON.parse(
-    localStorage.getItem("edupulse_students")
+    localStorage.getItem("eduStudents")
 ) || [
 
     {
-        id: "STU001",
-        name: "Rahul Kumar",
-        email: "rahul@college.edu",
-        phone: "9876543210",
-        department: "CSE",
-        year: "1st Year",
-        section: "A",
-        attendance: 64,
-        marks: 48,
-        assignments: 3,
-        totalAssignments: 6,
-        lms: 32,
-        mentor: "Dr. Priya",
-        trend: "down"
-    },
-
-    {
-        id: "STU002",
-        name: "Ananya Reddy",
-        email: "ananya@college.edu",
-        phone: "9876501234",
-        department: "CSE",
-        year: "1st Year",
-        section: "A",
+        id: "25CS001",
+        name: "V.Sri Udbhav",
+        gender: "Male",
+        course: "CSE",
+        year: "2nd Year",
+        cgpa: 8.2,
+        credits: 24,
         attendance: 82,
-        marks: 74,
-        assignments: 5,
-        totalAssignments: 6,
-        lms: 78,
-        mentor: "Dr. Priya",
-        trend: "up"
+
+        dob: "2007-06-15",
+
+        father: "Ramesh Kumar",
+        mother: "Lakshmi Kumar",
+
+        motherTongue: "Telugu",
+
+        region: "South India",
+        place: "Hyderabad",
+        country: "India",
+
+        risk: 18
     },
 
+
     {
-        id: "STU003",
-        name: "Kiran Varma",
-        email: "kiran@college.edu",
-        phone: "9876512345",
-        department: "ECE",
+        id: "25CS002",
+        name: "Y.Hemanth Reddy",
+        gender: "Male",
+        course: "CSE",
         year: "2nd Year",
-        section: "B",
-        attendance: 71,
-        marks: 56,
-        assignments: 4,
-        totalAssignments: 6,
-        lms: 49,
-        mentor: "Dr. Suresh",
-        trend: "down"
+        cgpa: 7.4,
+        credits: 23,
+        attendance: 68,
+
+        dob: "2007-03-12",
+
+        father: "Reddy Kumar",
+        mother: "Padma",
+
+        motherTongue: "Telugu",
+
+        region: "South India",
+        place: "Vijayawada",
+        country: "India",
+
+        risk: 55
     },
 
+
     {
-        id: "STU004",
+        id: "25CS003",
+        name: "T.Gopi",
+        gender: "Male",
+        course: "CSE",
+        year: "2nd Year",
+        cgpa: 7.8,
+        credits: 22,
+        attendance: 73,
+
+        dob: "2007-09-20",
+
+        father: "Srinivas",
+        mother: "Anitha",
+
+        motherTongue: "Telugu",
+
+        region: "South India",
+        place: "Guntur",
+        country: "India",
+
+        risk: 42
+    },
+
+
+    {
+        id: "25CS004",
         name: "Sneha Rao",
-        email: "sneha@college.edu",
-        phone: "9876523456",
-        department: "IT",
+        gender: "Female",
+        course: "CSE",
         year: "2nd Year",
-        section: "A",
+        cgpa: 8.7,
+        credits: 25,
         attendance: 91,
-        marks: 88,
-        assignments: 6,
-        totalAssignments: 6,
-        lms: 94,
-        mentor: "Dr. Suresh",
-        trend: "up"
+
+        dob: "2007-11-03",
+
+        father: "Rao Kumar",
+        mother: "Sunitha",
+
+        motherTongue: "Telugu",
+
+        region: "South India",
+        place: "Hyderabad",
+        country: "India",
+
+        risk: 8
     },
 
+
     {
-        id: "STU005",
-        name: "Arjun Sai",
-        email: "arjun@college.edu",
-        phone: "9876534567",
-        department: "CSE",
-        year: "1st Year",
-        section: "B",
-        attendance: 76,
-        marks: 62,
-        assignments: 4,
-        totalAssignments: 6,
-        lms: 61,
-        mentor: "Dr. Priya",
-        trend: "stable"
+        id: "25CS005",
+        name: "Arjun Patel",
+        gender: "Male",
+        course: "CSE",
+        year: "2nd Year",
+        cgpa: 6.9,
+        credits: 20,
+        attendance: 61,
+
+        dob: "2007-01-28",
+
+        father: "Mahesh Patel",
+        mother: "Kavitha",
+
+        motherTongue: "Hindi",
+
+        region: "West India",
+        place: "Mumbai",
+        country: "India",
+
+        risk: 72
     }
 
 ];
 
 
-let completedInterventions =
-    JSON.parse(
-        localStorage.getItem(
-            "edupulse_completed"
-        )
-    ) || [];
-
-
-/* ================= LOGIN ================= */
-
-const loginForm =
-    document.getElementById("loginForm");
-
-loginForm.addEventListener(
-    "submit",
-    function (event) {
-
-        event.preventDefault();
-
-        const email =
-            document.getElementById(
-                "loginEmail"
-            ).value;
-
-        const password =
-            document.getElementById(
-                "loginPassword"
-            ).value;
-
-        if (!email || !password) {
-
-            showToast(
-                "Please enter email and password"
-            );
-
-            return;
-        }
-
-        localStorage.setItem(
-            "edupulse_logged_in",
-            "true"
-        );
-
-        document
-            .getElementById("loginPage")
-            .classList.add("hidden");
-
-        document
-            .getElementById("app")
-            .classList.remove("hidden");
-
-        initializeApp();
-
-    }
-);
-
-
-/* ================= SHOW PASSWORD ================= */
-
-document
-    .getElementById("showPassword")
-    .addEventListener(
-        "click",
-        function () {
-
-            const input =
-                document.getElementById(
-                    "loginPassword"
-                );
-
-            if (input.type === "password") {
-
-                input.type = "text";
-
-                this.textContent = "Hide";
-
-            } else {
-
-                input.type = "password";
-
-                this.textContent = "Show";
-
-            }
-
-        }
-    );
-
-
-/* ================= SSO ================= */
-
-document
-    .getElementById("ssoButton")
-    .addEventListener(
-        "click",
-        function () {
-
-            localStorage.setItem(
-                "edupulse_logged_in",
-                "true"
-            );
-
-            document
-                .getElementById("loginPage")
-                .classList.add("hidden");
-
-            document
-                .getElementById("app")
-                .classList.remove("hidden");
-
-            initializeApp();
-
-        }
-    );
-
-
-/* ================= LOGOUT ================= */
-
-function logout() {
-
-    localStorage.removeItem(
-        "edupulse_logged_in"
-    );
-
-    location.reload();
-
-}
-
-
-/* ================= NAVIGATION ================= */
-
-document
-    .querySelectorAll(".nav-item")
-    .forEach(button => {
-
-        button.addEventListener(
-            "click",
-            function () {
-
-                const page =
-                    this.dataset.page;
-
-                showPage(page);
-
-            }
-        );
-
-    });
-
-
-function showPage(page) {
-
-    document
-        .querySelectorAll(".page")
-        .forEach(section => {
-
-            section.classList.remove(
-                "active-page"
-            );
-
-        });
-
-
-    const selectedPage =
-        document.getElementById(page);
-
-    if (selectedPage) {
-
-        selectedPage.classList.add(
-            "active-page"
-        );
-
-    }
-
-
-    document
-        .querySelectorAll(".nav-item")
-        .forEach(button => {
-
-            button.classList.remove(
-                "active"
-            );
-
-            if (
-                button.dataset.page === page
-            ) {
-
-                button.classList.add(
-                    "active"
-                );
-
-            }
-
-        });
-
-
-    updatePageTitle(page);
-
-    renderPage(page);
-
-}
-
-
-/* ================= PAGE TITLE ================= */
-
-function updatePageTitle(page) {
-
-    const titles = {
-
-        dashboard:
-            "Good morning, Mentor 👋",
-
-        students:
-            "Student Directory",
-
-        analytics:
-            "Risk Analytics",
-
-        interventions:
-            "Intervention Center",
-
-        ai:
-            "EduPulse AI Agent",
-
-        reports:
-            "Reports",
-
-        settings:
-            "Settings"
-
-    };
-
-
-    const names = {
-
-        dashboard:
-            "Dashboard",
-
-        students:
-            "Students",
-
-        analytics:
-            "Risk Analytics",
-
-        interventions:
-            "Interventions",
-
-        ai:
-            "AI Agent",
-
-        reports:
-            "Reports",
-
-        settings:
-            "Settings"
-
-    };
-
-
-    document.getElementById(
-        "pageTitle"
-    ).textContent = titles[page];
-
-
-    document.getElementById(
-        "currentPageName"
-    ).textContent = names[page];
-
-}
-
-
-/* ================= RISK CALCULATION ================= */
-
-function calculateRisk(student) {
-
-    const assignmentPercentage =
-        (
-            student.assignments /
-            student.totalAssignments
-        ) * 100;
-
-
-    const score =
-        (
-            student.attendance * 0.35
-        ) +
-        (
-            student.marks * 0.35
-        ) +
-        (
-            student.lms * 0.15
-        ) +
-        (
-            assignmentPercentage * 0.15
-        );
-
-
-    if (score < 55) {
-
-        return "High";
-
-    }
-
-
-    if (score < 72) {
-
-        return "Medium";
-
-    }
-
-
-    return "Low";
-
-}
-
-
-/* ================= RISK EXPLANATION ================= */
-
-function explainRisk(student) {
-
-    const reasons = [];
-
-
-    if (student.attendance < 75) {
-
-        reasons.push(
-            `attendance is ${student.attendance}%`
-        );
-
-    }
-
-
-    if (student.marks < 60) {
-
-        reasons.push(
-            `average marks are ${student.marks}%`
-        );
-
-    }
-
-
-    const assignmentPercentage =
-        (
-            student.assignments /
-            student.totalAssignments
-        ) * 100;
-
-
-    if (assignmentPercentage < 75) {
-
-        reasons.push(
-            `assignment completion is ${Math.round(
-                assignmentPercentage
-            )}%`
-        );
-
-    }
-
-
-    if (student.lms < 60) {
-
-        reasons.push(
-            `LMS activity is ${student.lms}%`
-        );
-
-    }
-
-
-    if (reasons.length === 0) {
-
-        return "No significant negative signals detected.";
-
-    }
-
-
-    return reasons.join(", ") + ".";
-
-}
-
-
-/* ================= INITIALIZE ================= */
-
-function initializeApp() {
-
-    updateStudentRisks();
-
-    updateDashboard();
-
-    renderStudents();
-
-    renderAnalytics();
-
-    renderInterventions();
-
-    renderReports();
-
-    updateAIContext();
-
-}
-
-
-/* ================= UPDATE RISK ================= */
-
-function updateStudentRisks() {
-
-    students.forEach(student => {
-
-        student.risk =
-            calculateRisk(student);
-
-    });
-
-    saveStudents();
-
-}
-
-
-/* ================= SAVE ================= */
-
 function saveStudents() {
 
     localStorage.setItem(
-        "edupulse_students",
+        "eduStudents",
         JSON.stringify(students)
     );
 
 }
 
 
-/* ================= DASHBOARD ================= */
+/* =====================================================
+   DOM
+===================================================== */
 
-function updateDashboard() {
+const loginPage =
+    document.getElementById("loginPage");
+
+const app =
+    document.getElementById("app");
+
+const pageContent =
+    document.getElementById("pageContent");
+
+const sidebar =
+    document.getElementById("sidebar");
+
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+const loginForm =
+    document.getElementById("loginForm");
+
+
+function showApp() {
+
+    loginPage.classList.add("d-none");
+
+    app.classList.remove("d-none");
+
+    renderPage("dashboard");
+
+}
+
+
+function logout() {
+
+    localStorage.removeItem("eduLoggedIn");
+
+    location.reload();
+
+}
+
+
+if (
+    localStorage.getItem("eduLoggedIn") === "true"
+) {
+
+    showApp();
+
+}
+
+
+loginForm.addEventListener(
+    "submit",
+    function(event) {
+
+        event.preventDefault();
+
+        const email =
+            document.getElementById(
+                "loginEmail"
+            ).value.trim();
+
+        const password =
+            document.getElementById(
+                "loginPassword"
+            ).value;
+
+        const remember =
+            document.getElementById(
+                "rememberMe"
+            ).checked;
+
+        const error =
+            document.getElementById(
+                "loginError"
+            );
+
+
+        if (
+            email === "info@vignan.ac.in" &&
+            password === "vucse"
+        ) {
+
+            if (remember) {
+
+                localStorage.setItem(
+                    "eduLoggedIn",
+                    "true"
+                );
+
+            } else {
+
+                sessionStorage.setItem(
+                    "eduLoggedIn",
+                    "true"
+                );
+
+            }
+
+            showApp();
+
+        } else {
+
+            error.textContent =
+                "Invalid email or password.";
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   PASSWORD TOGGLE
+===================================================== */
+
+document
+    .getElementById("passwordToggle")
+    .addEventListener(
+        "click",
+        function() {
+
+            const password =
+                document.getElementById(
+                    "loginPassword"
+                );
+
+            const icon =
+                this.querySelector("i");
+
+
+            if (
+                password.type === "password"
+            ) {
+
+                password.type = "text";
+
+                icon.className =
+                    "bi bi-eye-slash";
+
+            } else {
+
+                password.type = "password";
+
+                icon.className =
+                    "bi bi-eye";
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+document
+    .getElementById("logoutBtn")
+    .addEventListener(
+        "click",
+        logout
+    );
+
+
+/* =====================================================
+   SIDEBAR TOGGLE
+===================================================== */
+
+document
+    .getElementById("sidebarToggle")
+    .addEventListener(
+        "click",
+        function() {
+
+            if (
+                window.innerWidth <= 750
+            ) {
+
+                sidebar.classList.toggle(
+                    "mobile-open"
+                );
+
+            } else {
+
+                sidebar.classList.toggle(
+                    "collapsed"
+                );
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+document
+    .querySelectorAll(".nav-item")
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                function() {
+
+                    document
+                        .querySelectorAll(
+                            ".nav-item"
+                        )
+                        .forEach(
+                            item =>
+                                item.classList.remove(
+                                    "active"
+                                )
+                        );
+
+
+                    this.classList.add(
+                        "active"
+                    );
+
+
+                    const page =
+                        this.dataset.page;
+
+                    renderPage(page);
+
+
+                    if (
+                        window.innerWidth <= 750
+                    ) {
+
+                        sidebar.classList.remove(
+                            "mobile-open"
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+/* =====================================================
+   PAGE RENDERER
+===================================================== */
+
+function renderPage(page) {
+
+    switch(page) {
+
+        case "dashboard":
+            renderDashboard();
+            break;
+
+        case "students":
+            renderStudents();
+            break;
+
+        case "analytics":
+            renderAnalytics();
+            break;
+
+        case "engagement":
+            renderEngagement();
+            break;
+
+        case "mentor":
+            renderMentor();
+            break;
+
+        case "anomalies":
+            renderAnomalies();
+            break;
+
+        case "student360":
+            renderStudent360();
+            break;
+
+        case "aiagent":
+            renderAIAgent();
+            break;
+
+        case "notifications":
+            renderNotifications();
+            break;
+
+        case "reports":
+            renderReports();
+            break;
+
+        case "settings":
+            renderSettings();
+            break;
+
+        default:
+            renderDashboard();
+
+    }
+
+}
+
+
+/* =====================================================
+   DASHBOARD
+===================================================== */
+
+function renderDashboard() {
+
+    const male =
+        students.filter(
+            s => s.gender === "Male"
+        ).length;
+
+    const female =
+        students.filter(
+            s => s.gender === "Female"
+        ).length;
 
     const total =
         students.length;
 
 
-    const high =
-        students.filter(
-            s => s.risk === "High"
-        ).length;
+    const avgCGPA =
+        students.reduce(
+            (sum,s) =>
+                sum + Number(s.cgpa),
+            0
+        ) / (total || 1);
 
 
-    const medium =
-        students.filter(
-            s => s.risk === "Medium"
-        ).length;
+    const avgAttendance =
+        students.reduce(
+            (sum,s) =>
+                sum + Number(s.attendance),
+            0
+        ) / (total || 1);
 
 
-    const low =
-        students.filter(
-            s => s.risk === "Low"
-        ).length;
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                ACADEMIC OVERVIEW
+            </span>
+
+            <h1>
+                Dashboard
+            </h1>
+
+            <p>
+                AI-powered view of student academic
+                health, engagement and intervention.
+            </p>
+
+        </div>
 
 
-    const averageAttendance =
-        students.length
-            ? Math.round(
-                students.reduce(
-                    (sum, s) =>
-                        sum + Number(
-                            s.attendance
-                        ),
-                    0
-                ) / students.length
-            )
-            : 0;
+        <div class="stat-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+
+                <span>Total Students</span>
+
+                <h2>${total}</h2>
+
+                <small>
+                    Active student population
+                </small>
+
+            </div>
 
 
-    document.getElementById(
-        "totalStudents"
-    ).textContent = total;
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    <i class="bi bi-mortarboard"></i>
+                </div>
+
+                <span>Average CGPA</span>
+
+                <h2>
+                    ${avgCGPA.toFixed(2)}
+                </h2>
+
+                <small>
+                    Academic performance
+                </small>
+
+            </div>
 
 
-    document.getElementById(
-        "highRisk"
-    ).textContent = high;
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+
+                <span>Average Attendance</span>
+
+                <h2>
+                    ${Math.round(avgAttendance)}%
+                </h2>
+
+                <small>
+                    Across all students
+                </small>
+
+            </div>
 
 
-    document.getElementById(
-        "mediumRisk"
-    ).textContent = medium;
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    <i class="bi bi-stars"></i>
+                </div>
+
+                <span>AI Risk Alerts</span>
+
+                <h2>
+                    ${students.filter(s => s.risk >= 40).length}
+                </h2>
+
+                <small>
+                    Requires attention
+                </small>
+
+            </div>
+
+        </div>
 
 
-    document.getElementById(
-        "averageAttendance"
-    ).textContent =
-        averageAttendance + "%";
+        <div class="two-column">
 
+            <div class="panel">
 
-    document.getElementById(
-        "studentCountBadge"
-    ).textContent = total;
+                <div class="panel-title">
 
+                    <div>
 
-    document.getElementById(
-        "lowRisk"
-    ).textContent = low;
+                        <h2>
+                            Student performance
+                        </h2>
 
-
-    document.getElementById(
-        "mediumRiskLegend"
-    ).textContent = medium;
-
-
-    document.getElementById(
-        "highRiskLegend"
-    ).textContent = high;
-
-
-    const lowPercentage =
-        total
-            ? Math.round(
-                (low / total) * 100
-            )
-            : 0;
-
-
-    document.getElementById(
-        "lowRiskPercent"
-    ).textContent =
-        lowPercentage + "%";
-
-
-    document.getElementById(
-        "dashboardInsight"
-    ).textContent =
-        high > 0
-            ? `${high} students show signals that may require mentor follow-up this week.`
-            : "No high-risk students detected this week.";
-
-
-    renderAttentionStudents();
-
-    renderRecentStudents();
-
-}
-
-
-/* ================= ATTENTION ================= */
-
-function renderAttentionStudents() {
-
-    const container =
-        document.getElementById(
-            "attentionStudents"
-        );
-
-
-    const attention =
-        students
-            .filter(
-                s => s.risk !== "Low"
-            )
-            .sort(
-                (a, b) =>
-                    riskValue(b.risk) -
-                    riskValue(a.risk)
-            );
-
-
-    if (!attention.length) {
-
-        container.innerHTML =
-            `<p>No students currently need attention.</p>`;
-
-        return;
-
-    }
-
-
-    container.innerHTML =
-        attention
-            .slice(0, 5)
-            .map(student => `
-
-                <button
-                    class="student-row"
-                    onclick="openStudentDetails('${student.id}')"
-                >
-
-                    <div class="avatar">
-                        ${initials(student.name)}
-                    </div>
-
-                    <div class="student-info">
-
-                        <strong>
-                            ${student.name}
-                        </strong>
-
-                        <small>
-                            ${student.id} •
-                            ${student.department} •
-                            ${student.section}
-                        </small>
+                        <p>
+                            AI calculated academic health
+                        </p>
 
                     </div>
 
-                    <span
-                        class="risk ${student.risk.toLowerCase()}"
-                    >
-                        ${student.risk}
-                    </span>
-
-                </button>
-
-            `)
-            .join("");
-
-}
+                </div>
 
 
-/* ================= RECENT STUDENTS ================= */
+                <div class="circular-score">
 
-function renderRecentStudents() {
+                    <strong>
+                        ${Math.round(avgAttendance)}%
+                    </strong>
 
-    const tbody =
-        document.getElementById(
-            "recentStudents"
-        );
+                </div>
 
 
-    tbody.innerHTML =
-        students
-            .slice(0, 6)
-            .map(student => `
+                <div class="health-label">
 
-                <tr
-                    onclick="openStudentDetails('${student.id}')"
-                >
+                    <h3>
+                        Overall academic health
+                    </h3>
 
-                    <td>
+                    <p>
+                        Combined attendance and
+                        academic performance indicator.
+                    </p>
 
-                        <div class="table-person">
+                </div>
 
-                            <div class="avatar">
-                                ${initials(student.name)}
-                            </div>
+            </div>
 
-                            <div>
-                                <strong>
-                                    ${student.name}
-                                </strong>
 
-                                <small>
-                                    ${student.id}
-                                </small>
-                            </div>
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Student Gender
+                        </h2>
+
+                        <p>
+                            Current student population
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="gender-cards">
+
+                    <div class="gender-card male-card">
+
+                        <div class="gender-avatar male-avatar">
+                            👨🏻‍🎓
+                        </div>
+
+                        <div>
+
+                            <span class="gender-number">
+                                ${male}
+                            </span>
+
+                            <span class="gender-name">
+                                Male
+                            </span>
 
                         </div>
 
-                    </td>
+                    </div>
 
 
-                    <td>
+                    <div class="gender-card female-card">
 
-                        <div class="meter">
+                        <div class="gender-avatar female-avatar">
+                            👩🏻‍🎓
+                        </div>
 
-                            ${student.attendance}%
+                        <div>
 
-                            <div class="meter-bar">
+                            <span class="gender-number">
+                                ${female}
+                            </span>
+
+                            <span class="gender-name">
+                                Female
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="gender-insights">
+
+                    <div class="insight-heading">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                GENDER INSIGHTS
+                            </span>
+
+                            <h3>
+                                Population analysis
+                            </h3>
+
+                        </div>
+
+                        <p>
+                            Total: ${total}
+                        </p>
+
+                    </div>
+
+
+                    <div class="gender-statistics">
+
+                        <div class="gender-stat">
+
+                            <div class="stat-top">
+
+                                <span>
+                                    Male students
+                                </span>
+
+                                <strong>
+                                    ${
+                                        total
+                                        ? Math.round(
+                                            male /
+                                            total *
+                                            100
+                                        )
+                                        : 0
+                                    }%
+                                </strong>
+
+                            </div>
+
+                            <div class="progress-bar-custom">
 
                                 <div
-                                    class="meter-fill"
+                                    class="progress-fill male-progress"
                                     style="
-                                    width:${student.attendance}%
+                                        width:${
+                                            total
+                                            ? male /
+                                            total *
+                                            100
+                                            : 0
+                                        }%
                                     "
                                 ></div>
 
@@ -771,260 +771,2108 @@ function renderRecentStudents() {
 
                         </div>
 
-                    </td>
 
+                        <div class="gender-stat">
 
-                    <td>
-                        ${student.marks}%
-                    </td>
+                            <div class="stat-top">
 
+                                <span>
+                                    Female students
+                                </span>
 
-                    <td>
-                        ${student.assignments}/${student.totalAssignments}
-                    </td>
+                                <strong>
+                                    ${
+                                        total
+                                        ? Math.round(
+                                            female /
+                                            total *
+                                            100
+                                        )
+                                        : 0
+                                    }%
+                                </strong>
 
+                            </div>
 
-                    <td>
-                        ${student.lms}%
-                    </td>
+                            <div class="progress-bar-custom">
 
+                                <div
+                                    class="progress-fill female-progress"
+                                    style="
+                                        width:${
+                                            total
+                                            ? female /
+                                            total *
+                                            100
+                                            : 0
+                                        }%
+                                    "
+                                ></div>
 
-                    <td>
-
-                        <span
-                            class="risk ${student.risk.toLowerCase()}"
-                        >
-                            ${student.risk}
-                        </span>
-
-                    </td>
-
-
-                    <td>
-
-                        ${trendText(student.trend)}
-
-                    </td>
-
-                </tr>
-
-            `)
-            .join("");
-
-}
-
-
-/* ================= STUDENT PAGE ================= */
-
-function renderStudents() {
-
-    const search =
-        document
-            .getElementById(
-                "studentSearch"
-            )
-            .value
-            .toLowerCase();
-
-
-    const risk =
-        document
-            .getElementById(
-                "riskFilter"
-            )
-            .value;
-
-
-    const filtered =
-        students.filter(student => {
-
-            const matchesSearch =
-                student.name
-                    .toLowerCase()
-                    .includes(search) ||
-
-                student.id
-                    .toLowerCase()
-                    .includes(search) ||
-
-                student.department
-                    .toLowerCase()
-                    .includes(search);
-
-
-            const matchesRisk =
-                risk === "All" ||
-                student.risk === risk;
-
-
-            return (
-                matchesSearch &&
-                matchesRisk
-            );
-
-        });
-
-
-    const tbody =
-        document.getElementById(
-            "studentTable"
-        );
-
-
-    tbody.innerHTML =
-        filtered.map(student => `
-
-            <tr>
-
-                <td>
-
-                    <div class="table-person">
-
-                        <div class="avatar">
-                            ${initials(student.name)}
-                        </div>
-
-                        <div>
-
-                            <strong>
-                                ${student.name}
-                            </strong>
-
-                            <small>
-                                ${student.id} •
-                                ${student.email}
-                            </small>
+                            </div>
 
                         </div>
 
                     </div>
 
-                </td>
+                </div>
+
+            </div>
+
+        </div>
 
 
-                <td>
+        <div class="two-column">
 
-                    ${student.department}
+            <div class="panel">
 
-                    <small>
-                        ${student.year} •
-                        ${student.section}
-                    </small>
+                <div class="panel-title">
 
-                </td>
+                    <div>
 
+                        <h2>
+                            Engagement trend
+                        </h2>
 
-                <td>
-                    ${student.attendance}%
-                </td>
+                        <p>
+                            Student engagement over
+                            the last eight weeks
+                        </p>
 
+                    </div>
 
-                <td>
-                    ${student.marks}%
-                </td>
-
-
-                <td>
-                    ${student.assignments}/
-                    ${student.totalAssignments}
-                </td>
+                </div>
 
 
-                <td>
-                    ${student.lms}%
-                </td>
+                ${engagementGraph()}
+
+            </div>
 
 
-                <td>
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Mentor priority
+                        </h2>
+
+                        <p>
+                            Students requiring attention
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                ${priorityList()}
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+
+                <div>
+
+                    <h2>
+                        AI anomaly detection
+                    </h2>
+
+                    <p>
+                        Meaningful changes detected
+                        in academic engagement.
+                    </p>
+
+                </div>
+
+                <button
+                    class="secondary-btn"
+                    onclick="navigateTo('anomalies')"
+                >
+                    View all
+                </button>
+
+            </div>
+
+
+            <div class="anomaly-list">
+
+                ${getAnomalies()
+                    .slice(0,3)
+                    .map(
+                        anomaly => `
+
+                        <div class="anomaly-item">
+
+                            <div class="anomaly-icon">
+
+                                <i class="bi bi-activity"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    ${anomaly.name}
+                                </h4>
+
+                                <p>
+                                    ${anomaly.reason}
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    `
+                    )
+                    .join("")}
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   ENGAGEMENT GRAPH
+===================================================== */
+
+function engagementGraph() {
+
+    const values =
+        [64,68,66,72,75,71,78,82];
+
+
+    const max = 100;
+
+
+    return `
+
+        <div
+            style="
+                height:220px;
+                display:flex;
+                align-items:flex-end;
+                gap:14px;
+                padding:20px 5px 5px;
+            "
+        >
+
+            ${values.map(
+                (value,index) => `
+
+                <div
+                    style="
+                        flex:1;
+                        height:100%;
+                        display:flex;
+                        flex-direction:column;
+                        justify-content:flex-end;
+                        align-items:center;
+                        gap:8px;
+                    "
+                >
 
                     <span
-                        class="risk ${student.risk.toLowerCase()}"
-                    >
-                        ${student.risk}
-                    </span>
-
-                </td>
-
-
-                <td>
-
-                    <button
-                        class="text-button"
-                        onclick="
-                        openStudentDetails('${student.id}')
+                        style="
+                            font-size:9px;
+                            color:#8b93a5;
                         "
                     >
-                        View
+                        ${value}%
+                    </span>
+
+                    <div
+                        style="
+                            width:100%;
+                            max-width:34px;
+                            height:${
+                                value/max*150
+                            }px;
+                            border-radius:7px 7px 3px 3px;
+                            background:#3159c9;
+                        "
+                    ></div>
+
+                    <small
+                        style="
+                            color:#9aa1b0;
+                            font-size:9px;
+                        "
+                    >
+                        W${index+1}
+                    </small>
+
+                </div>
+
+            `).join("")}
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   PRIORITY
+===================================================== */
+
+function priorityList() {
+
+    return students
+        .sort(
+            (a,b) =>
+                b.risk - a.risk
+        )
+        .slice(0,4)
+        .map(
+            student => `
+
+            <div class="priority-item">
+
+                <div class="priority-top">
+
+                    <span class="priority-name">
+                        ${student.name}
+                    </span>
+
+                    <span class="${
+                        student.risk >= 60
+                        ? "risk-high"
+                        : student.risk >= 35
+                        ? "risk-medium"
+                        : "risk-low"
+                    }">
+
+                        ${student.risk}% risk
+
+                    </span>
+
+                </div>
+
+                <p>
+                    Attendance ${student.attendance}%
+                    · CGPA ${student.cgpa}
+                </p>
+
+            </div>
+
+        `
+        )
+        .join("");
+
+}
+
+
+/* =====================================================
+   STUDENTS
+===================================================== */
+
+function renderStudents() {
+
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                STUDENT MANAGEMENT
+            </span>
+
+            <h1>
+                Students
+            </h1>
+
+            <p>
+                Manage student records and academic
+                information.
+            </p>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+
+                <div>
+
+                    <h2>
+                        Student directory
+                    </h2>
+
+                    <p>
+                        ${students.length}
+                        registered students
+                    </p>
+
+                </div>
+
+                <button
+                    class="primary-btn"
+                    onclick="openStudentModal()"
+                >
+
+                    <i class="bi bi-plus"></i>
+                    Add Student
+
+                </button>
+
+            </div>
+
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Student</th>
+                            <th>ID</th>
+                            <th>Gender</th>
+                            <th>Attendance</th>
+                            <th>CGPA</th>
+                            <th>Credits</th>
+                            <th>Risk</th>
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="studentTableBody">
+
+                        ${students.map(
+                            student => `
+
+                            <tr>
+
+                                <td>
+
+                                    <span class="student-name">
+                                        ${student.name}
+                                    </span>
+
+                                    <span class="student-sub">
+                                        ${student.course}
+                                        ·
+                                        ${student.year}
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+                                    ${student.id}
+                                </td>
+
+
+                                <td>
+                                    ${student.gender}
+                                </td>
+
+
+                                <td>
+                                    ${student.attendance}%
+                                </td>
+
+
+                                <td>
+                                    ${student.cgpa}
+                                </td>
+
+
+                                <td>
+                                    ${student.credits}
+                                </td>
+
+
+                                <td>
+
+                                    <span class="
+                                        status-pill
+                                        ${
+                                            student.risk >= 60
+                                            ? "status-danger"
+                                            : student.risk >= 35
+                                            ? "status-warning"
+                                            : "status-good"
+                                        }
+                                    ">
+
+                                        ${student.risk}%
+
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    <button
+                                        class="secondary-btn"
+                                        onclick="
+                                            viewStudent(
+                                                '${student.id}'
+                                            )
+                                        "
+                                    >
+                                        View
+                                    </button>
+
+
+                                    <button
+                                        class="secondary-btn"
+                                        onclick="
+                                            deleteStudent(
+                                                '${student.id}'
+                                            )
+                                        "
+                                    >
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+
+                                </td>
+
+                            </tr>
+
+                        `
+                        ).join("")}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   STUDENT 360
+===================================================== */
+
+let currentStudentIndex = 0;
+
+
+function renderStudent360() {
+
+    if (!students.length) {
+
+        pageContent.innerHTML = `
+            <div class="panel">
+                No students available.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    const student =
+        students[currentStudentIndex];
+
+
+    const avatar =
+        student.gender === "Female"
+        ? "👩🏻‍🎓"
+        : "👨🏻‍🎓";
+
+
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                COMPLETE STUDENT INTELLIGENCE
+            </span>
+
+            <h1>
+                Student 360°
+            </h1>
+
+            <p>
+                Academic, personal and engagement
+                intelligence.
+            </p>
+
+        </div>
+
+
+        <div class="profile-card">
+
+            <div class="profile-top">
+
+                <div class="profile-avatar">
+                    ${avatar}
+                </div>
+
+
+                <div>
+
+                    <h2>
+                        ${student.name}
+                    </h2>
+
+                    <p>
+                        ${student.id}
+                        ·
+                        ${student.course}
+                        ·
+                        ${student.year}
+                    </p>
+
+                    <span class="
+                        status-pill
+                        ${
+                            student.risk >= 60
+                            ? "status-danger"
+                            : student.risk >= 35
+                            ? "status-warning"
+                            : "status-good"
+                        }
+                    ">
+
+                        ${student.risk}% AI risk
+
+                    </span>
+
+                </div>
+
+
+                <div class="profile-actions">
+
+                    <button
+                        class="secondary-btn"
+                        onclick="previousStudent()"
+                    >
+                        ← Previous
                     </button>
 
-                </td>
+                    <button
+                        class="primary-btn"
+                        onclick="nextStudent()"
+                    >
+                        Next →
+                    </button>
 
-            </tr>
+                </div>
 
-        `).join("");
+            </div>
+
+
+            <div class="profile-details">
+
+                <div class="detail-item">
+
+                    <span>Student ID</span>
+
+                    <strong>
+                        ${student.id}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>Gender</span>
+
+                    <strong>
+                        ${student.gender}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>Date of Birth</span>
+
+                    <strong>
+                        ${student.dob}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span>CGPA</span>
+
+                    <strong>
+                        ${student.cgpa}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="two-column">
+
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Personal information
+                        </h2>
+
+                        <p>
+                            Complete student details
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-details">
+
+                    <div class="detail-item">
+
+                        <span>Father's Name</span>
+
+                        <strong>
+                            ${student.father}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="detail-item">
+
+                        <span>Mother's Name</span>
+
+                        <strong>
+                            ${student.mother}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="detail-item">
+
+                        <span>Mother Tongue</span>
+
+                        <strong>
+                            ${student.motherTongue}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="detail-item">
+
+                        <span>Region</span>
+
+                        <strong>
+                            ${student.region}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="detail-item">
+
+                        <span>Place</span>
+
+                        <strong>
+                            ${student.place}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="detail-item">
+
+                        <span>Country</span>
+
+                        <strong>
+                            ${student.country}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Academic health
+                        </h2>
+
+                        <p>
+                            AI-generated academic indicators
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="attendance-row">
+
+                    <div class="attendance-head">
+
+                        <span>
+                            Overall attendance
+                        </span>
+
+                        <strong>
+                            ${student.attendance}%
+                        </strong>
+
+                    </div>
+
+                    <div class="attendance-track">
+
+                        <div
+                            class="attendance-fill"
+                            style="
+                                width:${student.attendance}%
+                            "
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="attendance-row">
+
+                    <div class="attendance-head">
+
+                        <span>
+                            CGPA
+                        </span>
+
+                        <strong>
+                            ${student.cgpa}/10
+                        </strong>
+
+                    </div>
+
+                    <div class="attendance-track">
+
+                        <div
+                            class="attendance-fill"
+                            style="
+                                width:${student.cgpa*10}%
+                            "
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="attendance-row">
+
+                    <div class="attendance-head">
+
+                        <span>
+                            Credits completed
+                        </span>
+
+                        <strong>
+                            ${student.credits}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="two-column">
+
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Subject-wise attendance
+                        </h2>
+
+                        <p>
+                            Current semester attendance
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                ${subjectAttendance(student)}
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Assessment data
+                        </h2>
+
+                        <p>
+                            Subject performance
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                ${assessmentData(student)}
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+
+                <div>
+
+                    <h2>
+                        LMS activity
+                    </h2>
+
+                    <p>
+                        Authorized learning engagement
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="three-column">
+
+                <div class="stat-card">
+
+                    <span>
+                        LMS logins
+                    </span>
+
+                    <h2>
+                        34
+                    </h2>
+
+                    <small>
+                        +8 this week
+                    </small>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <span>
+                        Assignments
+                    </span>
+
+                    <h2>
+                        12/14
+                    </h2>
+
+                    <small>
+                        86% completion
+                    </small>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <span>
+                        Learning hours
+                    </span>
+
+                    <h2>
+                        18.4h
+                    </h2>
+
+                    <small>
+                        +2.1h this week
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
 
 }
 
 
-/* ================= SEARCH ================= */
+/* =====================================================
+   SUBJECT ATTENDANCE
+===================================================== */
 
-document
-    .getElementById(
-        "studentSearch"
-    )
-    .addEventListener(
-        "input",
-        renderStudents
-    );
+function subjectAttendance(student) {
 
+    const subjects = [
 
-document
-    .getElementById(
-        "riskFilter"
-    )
-    .addEventListener(
-        "change",
-        renderStudents
-    );
+        ["Data Structures", 88],
+        ["Database Systems", 79],
+        ["Java Programming", 84],
+        ["Mathematics", 76],
+        ["Communication", student.attendance]
+
+    ];
 
 
-/* ================= ADD STUDENT MODAL ================= */
+    return subjects.map(
+        subject => `
 
-function openAddStudentModal() {
+        <div class="attendance-row">
+
+            <div class="attendance-head">
+
+                <span>
+                    ${subject[0]}
+                </span>
+
+                <strong>
+                    ${subject[1]}%
+                </strong>
+
+            </div>
+
+            <div class="attendance-track">
+
+                <div
+                    class="attendance-fill"
+                    style="
+                        width:${subject[1]}%;
+                        background:
+                        ${
+                            subject[1] < 75
+                            ? "#dc5a68"
+                            : "#3159c9"
+                        };
+                    "
+                ></div>
+
+            </div>
+
+        </div>
+
+    `).join("");
+
+}
+
+
+/* =====================================================
+   ASSESSMENT DATA
+===================================================== */
+
+function assessmentData(student) {
+
+    const subjects = [
+
+        ["Data Structures", 82],
+        ["Database Systems", 76],
+        ["Java Programming", 88],
+        ["Mathematics", 79],
+        ["Communication", 91]
+
+    ];
+
+
+    return subjects.map(
+        subject => `
+
+        <div class="attendance-row">
+
+            <div class="attendance-head">
+
+                <span>
+                    ${subject[0]}
+                </span>
+
+                <strong>
+                    ${subject[1]}/100
+                </strong>
+
+            </div>
+
+            <div class="attendance-track">
+
+                <div
+                    class="attendance-fill"
+                    style="
+                        width:${subject[1]}%;
+                    "
+                ></div>
+
+            </div>
+
+        </div>
+
+    `).join("");
+
+}
+
+
+/* =====================================================
+   NEXT STUDENT
+===================================================== */
+
+function nextStudent() {
+
+    currentStudentIndex++;
+
+    if (
+        currentStudentIndex >=
+        students.length
+    ) {
+
+        currentStudentIndex = 0;
+
+    }
+
+    renderStudent360();
+
+}
+
+
+/* =====================================================
+   PREVIOUS STUDENT
+===================================================== */
+
+function previousStudent() {
+
+    currentStudentIndex--;
+
+    if (
+        currentStudentIndex < 0
+    ) {
+
+        currentStudentIndex =
+            students.length - 1;
+
+    }
+
+    renderStudent360();
+
+}
+
+
+/* =====================================================
+   VIEW STUDENT
+===================================================== */
+
+function viewStudent(id) {
+
+    const index =
+        students.findIndex(
+            s => s.id === id
+        );
+
+
+    if (index !== -1) {
+
+        currentStudentIndex = index;
+
+        navigateTo("student360");
+
+    }
+
+}
+
+
+/* =====================================================
+   NAVIGATE
+===================================================== */
+
+function navigateTo(page) {
 
     document
-        .getElementById(
-            "addStudentModal"
+        .querySelectorAll(".nav-item")
+        .forEach(
+            item => {
+
+                item.classList.remove(
+                    "active"
+                );
+
+                if (
+                    item.dataset.page === page
+                ) {
+
+                    item.classList.add(
+                        "active"
+                    );
+
+                }
+
+            }
+        );
+
+
+    renderPage(page);
+
+}
+
+
+/* =====================================================
+   ANALYTICS
+===================================================== */
+
+function renderAnalytics() {
+
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                DATA INTELLIGENCE
+            </span>
+
+            <h1>
+                Academic Analytics
+            </h1>
+
+            <p>
+                Understand academic performance
+                across the student population.
+            </p>
+
+        </div>
+
+
+        <div class="stat-grid">
+
+            <div class="stat-card">
+
+                <span>
+                    Average CGPA
+                </span>
+
+                <h2>
+                    7.80
+                </h2>
+
+                <small>
+                    +0.30 improvement
+                </small>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Assignment completion
+                </span>
+
+                <h2>
+                    87%
+                </h2>
+
+                <small>
+                    +5% this month
+                </small>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Average attendance
+                </span>
+
+                <h2>
+                    78%
+                </h2>
+
+                <small>
+                    Stable
+                </small>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Engagement
+                </span>
+
+                <h2>
+                    82%
+                </h2>
+
+                <small>
+                    +6% this month
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+
+                <div>
+
+                    <h2>
+                        Academic performance trend
+                    </h2>
+
+                    <p>
+                        Weekly student performance
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            ${engagementGraph()}
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   ENGAGEMENT
+===================================================== */
+
+function renderEngagement() {
+
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                STUDENT ENGAGEMENT
+            </span>
+
+            <h1>
+                Engagement Intelligence
+            </h1>
+
+            <p>
+                Attendance, LMS and assignment
+                engagement signals.
+            </p>
+
+        </div>
+
+
+        <div class="two-column">
+
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Engagement trend
+                        </h2>
+
+                        <p>
+                            Last eight weeks
+                        </p>
+
+                    </div>
+
+                </div>
+
+                ${engagementGraph()}
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Engagement signals
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="priority-item">
+
+                    <div class="priority-top">
+
+                        <span class="priority-name">
+                            LMS activity
+                        </span>
+
+                        <span class="risk-low">
+                            Healthy
+                        </span>
+
+                    </div>
+
+                    <p>
+                        84% students actively using LMS.
+                    </p>
+
+                </div>
+
+
+                <div class="priority-item">
+
+                    <div class="priority-top">
+
+                        <span class="priority-name">
+                            Assignment activity
+                        </span>
+
+                        <span class="risk-medium">
+                            Watch
+                        </span>
+
+                    </div>
+
+                    <p>
+                        13 students missed recent submissions.
+                    </p>
+
+                </div>
+
+
+                <div class="priority-item">
+
+                    <div class="priority-top">
+
+                        <span class="priority-name">
+                            Attendance
+                        </span>
+
+                        <span class="risk-medium">
+                            Watch
+                        </span>
+
+                    </div>
+
+                    <p>
+                        8 students below attendance threshold.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   MENTOR PRIORITY
+===================================================== */
+
+function renderMentor() {
+
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                FACULTY INTELLIGENCE
+            </span>
+
+            <h1>
+                Mentor Priority
+            </h1>
+
+            <p>
+                Prioritized students based on
+                academic and engagement risk.
+            </p>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+
+                <div>
+
+                    <h2>
+                        Priority list
+                    </h2>
+
+                    <p>
+                        AI-ranked intervention queue
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            ${priorityList()}
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   ANOMALIES
+===================================================== */
+
+function getAnomalies() {
+
+    return students
+        .filter(
+            s =>
+                s.attendance < 75 ||
+                s.cgpa < 7.5
         )
-        .classList.remove(
-            "hidden"
+        .map(
+            s => ({
+
+                name:
+                    s.name,
+
+                reason:
+                    s.attendance < 75
+                    ? `Attendance is ${s.attendance}%, below the recommended threshold.`
+                    : "Academic performance has decreased compared with previous assessments."
+
+            })
         );
 
 }
 
 
-function closeAddStudentModal() {
+function renderAnomalies() {
 
-    document
-        .getElementById(
-            "addStudentModal"
-        )
-        .classList.add(
-            "hidden"
-        );
+    const anomalies =
+        getAnomalies();
+
+
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                PREDICTIVE AI
+            </span>
+
+            <h1>
+                AI Anomaly Detection
+            </h1>
+
+            <p>
+                Detect meaningful changes in student
+                engagement signals.
+            </p>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+
+                <div>
+
+                    <h2>
+                        Meaningful engagement changes
+                    </h2>
+
+                    <p>
+                        AI-generated anomaly signals
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="anomaly-list">
+
+                ${
+                    anomalies.length
+                    ? anomalies.map(
+                        anomaly => `
+
+                        <div class="anomaly-item">
+
+                            <div class="anomaly-icon">
+
+                                <i class="bi bi-activity"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    ${anomaly.name}
+                                </h4>
+
+                                <p>
+                                    ${anomaly.reason}
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    `
+                    ).join("")
+                    : `
+                        <p>
+                            No significant anomalies detected.
+                        </p>
+                    `
+                }
+
+            </div>
+
+        </div>
+
+    `;
 
 }
 
 
-/* ================= ADD STUDENT ================= */
+/* =====================================================
+   AI AGENT
+===================================================== */
+
+function renderAIAgent() {
+
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                AGENTIC AI
+            </span>
+
+            <h1>
+                AI Intervention Agent
+            </h1>
+
+            <p>
+                Analyze signals, explain risk and
+                recommend mentor interventions.
+            </p>
+
+        </div>
+
+
+        <div class="ai-box">
+
+            <h2>
+                EduStudent AI Agent
+            </h2>
+
+            <p>
+                The agent combines attendance,
+                assessments, assignments and
+                LMS engagement to generate
+                explainable intervention recommendations.
+            </p>
+
+
+            <div class="ai-response">
+
+                <strong>
+                    Recommended action
+                </strong>
+
+                <p>
+                    Prioritize students with attendance
+                    below 75%, declining assessment
+                    performance and reduced LMS activity.
+                    Schedule a mentor interaction and
+                    track the outcome.
+                </p>
+
+            </div>
+
+
+            <div class="ai-response">
+
+                <strong>
+                    Intervention workflow
+                </strong>
+
+                <p>
+                    Detect → Explain → Prioritize →
+                    Recommend → Track → Measure outcome.
+                </p>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   NOTIFICATIONS
+===================================================== */
+
+let notifications = [
+
+    {
+        title:
+            "Attendance anomaly detected",
+
+        message:
+            "Arjun Patel has attendance below 65%."
+    },
+
+    {
+        title:
+            "Assessment performance changed",
+
+        message:
+            "A significant performance change was detected."
+    },
+
+    {
+        title:
+            "Mentor action required",
+
+        message:
+            "Three students require intervention."
+    }
+
+];
+
+
+function renderNotifications() {
+
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                ALERT CENTER
+            </span>
+
+            <h1>
+                Notifications
+            </h1>
+
+            <p>
+                Important AI-generated alerts.
+            </p>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+
+                <div>
+
+                    <h2>
+                        Recent notifications
+                    </h2>
+
+                </div>
+
+
+                <button
+                    class="clear-btn"
+                    onclick="clearNotifications()"
+                >
+
+                    <i class="bi bi-trash"></i>
+
+                    Clear all
+
+                </button>
+
+            </div>
+
+
+            <div>
+
+                ${
+                    notifications.length
+                    ? notifications.map(
+                        notification => `
+
+                        <div class="notification-item">
+
+                            <div class="notification-icon">
+
+                                <i class="bi bi-bell"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h4>
+                                    ${notification.title}
+                                </h4>
+
+                                <p>
+                                    ${notification.message}
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    `
+                    ).join("")
+                    : `
+                        <div style="
+                            padding:30px;
+                            text-align:center;
+                            color:#8b93a5;
+                        ">
+                            No notifications
+                        </div>
+                    `
+                }
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   CLEAR NOTIFICATIONS
+===================================================== */
+
+function clearNotifications() {
+
+    notifications = [];
+
+    renderNotifications();
+
+}
+
+
+/* =====================================================
+   REPORTS
+===================================================== */
+
+function renderReports() {
+
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                REPORTING
+            </span>
+
+            <h1>
+                Reports
+            </h1>
+
+            <p>
+                Academic and intervention summaries.
+            </p>
+
+        </div>
+
+
+        <div class="three-column">
+
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Academic report
+                        </h2>
+
+                        <p>
+                            CGPA and assessment overview
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="primary-btn"
+                    onclick="alert('Academic report generated.')"
+                >
+                    Generate report
+                </button>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Attendance report
+                        </h2>
+
+                        <p>
+                            Subject-wise attendance
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="primary-btn"
+                    onclick="alert('Attendance report generated.')"
+                >
+                    Generate report
+                </button>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-title">
+
+                    <div>
+
+                        <h2>
+                            Intervention report
+                        </h2>
+
+                        <p>
+                            Mentor action summary
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="primary-btn"
+                    onclick="alert('Intervention report generated.')"
+                >
+                    Generate report
+                </button>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   SETTINGS
+===================================================== */
+
+function renderSettings() {
+
+    pageContent.innerHTML = `
+
+        <div class="page-header">
+
+            <span class="eyebrow">
+                SYSTEM
+            </span>
+
+            <h1>
+                Settings
+            </h1>
+
+            <p>
+                Configure your academic intelligence
+                dashboard.
+            </p>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+
+                <div>
+
+                    <h2>
+                        AI thresholds
+                    </h2>
+
+                    <p>
+                        Configure academic risk detection.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label>
+                        Attendance threshold
+                    </label>
+
+                    <input
+                        value="75%"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        CGPA warning threshold
+                    </label>
+
+                    <input
+                        value="7.0"
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   ADD STUDENT MODAL
+===================================================== */
+
+const studentModal =
+    document.getElementById(
+        "studentModal"
+    );
+
+
+function openStudentModal() {
+
+    studentModal.classList.add(
+        "show"
+    );
+
+}
+
+
+function closeStudentModal() {
+
+    studentModal.classList.remove(
+        "show"
+    );
+
+}
+
 
 document
-    .getElementById(
-        "studentForm"
-    )
+    .getElementById("closeModal")
+    .addEventListener(
+        "click",
+        closeStudentModal
+    );
+
+
+document
+    .getElementById("cancelModal")
+    .addEventListener(
+        "click",
+        closeStudentModal
+    );
+
+
+/* =====================================================
+   ADD STUDENT
+===================================================== */
+
+document
+    .getElementById("studentForm")
     .addEventListener(
         "submit",
-        function (event) {
+        function(event) {
 
             event.preventDefault();
 
@@ -1032,105 +2880,172 @@ document
             const student = {
 
                 id:
-                    "STU" +
-                    String(
-                        students.length + 1
-                    ).padStart(3, "0"),
+                    document.getElementById(
+                        "studentId"
+                    ).value.trim(),
 
                 name:
-                    value("studentName"),
+                    document.getElementById(
+                        "studentName"
+                    ).value.trim(),
 
-                email:
-                    value("studentEmail"),
+                gender:
+                    document.getElementById(
+                        "studentGender"
+                    ).value,
 
-                phone:
-                    value("studentPhone"),
-
-                department:
-                    value("studentDepartment"),
+                course:
+                    document.getElementById(
+                        "studentCourse"
+                    ).value,
 
                 year:
-                    value("studentYear"),
+                    document.getElementById(
+                        "studentYear"
+                    ).value,
 
-                section:
-                    value("studentSection"),
+                cgpa:
+                    Number(
+                        document.getElementById(
+                            "studentCGPA"
+                        ).value
+                    ),
+
+                credits:
+                    Number(
+                        document.getElementById(
+                            "studentCredits"
+                        ).value
+                    ),
 
                 attendance:
                     Number(
-                        value(
+                        document.getElementById(
                             "studentAttendance"
-                        )
+                        ).value
                     ),
 
-                marks:
-                    Number(
-                        value(
-                            "studentMarks"
+                dob: "Not provided",
+
+                father:
+                    document.getElementById(
+                        "fatherName"
+                    ).value || "Not provided",
+
+                mother:
+                    document.getElementById(
+                        "motherName"
+                    ).value || "Not provided",
+
+                motherTongue:
+                    document.getElementById(
+                        "motherTongue"
+                    ).value || "Not provided",
+
+                region:
+                    document.getElementById(
+                        "studentRegion"
+                    ).value || "Not provided",
+
+                place:
+                    document.getElementById(
+                        "studentPlace"
+                    ).value || "Not provided",
+
+                country:
+                    document.getElementById(
+                        "studentCountry"
+                    ).value || "India",
+
+                risk:
+                    calculateRisk(
+                        Number(
+                            document.getElementById(
+                                "studentAttendance"
+                            ).value
+                        ),
+                        Number(
+                            document.getElementById(
+                                "studentCGPA"
+                            ).value
                         )
-                    ),
-
-                assignments:
-                    Number(
-                        value(
-                            "studentAssignments"
-                        )
-                    ),
-
-                totalAssignments:
-                    Number(
-                        value(
-                            "studentTotalAssignments"
-                        )
-                    ),
-
-                lms:
-                    Number(
-                        value(
-                            "studentLMS"
-                        )
-                    ),
-
-                mentor:
-                    value("studentMentor"),
-
-                trend: "stable"
+                    )
 
             };
 
 
-            student.risk =
-                calculateRisk(student);
+            const duplicate =
+                students.some(
+                    s =>
+                        s.id.toLowerCase() ===
+                        student.id.toLowerCase()
+                );
 
 
-            students.unshift(student);
+            if (duplicate) {
 
+                alert(
+                    "Student ID already exists."
+                );
+
+                return;
+
+            }
+
+
+            students.push(student);
 
             saveStudents();
 
+            closeStudentModal();
 
-            closeAddStudentModal();
-
-
-            this.reset();
-
-
-            initializeApp();
-
-
-            showToast(
-                `${student.name} added successfully`
-            );
-
-
-            showPage("students");
+            renderStudents();
 
         }
     );
 
 
-/* ================= STUDENT DETAILS ================= */
+/* =====================================================
+   RISK CALCULATION
+===================================================== */
 
-function openStudentDetails(id) {
+function calculateRisk(
+    attendance,
+    cgpa
+) {
+
+    let risk = 0;
+
+
+    if (attendance < 75) {
+
+        risk +=
+            (75 - attendance) * 1.4;
+
+    }
+
+
+    if (cgpa < 7.5) {
+
+        risk +=
+            (7.5 - cgpa) * 12;
+
+    }
+
+
+    return Math.min(
+        100,
+        Math.round(risk)
+    );
+
+}
+
+
+/* =====================================================
+   DELETE STUDENT
+===================================================== */
+
+function deleteStudent(id) {
 
     const student =
         students.find(
@@ -1141,1308 +3056,256 @@ function openStudentDetails(id) {
     if (!student) return;
 
 
-    const modal =
-        document.getElementById(
-            "studentModal"
+    const confirmed =
+        confirm(
+            `Delete ${student.name}?`
         );
 
 
-    const container =
-        document.getElementById(
-            "studentDetails"
+    if (!confirmed) return;
+
+
+    students =
+        students.filter(
+            s => s.id !== id
         );
 
 
-    container.innerHTML = `
+    saveStudents();
 
-        <div class="student-details">
-
-            <div class="modal-header">
-
-                <div class="detail-header">
-
-                    <div class="avatar">
-                        ${initials(student.name)}
-                    </div>
-
-                    <div>
-
-                        <h2>
-                            ${student.name}
-                        </h2>
-
-                        <p>
-                            ${student.id} •
-                            ${student.department} •
-                            ${student.year} •
-                            Section ${student.section}
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <button
-                    class="close-button"
-                    onclick="closeStudentDetails()"
-                >
-                    ×
-                </button>
-
-            </div>
-
-
-            <span
-                class="risk ${student.risk.toLowerCase()}"
-            >
-                ${student.risk} Risk
-            </span>
-
-
-            <div class="metric-grid">
-
-                <div class="metric">
-
-                    <span>Attendance</span>
-
-                    <strong>
-                        ${student.attendance}%
-                    </strong>
-
-                    <small>
-                        ${
-                            student.attendance >= 75
-                                ? "Healthy"
-                                : "Needs Review"
-                        }
-                    </small>
-
-                </div>
-
-
-                <div class="metric">
-
-                    <span>Average Marks</span>
-
-                    <strong>
-                        ${student.marks}%
-                    </strong>
-
-                    <small>
-                        ${
-                            student.marks >= 60
-                                ? "Healthy"
-                                : "Needs Review"
-                        }
-                    </small>
-
-                </div>
-
-
-                <div class="metric">
-
-                    <span>Assignments</span>
-
-                    <strong>
-                        ${student.assignments}/
-                        ${student.totalAssignments}
-                    </strong>
-
-                    <small>
-                        Completion
-                    </small>
-
-                </div>
-
-
-                <div class="metric">
-
-                    <span>LMS Activity</span>
-
-                    <strong>
-                        ${student.lms}%
-                    </strong>
-
-                    <small>
-                        Engagement
-                    </small>
-
-                </div>
-
-            </div>
-
-
-            <div class="ai-explanation">
-
-                <strong>
-                    ✦ Why AI flagged this student
-                </strong>
-
-                <p>
-                    ${explainRisk(student)}
-                </p>
-
-            </div>
-
-
-            <div class="detail-actions">
-
-                <button
-                    class="secondary-button"
-                    onclick="showPage('analytics');closeStudentDetails()"
-                >
-                    View Full Analytics
-                </button>
-
-                <button
-                    class="primary-button"
-                    onclick="createIntervention('${student.id}')"
-                >
-                    Create Intervention
-                </button>
-
-            </div>
-
-        </div>
-
-    `;
-
-
-    modal.classList.remove(
-        "hidden"
-    );
+    renderStudents();
 
 }
 
 
-function closeStudentDetails() {
+/* =====================================================
+   GLOBAL SEARCH
+===================================================== */
 
-    document
-        .getElementById(
-            "studentModal"
-        )
-        .classList.add(
-            "hidden"
-        );
+document
+    .getElementById("globalSearch")
+    .addEventListener(
+        "input",
+        function() {
 
-}
-
-
-/* ================= ANALYTICS ================= */
-
-function renderAnalytics() {
-
-    const attendance =
-        average(
-            students.map(
-                s => s.attendance
-            )
-        );
+            const query =
+                this.value
+                    .toLowerCase()
+                    .trim();
 
 
-    const marks =
-        average(
-            students.map(
-                s => s.marks
-            )
-        );
+            if (!query) {
+
+                renderPage(
+                    "students"
+                );
+
+                return;
+
+            }
 
 
-    const assignments =
-        average(
-            students.map(
-                s =>
-                    (
-                        s.assignments /
-                        s.totalAssignments
-                    ) * 100
-            )
-        );
+            const results =
+                students.filter(
+                    student =>
+                        student.name
+                            .toLowerCase()
+                            .includes(query)
+                        ||
+                        student.id
+                            .toLowerCase()
+                            .includes(query)
+                        ||
+                        student.course
+                            .toLowerCase()
+                            .includes(query)
+                        ||
+                        student.gender
+                            .toLowerCase()
+                            .includes(query)
+                );
 
 
-    const lms =
-        average(
-            students.map(
-                s => s.lms
-            )
-        );
+            pageContent.innerHTML = `
 
+                <div class="page-header">
 
-    const signals = [
-
-        ["Attendance", attendance],
-
-        ["Marks", marks],
-
-        ["Assignments", assignments],
-
-        ["LMS Activity", lms]
-
-    ];
-
-
-    document.getElementById(
-        "signalBars"
-    ).innerHTML = signals.map(
-        signal => `
-
-            <div class="signal-row">
-
-                <span>
-                    ${signal[0]}
-                </span>
-
-                <div class="signal-bar">
-
-                    <div
-                        class="signal-fill"
-                        style="
-                        width:${signal[1]}%
-                        "
-                    ></div>
-
-                </div>
-
-                <b>
-                    ${Math.round(signal[1])}%
-                </b>
-
-            </div>
-
-        `
-    ).join("");
-
-
-    const high =
-        students.filter(
-            s => s.risk === "High"
-        ).length;
-
-
-    const medium =
-        students.filter(
-            s => s.risk === "Medium"
-        ).length;
-
-
-    const low =
-        students.filter(
-            s => s.risk === "Low"
-        ).length;
-
-
-    document.getElementById(
-        "analyticsHigh"
-    ).textContent = high;
-
-
-    document.getElementById(
-        "analyticsMedium"
-    ).textContent = medium;
-
-
-    document.getElementById(
-        "analyticsLow"
-    ).textContent = low;
-
-
-    document.getElementById(
-        "riskReasons"
-    ).innerHTML =
-        students
-            .filter(
-                s => s.risk !== "Low"
-            )
-            .map(
-                student => `
-
-                <div class="reason-row">
-
-                    <div class="avatar">
-                        ${initials(student.name)}
-                    </div>
-
-                    <div class="reason-content">
-
-                        <strong>
-                            ${student.name}
-                        </strong>
-
-                        <p>
-                            ${explainRisk(student)}
-                        </p>
-
-                    </div>
-
-                    <span
-                        class="risk ${student.risk.toLowerCase()}"
-                    >
-                        ${student.risk}
+                    <span class="eyebrow">
+                        SEARCH
                     </span>
 
+                    <h1>
+                        Search results
+                    </h1>
+
+                    <p>
+                        ${results.length}
+                        student(s) found for
+                        "${query}"
+                    </p>
+
                 </div>
 
-            `
-            )
-            .join("");
 
-}
+                <div class="panel">
 
+                    <div class="table-wrap">
 
-/* ================= INTERVENTIONS ================= */
+                        <table>
 
-function renderInterventions() {
+                            <thead>
 
-    const studentsAtRisk =
-        students.filter(
-            s => s.risk !== "Low"
-        );
+                                <tr>
 
+                                    <th>Student</th>
+                                    <th>ID</th>
+                                    <th>Gender</th>
+                                    <th>Attendance</th>
+                                    <th>CGPA</th>
+                                    <th>Action</th>
 
-    const container =
-        document.getElementById(
-            "interventionList"
-        );
+                                </tr>
 
-
-    container.innerHTML =
-        studentsAtRisk
-            .map(student => {
-
-                const completed =
-                    completedInterventions
-                        .includes(student.id);
+                            </thead>
 
 
-                return `
+                            <tbody>
 
-                    <div
-                        class="
-                        intervention-row
-                        ${completed ? "completed" : ""}
-                        "
-                    >
+                                ${
+                                    results.length
+                                    ? results.map(
+                                        student => `
 
-                        <div class="avatar">
-                            ${initials(student.name)}
-                        </div>
+                                        <tr>
 
+                                            <td>
+                                                <span class="student-name">
+                                                    ${student.name}
+                                                </span>
 
-                        <div class="intervention-content">
+                                                <span class="student-sub">
+                                                    ${student.course}
+                                                    ·
+                                                    ${student.year}
+                                                </span>
+                                            </td>
 
-                            <strong>
-                                ${student.name}
-                            </strong>
+                                            <td>
+                                                ${student.id}
+                                            </td>
 
-                            <span
-                                class="
-                                risk
-                                ${student.risk.toLowerCase()}
-                                "
-                            >
-                                ${student.risk}
-                            </span>
+                                            <td>
+                                                ${student.gender}
+                                            </td>
 
-                            <p>
-                                ${recommendedAction(student)}
-                            </p>
+                                            <td>
+                                                ${student.attendance}%
+                                            </td>
 
-                            <small>
-                                AI Reason:
-                                ${explainRisk(student)}
-                            </small>
+                                            <td>
+                                                ${student.cgpa}
+                                            </td>
 
-                        </div>
+                                            <td>
 
+                                                <button
+                                                    class="primary-btn"
+                                                    onclick="
+                                                        viewStudent(
+                                                            '${student.id}'
+                                                        )
+                                                    "
+                                                >
+                                                    Open 360°
+                                                </button>
 
-                        <button
-                            class="done-button"
-                            onclick="
-                            toggleIntervention('${student.id}')
-                            "
-                        >
+                                            </td>
 
-                            ${
-                                completed
-                                    ? "✓ Completed"
-                                    : "Mark Done"
-                            }
+                                        </tr>
 
-                        </button>
+                                    `
+                                    ).join("")
+                                    : `
+                                        <tr>
+
+                                            <td
+                                                colspan="6"
+                                                style="
+                                                    text-align:center;
+                                                    padding:40px;
+                                                    color:#8b93a5;
+                                                "
+                                            >
+                                                No students found.
+                                            </td>
+
+                                        </tr>
+                                    `
+                                }
+
+                            </tbody>
+
+                        </table>
 
                     </div>
 
-                `;
+                </div>
 
-            })
-            .join("");
+            `;
 
-
-    const completed =
-        completedInterventions.length;
-
-
-    document.getElementById(
-        "openInterventions"
-    ).textContent =
-        studentsAtRisk.length;
-
-
-    document.getElementById(
-        "completedInterventions"
-    ).textContent =
-        completed;
-
-
-    document.getElementById(
-        "followupInterventions"
-    ).textContent =
-        Math.max(
-            studentsAtRisk.length -
-            completed,
-            0
-        );
-
-}
-
-
-function recommendedAction(student) {
-
-    if (
-        student.attendance < 70
-    ) {
-
-        return `
-            Schedule a mentor meeting and
-            discuss attendance barriers.
-        `;
-
-    }
-
-
-    if (
-        student.assignments <
-        student.totalAssignments
-    ) {
-
-        return `
-            Create an assignment recovery plan
-            and schedule a 7-day follow-up.
-        `;
-
-    }
-
-
-    if (
-        student.marks < 60
-    ) {
-
-        return `
-            Recommend subject-specific
-            doubt clearing and reassessment.
-        `;
-
-    }
-
-
-    return `
-        Monitor the student and review
-        engagement after two weeks.
-    `;
-
-}
-
-
-function toggleIntervention(id) {
-
-    const index =
-        completedInterventions
-            .indexOf(id);
-
-
-    if (index === -1) {
-
-        completedInterventions.push(id);
-
-        showToast(
-            "Intervention marked completed"
-        );
-
-    } else {
-
-        completedInterventions.splice(
-            index,
-            1
-        );
-
-        showToast(
-            "Intervention reopened"
-        );
-
-    }
-
-
-    localStorage.setItem(
-        "edupulse_completed",
-        JSON.stringify(
-            completedInterventions
-        )
+        }
     );
 
 
-    renderInterventions();
-
-}
-
-
-function createIntervention(id) {
-
-    if (
-        !completedInterventions
-            .includes(id)
-    ) {
-
-        completedInterventions.push(id);
-
-    }
-
-
-    localStorage.setItem(
-        "edupulse_completed",
-        JSON.stringify(
-            completedInterventions
-        )
-    );
-
-
-    closeStudentDetails();
-
-
-    showPage(
-        "interventions"
-    );
-
-
-    showToast(
-        "Intervention created"
-    );
-
-}
-
-
-/* ================= AI AGENT ================= */
+/* =====================================================
+   NOTIFICATION BUTTON
+===================================================== */
 
 document
     .getElementById(
-        "aiForm"
+        "notificationButton"
     )
     .addEventListener(
-        "submit",
-        function (event) {
+        "click",
+        function() {
+
+            navigateTo(
+                "notifications"
+            );
+
+        }
+    );
+
+
+/* =====================================================
+   KEYBOARD SEARCH
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key.toLowerCase() === "k"
+        ) {
 
             event.preventDefault();
 
-
-            const input =
-                document.getElementById(
-                    "aiInput"
-                );
-
-
-            const message =
-                input.value.trim();
-
-
-            if (!message) return;
-
-
-            addChatMessage(
-                message,
-                "user"
-            );
-
-
-            input.value = "";
-
-
-            setTimeout(
-                () => {
-
-                    const response =
-                        generateAIResponse(
-                            message
-                        );
-
-
-                    addChatMessage(
-                        response,
-                        "ai"
-                    );
-
-                },
-                500
-            );
-
-        }
-    );
-
-
-function askAI(question) {
-
-    addChatMessage(
-        question,
-        "user"
-    );
-
-
-    setTimeout(
-        () => {
-
-            addChatMessage(
-                generateAIResponse(
-                    question
-                ),
-                "ai"
-            );
-
-        },
-        400
-    );
-
-}
-
-
-function addChatMessage(
-    message,
-    type
-) {
-
-    const container =
-        document.getElementById(
-            "chatMessages"
-        );
-
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.className =
-        type === "user"
-            ? "message user-message"
-            : "message ai-message";
-
-
-    div.innerHTML = `
-
-        <div class="message-icon">
-
-            ${
-                type === "ai"
-                    ? "✦"
-                    : "U"
-            }
-
-        </div>
-
-        <div class="message-bubble">
-
-            ${message}
-
-        </div>
-
-    `;
-
-
-    container.appendChild(div);
-
-
-    container.scrollTop =
-        container.scrollHeight;
-
-}
-
-
-/* ================= AI RESPONSE ================= */
-
-function generateAIResponse(
-    question
-) {
-
-    const q =
-        question.toLowerCase();
-
-
-    const high =
-        students.filter(
-            s => s.risk === "High"
-        );
-
-
-    const medium =
-        students.filter(
-            s => s.risk === "Medium"
-        );
-
-
-    if (
-        q.includes("who") ||
-        q.includes("attention")
-    ) {
-
-        if (!high.length) {
-
-            return `
-                There are currently no high-risk
-                students. I recommend continuing
-                regular monitoring.
-            `;
-
-        }
-
-
-        return `
-            <strong>
-                ${high.length}
-                student(s) need priority attention.
-            </strong>
-
-            <br><br>
-
-            ${high.map(
-                s =>
-                    `• ${s.name} —
-                    ${explainRisk(s)}`
-            ).join("<br>")}
-
-            <br><br>
-
-            I recommend reviewing these students
-            first in the Intervention Center.
-        `;
-
-    }
-
-
-    if (
-        q.includes("rahul")
-    ) {
-
-        const rahul =
-            students.find(
-                s =>
-                    s.name
-                        .toLowerCase()
-                        .includes("rahul")
-            );
-
-
-        if (!rahul) {
-
-            return `
-                Rahul is not currently present
-                in the student database.
-            `;
-
-        }
-
-
-        return `
-            <strong>
-                ${rahul.name}
-            </strong>
-            is currently
-            <strong>
-                ${rahul.risk} Risk.
-            </strong>
-
-            <br><br>
-
-            Main contributing factors:
-
-            <br><br>
-
-            • ${explainRisk(rahul)}
-
-            <br><br>
-
-            <strong>
-                Recommended intervention:
-            </strong>
-
-            Schedule a mentor meeting focused
-            on attendance and assignment recovery.
-        `;
-
-    }
-
-
-    if (
-        q.includes("intervention")
-    ) {
-
-        return `
-            Based on current student signals,
-            I recommend:
-
-            <br><br>
-
-            1. Students with attendance below
-            70% → Mentor meeting.
-
-            <br>
-
-            2. Students missing assignments →
-            Assignment recovery plan.
-
-            <br>
-
-            3. Students with marks below 60% →
-            Subject-specific academic support.
-
-            <br>
-
-            4. Reassess outcomes after 2 weeks.
-        `;
-
-    }
-
-
-    if (
-        q.includes("summary") ||
-        q.includes("week")
-    ) {
-
-        return `
-            <strong>Weekly AI Summary</strong>
-
-            <br><br>
-
-            Total students:
-            ${students.length}
-
-            <br>
-
-            High risk:
-            ${high.length}
-
-            <br>
-
-            Medium risk:
-            ${medium.length}
-
-            <br>
-
-            Low risk:
-            ${
-                students.filter(
-                    s => s.risk === "Low"
-                ).length
-            }
-
-            <br><br>
-
-            The main factors requiring attention
-            are attendance, assignment completion,
-            academic performance and LMS engagement.
-        `;
-
-    }
-
-
-    return `
-        I can help you analyze:
-
-        <br><br>
-
-        • Student risk
-
-        <br>
-
-        • Attendance trends
-
-        <br>
-
-        • Academic performance
-
-        <br>
-
-        • Assignment completion
-
-        <br>
-
-        • LMS engagement
-
-        <br>
-
-        • Intervention recommendations
-
-        <br><br>
-
-        Try asking:
-        <strong>
-        "Who needs attention today?"
-        </strong>
-    `;
-
-}
-
-
-/* ================= AI CONTEXT ================= */
-
-function updateAIContext() {
-
-    const high =
-        students.filter(
-            s => s.risk === "High"
-        ).length;
-
-
-    const medium =
-        students.filter(
-            s => s.risk === "Medium"
-        ).length;
-
-
-    const low =
-        students.filter(
-            s => s.risk === "Low"
-        ).length;
-
-
-    document.getElementById(
-        "aiContext"
-    ).textContent = `
-        ${students.length} students •
-        ${high} high risk •
-        ${medium} medium risk •
-        ${low} low risk
-    `;
-
-}
-
-
-/* ================= REPORTS ================= */
-
-function renderReports() {
-
-    const total =
-        students.length;
-
-
-    const averageMarks =
-        average(
-            students.map(
-                s => s.marks
-            )
-        );
-
-
-    const high =
-        students.filter(
-            s => s.risk === "High"
-        ).length;
-
-
-    document.getElementById(
-        "reportStudents"
-    ).textContent =
-        total;
-
-
-    document.getElementById(
-        "reportAverageMarks"
-    ).textContent =
-        Math.round(
-            averageMarks
-        ) +
-        "% Average Marks";
-
-
-    document.getElementById(
-        "weeklyReport"
-    ).textContent =
-        `${high} high-risk students require immediate attention. Average attendance is ${Math.round(
-            average(
-                students.map(
-                    s => s.attendance
-                )
-            )
-        )}%.`;
-
-}
-
-
-function generateReport() {
-
-    showToast(
-        "Report generated successfully"
-    );
-
-}
-
-
-/* ================= EXPORT ================= */
-
-function exportStudents() {
-
-    let csv =
-        "ID,Name,Email,Department,Year,Section,Attendance,Marks,Assignments,LMS,Risk\n";
-
-
-    students.forEach(student => {
-
-        csv +=
-            `${student.id},` +
-            `${student.name},` +
-            `${student.email},` +
-            `${student.department},` +
-            `${student.year},` +
-            `${student.section},` +
-            `${student.attendance},` +
-            `${student.marks},` +
-            `${student.assignments}/${student.totalAssignments},` +
-            `${student.lms},` +
-            `${student.risk}\n`;
-
-    });
-
-
-    const blob =
-        new Blob(
-            [csv],
-            {
-                type: "text/csv"
-            }
-        );
-
-
-    const url =
-        URL.createObjectURL(
-            blob
-        );
-
-
-    const link =
-        document.createElement(
-            "a"
-        );
-
-
-    link.href = url;
-
-    link.download =
-        "students-report.csv";
-
-    link.click();
-
-
-    URL.revokeObjectURL(
-        url
-    );
-
-}
-
-
-/* ================= UTILITIES ================= */
-
-function value(id) {
-
-    return document
-        .getElementById(id)
-        .value;
-
-}
-
-
-function initials(name) {
-
-    return name
-        .split(" ")
-        .map(
-            word => word[0]
-        )
-        .join("")
-        .slice(0, 2)
-        .toUpperCase();
-
-}
-
-
-function riskValue(risk) {
-
-    if (risk === "High")
-        return 3;
-
-    if (risk === "Medium")
-        return 2;
-
-    return 1;
-
-}
-
-
-function average(numbers) {
-
-    if (!numbers.length)
-        return 0;
-
-
-    return (
-        numbers.reduce(
-            (a, b) => a + Number(b),
-            0
-        ) / numbers.length
-    );
-
-}
-
-
-function trendText(trend) {
-
-    if (trend === "down") {
-
-        return `
-            <span style="color:#d64545">
-                ↘ Declining
-            </span>
-        `;
-
-    }
-
-
-    if (trend === "up") {
-
-        return `
-            <span style="color:#218451">
-                ↗ Improving
-            </span>
-        `;
-
-    }
-
-
-    return "→ Stable";
-
-}
-
-
-/* ================= TOAST ================= */
-
-function showToast(message) {
-
-    const toast =
-        document.getElementById(
-            "toast"
-        );
-
-
-    toast.textContent =
-        message;
-
-
-    toast.classList.remove(
-        "hidden"
-    );
-
-
-    setTimeout(
-        () => {
-
-            toast.classList.add(
-                "hidden"
-            );
-
-        },
-        2500
-    );
-
-}
-
-
-/* ================= RENDER PAGE ================= */
-
-function renderPage(page) {
-
-    if (page === "dashboard") {
-
-        updateDashboard();
-
-    }
-
-
-    if (page === "students") {
-
-        renderStudents();
-
-    }
-
-
-    if (page === "analytics") {
-
-        renderAnalytics();
-
-    }
-
-
-    if (page === "interventions") {
-
-        renderInterventions();
-
-    }
-
-
-    if (page === "ai") {
-
-        updateAIContext();
-
-    }
-
-
-    if (page === "reports") {
-
-        renderReports();
-
-    }
-
-}
-
-
-/* ================= AUTO LOGIN ================= */
-
-window.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        const loggedIn =
-            localStorage.getItem(
-                "edupulse_logged_in"
-            );
-
-
-        if (loggedIn === "true") {
-
             document
                 .getElementById(
-                    "loginPage"
+                    "globalSearch"
                 )
-                .classList.add(
-                    "hidden"
-                );
-
-            document
-                .getElementById(
-                    "app"
-                )
-                .classList.remove(
-                    "hidden"
-                );
-
-            initializeApp();
+                .focus();
 
         }
 
     }
 );
+
+
+/* =====================================================
+   INITIAL SAVE
+===================================================== */
+
+saveStudents();
