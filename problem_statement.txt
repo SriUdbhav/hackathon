@@ -1,0 +1,16 @@
+AI Student Attendance, Engagement & Intervention Agent
+Domain: College / Education / Predictive AI / Agentic AI
+Problem Statement: Attendance alone does not provide a complete view of student engagement. Faculty
+and mentors need to combine attendance, assessments, assignments, LMS activity and other authorized
+indicators.
+Objective: Develop an AI agent that analyzes academic-engagement signals, detects meaningful changes,
+explains contributing factors and recommends personalized interventions to faculty mentors.
+Expected Prototype Features
+● Attendance, assessment, assignment and LMS integration.
+● Engagement trend and anomaly detection.
+● Explainable academic-risk profiles.
+● Personalized intervention recommendations.
+● Faculty mentor prioritization dashboard.
+● Automated mentor summaries and action lists.
+● Intervention tracking and outcome monitoring.
+● Role-based access and privacy controls.
