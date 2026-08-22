@@ -2,770 +2,408 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduStudent Sight | AI Academic Intelligence</title>
 
     <!-- Bootstrap -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-        rel="stylesheet"
-    >
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Google Font -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/pages.css">
-
 </head>
-
 
 <body>
 
-
 <!-- =====================================================
-     LOGIN
+     LOGIN PAGE
 ===================================================== -->
-
 <div id="loginPage" class="login-page">
-
-    <div class="login-box">
-
+    <div class="login-box" style="max-width: 480px;">
         <div class="brand-login">
-
             <div class="brand-logo">
                 <i class="bi bi-mortarboard-fill"></i>
             </div>
-
             <div>
                 <h1>EduStudent Sight</h1>
-                <p>AI Academic Intelligence</p>
+                <p>AI Academic Intelligence Platform</p>
             </div>
-
         </div>
-
 
         <div class="login-title">
-
-            <span>WELCOME BACK</span>
-
-            <h2>Sign in to your dashboard</h2>
-
-            <p>
-                Monitor student engagement, academic health
-                and AI-driven interventions.
-            </p>
-
+            <span>UNIFIED ACCESS CONTROL</span>
+            <h2>Sign in to your account</h2>
+            <p>Access customized dashboards for Faculty, Mentors, Students & Admins.</p>
         </div>
-
 
         <form id="loginForm">
-
-            <label>Email address</label>
-
+            <label>User ID or Email</label>
             <div class="input-box">
-
-                <i class="bi bi-envelope"></i>
-
-                <input
-                    type="email"
-                    id="loginEmail"
-                    placeholder="Enter your email"
-                    required
-                >
-
+                <i class="bi bi-person-badge"></i>
+                <input type="text" id="loginUserId" placeholder="e.g. 25CS001 or admin or FAC001" required autocomplete="username">
             </div>
-
 
             <label>Password</label>
-
             <div class="input-box">
-
                 <i class="bi bi-lock"></i>
-
-                <input
-                    type="password"
-                    id="loginPassword"
-                    placeholder="Enter password"
-                    required
-                >
-
-                <button
-                    type="button"
-                    class="password-toggle"
-                    id="passwordToggle"
-                >
+                <input type="password" id="loginPassword" placeholder="Enter password" required autocomplete="current-password">
+                <button type="button" class="password-toggle" id="passwordToggle">
                     <i class="bi bi-eye"></i>
                 </button>
-
             </div>
 
-
-            <div class="remember-row">
-
-                <label class="remember">
-
-                    <input
-                        type="checkbox"
-                        id="rememberMe"
-                    >
-
+            <div class="remember-row d-flex justify-content-between align-items-center mb-3">
+                <label class="remember d-flex align-items-center gap-2 mb-0">
+                    <input type="checkbox" id="rememberMe">
                     <span>Remember me</span>
-
                 </label>
-
-                <span class="demo-text">
-                    Demo access
-                </span>
-
+                <a href="#" id="forgotPasswordBtn" class="text-decoration-none small text-primary fw-semibold">Forgot password?</a>
             </div>
 
-
-            <button
-                type="submit"
-                class="login-btn"
-            >
-
-                Sign in
-
+            <button type="submit" class="login-btn">
+                <span>Sign in</span>
                 <i class="bi bi-arrow-right"></i>
-
             </button>
 
-
-            <div
-                id="loginError"
-                class="login-error"
-            ></div>
-
+            <div id="loginError" class="login-error"></div>
         </form>
 
-
-        <div class="demo-login">
-
-            <span>Demo credentials</span>
-
-            <strong>info@vignan.ac.in</strong>
-
-            <strong>vucse</strong>
-
+        <!-- Quick Persona Demo Switcher -->
+        <div class="demo-login mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold text-muted small"><i class="bi bi-key-fill me-1"></i> Quick Demo Logins:</span>
+            </div>
+            <div class="d-grid gap-1">
+                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemoLogin('admin', 'admin123')">
+                    <span>👑 <strong>Admin</strong> (Full System Access)</span>
+                    <code class="small">admin / admin123</code>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemoLogin('FAC001', 'FAC001')">
+                    <span>👨‍🏫 <strong>Faculty</strong> (Dr. Ramesh - DBMS, OS)</span>
+                    <code class="small">FAC001 / FAC001</code>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemoLogin('MEN001', 'MEN001')">
+                    <span>🤝 <strong>Mentor</strong> (Prof. Sunitha - CN, SE)</span>
+                    <code class="small">MEN001 / MEN001</code>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemoLogin('25CS001', '25CS001')">
+                    <span>🎓 <strong>Student</strong> (V. Sri Udbhav - Own Stats)</span>
+                    <code class="small">25CS001 / 25CS001</code>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemoLogin('25CS005', '25CS005')">
+                    <span>⚠️ <strong>Student</strong> (Arjun Patel - High Risk)</span>
+                    <code class="small">25CS005 / 25CS005</code>
+                </button>
+            </div>
         </div>
-
     </div>
-
 </div>
-
 
 
 <!-- =====================================================
      APPLICATION
 ===================================================== -->
-
-<div
-    id="app"
-    class="app d-none"
->
-
+<div id="app" class="app d-none">
 
     <!-- =================================================
          SIDEBAR
     ================================================= -->
-
-    <aside
-        id="sidebar"
-        class="sidebar"
-    >
-
+    <aside id="sidebar" class="sidebar">
         <div class="sidebar-brand">
-
             <div class="sidebar-logo">
                 <i class="bi bi-mortarboard-fill"></i>
             </div>
-
             <div>
-
                 <h2>EduStudent Sight</h2>
-
-                <span>
-                    AI Academic Intelligence
-                </span>
-
+                <span id="sidebarRoleSubtitle">AI Academic Intelligence</span>
             </div>
-
         </div>
-
 
         <div class="sidebar-scroll">
+            <div class="nav-label" id="navLabelMain">MAIN</div>
 
-            <div class="nav-label">
-                MAIN
-            </div>
-
-
-            <button
-                class="nav-item active"
-                data-page="dashboard"
-            >
-
+            <button class="nav-item active" data-page="dashboard" id="navDashboard">
                 <i class="bi bi-grid-1x2"></i>
-
                 <span>Dashboard</span>
-
             </button>
 
-
-            <button
-                class="nav-item"
-                data-page="students"
-            >
-
+            <button class="nav-item" data-page="students" id="navStudents">
                 <i class="bi bi-people"></i>
-
                 <span>Students</span>
-
             </button>
 
-
-            <button
-                class="nav-item"
-                data-page="analytics"
-            >
-
+            <button class="nav-item" data-page="analytics" id="navAnalytics">
                 <i class="bi bi-bar-chart"></i>
-
                 <span>Analytics</span>
-
             </button>
 
+            <div class="nav-label" id="navLabelIntelligence">INTELLIGENCE</div>
 
-            <div class="nav-label">
-                INTELLIGENCE
-            </div>
-
-
-            <button
-                class="nav-item"
-                data-page="engagement"
-            >
-
+            <button class="nav-item" data-page="engagement" id="navEngagement">
                 <i class="bi bi-activity"></i>
-
                 <span>Engagement</span>
-
             </button>
 
-
-            <button
-                class="nav-item"
-                data-page="mentor"
-            >
-
+            <button class="nav-item" data-page="mentor" id="navMentor">
                 <i class="bi bi-person-check"></i>
-
                 <span>Mentor Priority</span>
-
             </button>
 
-
-            <button
-                class="nav-item"
-                data-page="anomalies"
-            >
-
+            <button class="nav-item" data-page="anomalies" id="navAnomalies">
                 <i class="bi bi-stars"></i>
-
                 <span>AI Anomalies</span>
-
-                <b class="nav-badge">5</b>
-
+                <b class="nav-badge" id="anomalyBadge">2</b>
             </button>
 
-
-            <button
-                class="nav-item"
-                data-page="student360"
-            >
-
+            <button class="nav-item" data-page="student360" id="navStudent360">
                 <i class="bi bi-person-vcard"></i>
-
-                <span>Student 360°</span>
-
+                <span id="navStudent360Label">Student 360°</span>
             </button>
 
-
-            <button
-                class="nav-item"
-                data-page="aiagent"
-            >
-
+            <button class="nav-item" data-page="aiagent" id="navAiAgent">
                 <i class="bi bi-robot"></i>
-
                 <span>AI Agent</span>
-
             </button>
 
+            <div class="nav-label" id="navLabelManagement">MANAGEMENT</div>
 
-            <div class="nav-label">
-                MANAGEMENT
-            </div>
-
-
-            <button
-                class="nav-item"
-                data-page="notifications"
-            >
-
+            <button class="nav-item" data-page="notifications" id="navNotifications">
                 <i class="bi bi-bell"></i>
-
                 <span>Notifications</span>
-
-                <b class="nav-badge red">3</b>
-
+                <b class="nav-badge red" id="sidebarNotifBadge">3</b>
             </button>
 
-
-            <button
-                class="nav-item"
-                data-page="reports"
-            >
-
+            <button class="nav-item" data-page="reports" id="navReports">
                 <i class="bi bi-file-earmark-bar-graph"></i>
-
                 <span>Reports</span>
-
             </button>
 
-
-            <button
-                class="nav-item"
-                data-page="settings"
-            >
-
+            <button class="nav-item" data-page="settings" id="navSettings">
                 <i class="bi bi-gear"></i>
-
                 <span>Settings</span>
-
             </button>
 
+            <button class="nav-item" data-page="users" id="navUsers">
+                <i class="bi bi-shield-lock"></i>
+                <span>User Access</span>
+            </button>
         </div>
-
 
         <div class="sidebar-bottom">
-
             <div class="system-status">
-
                 <span class="status-dot"></span>
-
                 <div>
-
-                    <strong>AI Agent Online</strong>
-
-                    <small>Monitoring active</small>
-
+                    <strong id="systemStatusTitle">AI Agent Online</strong>
+                    <small id="systemStatusSubtitle">Monitoring active</small>
                 </div>
-
             </div>
-
         </div>
-
     </aside>
-
 
 
     <!-- =================================================
          MAIN AREA
     ================================================= -->
-
     <main class="main-area">
 
-
         <!-- TOPBAR -->
-
         <header class="topbar">
-
-            <button
-                id="sidebarToggle"
-                class="toggle-btn"
-            >
-
+            <button id="sidebarToggle" class="toggle-btn" title="Toggle Sidebar">
                 <i class="bi bi-list"></i>
-
             </button>
 
-
-            <div class="top-search">
-
+            <!-- Global Search with Auto-complete Dropdown -->
+            <div class="top-search position-relative" id="topSearchContainer">
                 <i class="bi bi-search"></i>
-
-                <input
-                    type="text"
-                    id="globalSearch"
-                    placeholder="Search students, subjects..."
-                >
-
+                <input type="text" id="globalSearch" placeholder="Search student ID, name, or subject..." autocomplete="off">
                 <kbd>Ctrl K</kbd>
-
+                <div id="globalSearchResults" class="search-dropdown d-none"></div>
             </div>
-
 
             <div class="top-actions">
-
-
-                <button
-                    class="icon-btn"
-                    id="notificationButton"
-                >
-
+                <button class="icon-btn" id="notificationButton" title="Notifications">
                     <i class="bi bi-bell"></i>
-
-                    <span class="notification-dot">
-                        3
-                    </span>
-
+                    <span class="notification-dot" id="topNotifDot">3</span>
                 </button>
 
-
-                <div class="administrator">
-
-                    <div class="admin-avatar">
-                        👨🏻‍💼
-                    </div>
-
+                <!-- Dynamic User Pill -->
+                <div class="administrator dropdown-toggle cursor-pointer" id="userProfilePill" onclick="toggleUserDropdown()">
+                    <div class="admin-avatar" id="topbarAvatar">👨🏻‍💼</div>
                     <div>
-
-                        <strong>Administrator</strong>
-
-                        <small>Admin</small>
-
+                        <strong id="topbarUserName">Administrator</strong>
+                        <small id="topbarUserRole">Admin</small>
                     </div>
-
                 </div>
 
+                <!-- User Dropdown Menu -->
+                <div id="userDropdownMenu" class="user-dropdown-menu d-none">
+                    <div class="dropdown-header px-3 py-2 border-bottom">
+                        <strong id="dropMenuName" class="d-block text-truncate">User</strong>
+                        <span id="dropMenuDetail" class="small text-muted">Role: Admin</span>
+                    </div>
+                    <a href="#" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2" onclick="openChangePasswordModal(event)">
+                        <i class="bi bi-key text-primary"></i> Change Password
+                    </a>
+                    <a href="#" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2 text-danger" onclick="logout(event)">
+                        <i class="bi bi-box-arrow-right"></i> Sign Out
+                    </a>
+                </div>
 
-                <button
-                    id="logoutBtn"
-                    class="logout-btn"
-                    title="Logout"
-                >
-
+                <button id="logoutBtn" class="logout-btn" title="Logout">
                     <i class="bi bi-box-arrow-right"></i>
-
                 </button>
-
             </div>
-
         </header>
 
-
-
-        <!-- PAGE CONTENT -->
-
-        <div
-            id="pageContent"
-            class="page-content"
-        ></div>
-
+        <!-- PAGE CONTENT CONTAINER -->
+        <div id="pageContent" class="page-content"></div>
 
         <!-- FOOTER -->
-
         <footer class="site-footer">
-
-            <span>
-                © 2026 EduStudent Sight
-            </span>
-
-            <span>
-                AI Academic Intelligence Platform
-            </span>
-
-            <span>
-                Built for Student Success
-            </span>
-
+            <span>© 2026 EduStudent Sight</span>
+            <span>AI Academic Intelligence Platform</span>
+            <span>Built for Student Success</span>
         </footer>
-
-
     </main>
-
 </div>
-
 
 
 <!-- =====================================================
-     MODAL
+     MODALS
 ===================================================== -->
 
-<div
-    id="studentModal"
-    class="modal-overlay"
->
-
+<!-- 1. ADD STUDENT MODAL -->
+<div id="studentModal" class="modal-overlay">
     <div class="student-modal">
-
         <div class="modal-head">
-
             <div>
-
                 <span>STUDENT MANAGEMENT</span>
-
-                <h2>Add Student</h2>
-
+                <h2>Add Student Record</h2>
             </div>
-
-            <button
-                id="closeModal"
-                class="modal-close"
-            >
-
-                <i class="bi bi-x"></i>
-
-            </button>
-
+            <button id="closeModal" class="modal-close"><i class="bi bi-x"></i></button>
         </div>
 
-
         <form id="studentForm">
-
             <div class="form-grid">
-
                 <div class="form-group">
-
-                    <label>Student name</label>
-
-                    <input
-                        id="studentName"
-                        required
-                        placeholder="Full name"
-                    >
-
+                    <label>Student Name</label>
+                    <input id="studentName" required placeholder="Full Name">
                 </div>
-
-
                 <div class="form-group">
-
                     <label>Student ID</label>
-
-                    <input
-                        id="studentId"
-                        required
-                        placeholder="25CS001"
-                    >
-
+                    <input id="studentId" required placeholder="e.g. 25CS006">
                 </div>
-
-
                 <div class="form-group">
-
                     <label>Gender</label>
-
                     <select id="studentGender">
-
-                        <option value="Male">
-                            Male
-                        </option>
-
-                        <option value="Female">
-                            Female
-                        </option>
-
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
                     </select>
-
                 </div>
-
-
                 <div class="form-group">
-
                     <label>Course</label>
-
-                    <input
-                        id="studentCourse"
-                        value="CSE"
-                    >
-
+                    <input id="studentCourse" value="CSE">
                 </div>
-
-
                 <div class="form-group">
-
                     <label>Year</label>
-
                     <select id="studentYear">
-
-                        <option>1st Year</option>
-                        <option>2nd Year</option>
-                        <option>3rd Year</option>
-                        <option>4th Year</option>
-
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year" selected>2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
                     </select>
-
                 </div>
-
-
                 <div class="form-group">
-
-                    <label>CGPA</label>
-
-                    <input
-                        id="studentCGPA"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="10"
-                        value="8.2"
-                    >
-
+                    <label>CGPA (0 - 10)</label>
+                    <input id="studentCGPA" type="number" step="0.01" min="0" max="10" value="8.0">
                 </div>
-
-
                 <div class="form-group">
-
-                    <label>Attendance %</label>
-
-                    <input
-                        id="studentAttendance"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value="82"
-                    >
-
+                    <label>Attendance % (0 - 100)</label>
+                    <input id="studentAttendance" type="number" min="0" max="100" value="80">
                 </div>
-
-
                 <div class="form-group">
-
-                    <label>Credits</label>
-
-                    <input
-                        id="studentCredits"
-                        type="number"
-                        value="24"
-                    >
-
+                    <label>Credits Earned</label>
+                    <input id="studentCredits" type="number" value="24">
                 </div>
-
-
                 <div class="form-group">
-
-                    <label>Father's name</label>
-
-                    <input
-                        id="fatherName"
-                        placeholder="Father's name"
-                    >
-
+                    <label>Father's Name</label>
+                    <input id="fatherName" placeholder="Father's name">
                 </div>
-
-
                 <div class="form-group">
-
-                    <label>Mother's name</label>
-
-                    <input
-                        id="motherName"
-                        placeholder="Mother's name"
-                    >
-
+                    <label>Mother's Name</label>
+                    <input id="motherName" placeholder="Mother's name">
                 </div>
-
-
                 <div class="form-group">
-
-                    <label>Mother tongue</label>
-
-                    <input
-                        id="motherTongue"
-                        placeholder="Telugu"
-                    >
-
+                    <label>Mother Tongue</label>
+                    <input id="motherTongue" placeholder="Telugu / Hindi / English" value="Telugu">
                 </div>
-
-
                 <div class="form-group">
-
-                    <label>Place</label>
-
-                    <input
-                        id="studentPlace"
-                        placeholder="Hyderabad"
-                    >
-
+                    <label>Place / City</label>
+                    <input id="studentPlace" placeholder="City" value="Hyderabad">
                 </div>
-
-
                 <div class="form-group">
-
                     <label>Region</label>
-
-                    <input
-                        id="studentRegion"
-                        placeholder="South India"
-                    >
-
+                    <input id="studentRegion" placeholder="Region" value="South India">
                 </div>
-
-
                 <div class="form-group">
-
                     <label>Country</label>
-
-                    <input
-                        id="studentCountry"
-                        value="India"
-                    >
-
+                    <input id="studentCountry" value="India">
                 </div>
-
             </div>
-
 
             <div class="modal-actions">
-
-                <button
-                    type="button"
-                    id="cancelModal"
-                    class="secondary-btn"
-                >
-                    Cancel
-                </button>
-
-                <button
-                    type="submit"
-                    class="primary-btn"
-                >
-                    Add Student
-                </button>
-
+                <button type="button" id="cancelModal" class="secondary-btn">Cancel</button>
+                <button type="submit" class="primary-btn">Add Student Record</button>
             </div>
-
         </form>
-
     </div>
-
 </div>
 
+<!-- 2. CHANGE PASSWORD MODAL -->
+<div id="changePasswordModal" class="modal-overlay">
+    <div class="student-modal" style="max-width: 440px;">
+        <div class="modal-head">
+            <div>
+                <span>SECURITY & ACCESS</span>
+                <h2>Change Password</h2>
+            </div>
+            <button class="modal-close" onclick="closeChangePasswordModal()"><i class="bi bi-x"></i></button>
+        </div>
+        <form id="changePasswordForm" class="p-3">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Current Password</label>
+                <input type="password" id="currentPasswordInput" class="form-control" required placeholder="Enter current password">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">New Password</label>
+                <input type="password" id="newPasswordInput" class="form-control" required minlength="4" placeholder="Enter new password">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Confirm New Password</label>
+                <input type="password" id="confirmPasswordInput" class="form-control" required minlength="4" placeholder="Confirm new password">
+            </div>
+            <div id="passwordChangeError" class="text-danger small mb-3"></div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="secondary-btn" onclick="closeChangePasswordModal()">Cancel</button>
+                <button type="submit" class="primary-btn">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 
 <!-- Marked.js Markdown Renderer -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
+<!-- Application Scripts -->
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
@@ -778,9 +416,9 @@
 <script src="js/pages/anomalies.js"></script>
 <script src="js/pages/aiagent.js"></script>
 <script src="js/pages/notifications.js"></script>
+<script src="js/pages/reports.js"></script>
 <script src="js/pages/settings.js"></script>
 <script src="js/main.js"></script>
 
 </body>
-
 </html>

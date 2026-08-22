@@ -1,175 +1,186 @@
 /* =====================================================
    API.JS
-   Clean & Robust Fetch Wrapper for Backend REST & Agent Endpoints
+   Centralized REST API communication layer
+   All backend calls for CRUD, Auth, Subjects, Activities,
+   Interventions, Settings, Agent, Anomalies
 ===================================================== */
 
+const API_BASE = "http://localhost:5000/api";
+
 const API = {
-    // 1. Fetch all students
-    async getStudents() {
+
+    // ---- Generic fetch helper ----
+    async _fetch(path, options = {}) {
         try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/students`);
-            if (!response.ok) throw new Error("Failed to fetch students");
-            return await response.json();
-        } catch (error) {
-            console.warn("Backend API offline. Using fallback local data:", error);
+            const res = await fetch(`${API_BASE}${path}`, {
+                headers: { "Content-Type": "application/json", ...options.headers },
+                ...options
+            });
+            return await res.json();
+        } catch (e) {
+            console.warn(`[API Error] ${path}:`, e);
             return null;
         }
     },
 
-    // 2. Fetch single student details by ID
-    async getStudentById(id) {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/students/${id}`);
-            if (!response.ok) throw new Error("Student not found");
-            return await response.json();
-        } catch (error) {
-            console.error("API error fetching student detail:", error);
-            return null;
-        }
+    // ===================== AUTH =====================
+    login(id, password) {
+        return this._fetch("/login", {
+            method: "POST",
+            body: JSON.stringify({ email: id, password })
+        });
     },
 
-    // 3. Add a new student
-    async addStudent(studentData) {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/students`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(studentData)
-            });
-            return await response.json();
-        } catch (error) {
-            console.error("API error adding student:", error);
-            return { success: false, message: "Network error" };
-        }
+    changePassword(id, currentPassword, newPassword) {
+        return this._fetch("/users/password", {
+            method: "PUT",
+            body: JSON.stringify({ id, current_password: currentPassword, new_password: newPassword })
+        });
     },
 
-    // 4. Update student
-    async updateStudent(id, studentData) {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/students/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(studentData)
-            });
-            return await response.json();
-        } catch (error) {
-            console.error("API error updating student:", error);
-            return { success: false };
-        }
+    // ===================== USERS (Admin) =====================
+    getUsers() {
+        return this._fetch("/users");
     },
 
-    // 5. Delete student
-    async deleteStudent(id) {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/students/${id}`, {
-                method: "DELETE"
-            });
-            return await response.json();
-        } catch (error) {
-            console.error("API error deleting student:", error);
-            return { success: false };
-        }
+    createUser(userData) {
+        return this._fetch("/users", {
+            method: "POST",
+            body: JSON.stringify(userData)
+        });
     },
 
-    // 6. Run Truly Autonomous Agent Loop
-    async runAutonomousAgent() {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/agent/run-autonomous-loop`, {
-                method: "POST"
-            });
-            return await response.json();
-        } catch (error) {
-            console.error("API error running autonomous agent loop:", error);
-            return { success: false, traces: [] };
-        }
+    deleteUser(userId) {
+        return this._fetch(`/users/${userId}`, { method: "DELETE" });
     },
 
-    // 7. Interactive Agent Chat with Multi-turn History & Provider Override
-    async sendAgentChat(query, history = [], provider = null) {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/agent/chat`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query, history, provider })
-            });
-            return await response.json();
-        } catch (error) {
-            console.error("API error in agent chat:", error);
-            return { response: "AI Agent offline. Check backend connection." };
-        }
+    // ===================== STUDENTS =====================
+    getStudents() {
+        return this._fetch("/students");
     },
 
-    // 8. Fetch AI detected anomalies
-    async getAnomalies() {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/anomalies`);
-            return await response.json();
-        } catch (error) {
-            console.error("API error fetching anomalies:", error);
-            return [];
-        }
+    getStudentDetail(studentId) {
+        return this._fetch(`/students/${studentId}`);
     },
 
-    // 9. Fetch Notifications
-    async getNotifications() {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/notifications`);
-            return await response.json();
-        } catch (error) {
-            console.error("API error fetching notifications:", error);
-            return [];
-        }
+    addStudent(studentData) {
+        return this._fetch("/students", {
+            method: "POST",
+            body: JSON.stringify(studentData)
+        });
     },
 
-    // 10. Update Intervention
-    async updateIntervention(studentId, status, notes) {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/interventions`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ student_id: studentId, status: status, notes: notes })
-            });
-            return await response.json();
-        } catch (error) {
-            console.error("API error updating intervention:", error);
-            return { success: false };
-        }
+    updateStudent(studentId, data) {
+        return this._fetch(`/students/${studentId}`, {
+            method: "PUT",
+            body: JSON.stringify(data)
+        });
     },
 
-    // 11. Settings (AI Provider & Keys)
-    async getSettings() {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/settings`);
-            return await response.json();
-        } catch (error) {
-            return {};
-        }
+    deleteStudent(studentId) {
+        return this._fetch(`/students/${studentId}`, { method: "DELETE" });
     },
 
-    async saveSettings(settingsData) {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/settings`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(settingsData)
-            });
-            return await response.json();
-        } catch (error) {
-            return { success: false };
-        }
+    recalculateRisks() {
+        return this._fetch("/recalculate-risks", { method: "POST" });
     },
 
-    // 12. Login
-    async login(email, password) {
-        try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/api/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
-            });
-            return await response.json();
-        } catch (error) {
-            return { success: false, message: "Server connection failed" };
-        }
+    // ===================== SUBJECTS & MARKS =====================
+    getSubjects(year) {
+        const query = year ? `?year=${encodeURIComponent(year)}` : "";
+        return this._fetch(`/subjects${query}`);
+    },
+
+    getSubjectMarks(studentId) {
+        return this._fetch(`/subject-marks/${studentId}`);
+    },
+
+    getAllSubjectMarks() {
+        return this._fetch("/subject-marks");
+    },
+
+    saveSubjectMarks(data) {
+        return this._fetch("/subject-marks", {
+            method: "POST",
+            body: JSON.stringify(data)
+        });
+    },
+
+    // ===================== EXTRACURRICULAR ACTIVITIES =====================
+    getExtracurriculars() {
+        return this._fetch("/extracurriculars");
+    },
+
+    getStudentActivities(studentId) {
+        return this._fetch(`/student-activities/${studentId}`);
+    },
+
+    // ===================== INTERVENTIONS =====================
+    getInterventions() {
+        return this._fetch("/interventions");
+    },
+
+    getStudentInterventions(studentId) {
+        return this._fetch(`/interventions/${studentId}`);
+    },
+
+    createIntervention(data) {
+        return this._fetch("/interventions", {
+            method: "POST",
+            body: JSON.stringify(data)
+        });
+    },
+
+    updateIntervention(interventionId, data) {
+        return this._fetch(`/interventions/update/${interventionId}`, {
+            method: "PUT",
+            body: JSON.stringify(data)
+        });
+    },
+
+    // ===================== AI AGENT =====================
+    agentChat(query, history, provider) {
+        return this._fetch("/agent/chat", {
+            method: "POST",
+            body: JSON.stringify({ query, history, provider })
+        });
+    },
+
+    sendAgentChat(query, history, provider) {
+        return this.agentChat(query, history, provider);
+    },
+
+    runAutonomousLoop() {
+        return this._fetch("/agent/run-autonomous-loop", { method: "POST" });
+    },
+
+    runAutonomousAgent() {
+        return this.runAutonomousLoop();
+    },
+
+    getAgentLogs() {
+        return this._fetch("/agent/logs");
+    },
+
+    // ===================== SETTINGS =====================
+    getSettings() {
+        return this._fetch("/settings");
+    },
+
+    saveSettings(data) {
+        return this._fetch("/settings", {
+            method: "POST",
+            body: JSON.stringify(data)
+        });
+    },
+
+    // ===================== NOTIFICATIONS & ANOMALIES =====================
+    getNotifications(studentId) {
+        const query = studentId ? `?student_id=${studentId}` : "";
+        return this._fetch(`/notifications${query}`);
+    },
+
+    getAnomalies() {
+        return this._fetch("/anomalies");
     }
 };

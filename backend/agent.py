@@ -1,6 +1,7 @@
 # =====================================================
 # AGENT.PY
 # Truly Autonomous Academic Engagement & Intervention Agent
+# With per-subject academic context for precise diagnosis
 # =====================================================
 
 import datetime
@@ -15,10 +16,12 @@ You are the AI Academic Mentoring & Intervention Agent for "EduStudent Sight" (C
 Your mission is to empower faculty mentors and department heads by analyzing student engagement indicators and recommending supportive, personalized academic guidance.
 
 [SYSTEM BEHAVIOR RULES]
-1. Domain Scope: Combine Attendance %, CGPA, LMS platform activity streaks, and assignment completion into a holistic academic review.
-2. Tone & Style: Be encouraging, objective, professional, and structured. Use Markdown formatting (bullet points, bold highlights).
-3. Context Awareness: You are actively connected to the real-time student cohort database. Reference specific students and metrics directly.
-4. Actionability: Suggest supportive faculty mentoring tools (e.g. Schedule 1-on-1 Mentoring, Assign Peer Tutor, Send Attendance Reminder).
+1. Domain Scope: Analyze BOTH overall metrics AND per-subject data (attendance per subject, internal marks, external marks, assignment scores, grades).
+2. Subject-Specific Diagnosis: When a student is struggling, identify WHICH SPECIFIC SUBJECTS are causing the issue. Example: "Arjun needs DBMS tutoring — Internal: 8/30, Subject Attendance: 55%."
+3. Tone & Style: Be encouraging, objective, professional, and structured. Use Markdown formatting.
+4. Context Awareness: You have access to the real-time student cohort database including per-subject breakdowns and extracurricular activities.
+5. Actionability: Recommend subject-specific mentoring, peer tutoring, and targeted study plans.
+6. Extracurricular Awareness: Consider student clubs, sports, hackathons when assessing engagement and suggesting balanced interventions.
 """
 
 class AcademicInterventionAgent:
@@ -30,16 +33,45 @@ class AcademicInterventionAgent:
             "assign_peer_tutor": agent_tools.tool_assign_peer_tutor
         }
 
+    def _get_subject_context(self, student_id):
+        """Fetches per-subject marks for a student and formats them as readable text."""
+        conn = db.get_db_connection()
+        marks = conn.execute("""
+            SELECT sm.subject_code, s.short_name, sm.attendance, sm.internal_marks, 
+                   sm.external_marks, sm.assignment_score, sm.grade
+            FROM subject_marks sm
+            JOIN subjects s ON sm.subject_code = s.code
+            WHERE sm.student_id = ?
+        """, (student_id,)).fetchall()
+        activities = conn.execute("""
+            SELECT e.name, e.category, sa.role, sa.notes
+            FROM student_activities sa
+            JOIN extracurriculars e ON sa.activity_id = e.id
+            WHERE sa.student_id = ?
+        """, (student_id,)).fetchall()
+        conn.close()
+
+        lines = []
+        for m in marks:
+            lines.append(f"  {m['short_name']}: Attd={m['attendance']}%, Internal={m['internal_marks']}/30, External={m['external_marks']}/70, Assignment={m['assignment_score']}%, Grade={m['grade']}")
+
+        act_lines = []
+        for a in activities:
+            note = f" ({a['notes']})" if a['notes'] else ""
+            act_lines.append(f"  {a['category']}: {a['name']} — Role: {a['role']}{note}")
+
+        subject_text = "\n".join(lines) if lines else "  No subject data available."
+        activity_text = "\n".join(act_lines) if act_lines else "  No extracurricular activities."
+        return subject_text, activity_text
+
     def run_autonomous_cycle(self):
-        """
-        Runs full perception-reasoning-action loop over all students in database.
-        """
+        """Runs full perception-reasoning-action loop over all students."""
         conn = db.get_db_connection()
         settings = db.get_system_settings()
         rows = conn.execute("SELECT * FROM students").fetchall()
         students = [dict(r) for r in rows]
         conn.close()
-        
+
         execution_traces = []
         today = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -64,17 +96,21 @@ class AcademicInterventionAgent:
                     "tools_called": []
                 }
 
-                # Phrased pedagogically to avoid small model RLHF safety false-positives
+                # Get per-subject context
+                subject_text, activity_text = self._get_subject_context(student["id"])
+
                 prompt = (
                     f"Student Academic Review: {student['name']} (ID: {student['id']})\n"
-                    f"Academic Indicators: Class Attendance = {attd}%, CGPA = {cgpa}, LMS Activity Score = {lms}%, Priority Index = {risk}%.\n\n"
-                    "Task: Summarize academic areas needing attention and recommend supportive faculty mentoring steps in 2 bullet points."
+                    f"Overall: Attendance={attd}%, CGPA={cgpa}, LMS={lms}%, Risk={risk}%\n\n"
+                    f"Per-Subject Breakdown:\n{subject_text}\n\n"
+                    f"Extracurricular Activities:\n{activity_text}\n\n"
+                    "Task: Identify which specific subjects need attention and recommend supportive faculty mentoring in 2-3 bullet points."
                 )
                 system_prompt = (
                     f"{BASE_AGENT_RULES}\n"
-                    "Provide a concise 2-bullet academic progress review and suggest supportive mentor actions."
+                    "Provide a concise subject-specific academic review and suggest targeted mentor actions."
                 )
-                
+
                 diagnosis = LLMProvider.call_ai(prompt, system_prompt, settings)
                 trace["reasoning"] = diagnosis
 
@@ -97,13 +133,7 @@ class AcademicInterventionAgent:
                 log_conn.execute("""
                     INSERT INTO agent_logs (student_id, student_name, timestamp, diagnosis, actions_taken)
                     VALUES (?, ?, ?, ?, ?)
-                """, (
-                    student["id"],
-                    student["name"],
-                    today,
-                    trace["reasoning"],
-                    json.dumps(trace["tools_called"])
-                ))
+                """, (student["id"], student["name"], today, trace["reasoning"], json.dumps(trace["tools_called"])))
                 log_conn.commit()
                 log_conn.close()
 
@@ -112,26 +142,35 @@ class AcademicInterventionAgent:
         return execution_traces
 
     def chat_query(self, user_query, history=None, provider_override=None):
-        """
-        Answers interactive queries with current student dataset context and multi-turn history.
-        """
+        """Answers interactive queries with full cohort + per-subject context."""
         if history is None:
             history = []
 
         conn = db.get_db_connection()
         settings = db.get_system_settings()
-        students = conn.execute("SELECT id, name, course, attendance, cgpa, risk FROM students").fetchall()
+        students = conn.execute("SELECT id, name, course, year, attendance, cgpa, lms_score, risk FROM students").fetchall()
+
+        # Build rich context with per-subject data
+        student_lines = []
+        for s in students:
+            subj_text, act_text = self._get_subject_context(s["id"])
+            student_lines.append(
+                f"- {s['name']} (ID: {s['id']}, {s['course']} {s['year']}): "
+                f"Attendance={s['attendance']}%, CGPA={s['cgpa']}, LMS={s['lms_score']}%, Risk={s['risk']}%\n"
+                f"  Subjects:\n{subj_text}\n"
+                f"  Activities:\n{act_text}"
+            )
         conn.close()
 
         if provider_override:
             settings["ai_provider"] = provider_override
 
-        students_summary = "\n".join([f"- {s['name']} (ID: {s['id']}): Attendance={s['attendance']}%, CGPA={s['cgpa']}, Risk Score={s['risk']}%" for s in students])
-        
+        roster_context = "\n".join(student_lines)
+
         system_prompt = (
             f"{BASE_AGENT_RULES}\n"
-            f"[LIVE STUDENT ROSTER DATA IN DATABASE]\n{students_summary}\n\n"
-            "Provide insightful, structured, and helpful answers for faculty mentors."
+            f"[LIVE STUDENT ROSTER WITH PER-SUBJECT DATA]\n{roster_context}\n\n"
+            "Provide insightful, subject-specific answers for faculty mentors."
         )
 
         return LLMProvider.call_ai(user_query, system_prompt, settings, history)

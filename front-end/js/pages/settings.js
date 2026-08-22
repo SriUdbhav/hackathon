@@ -1,118 +1,194 @@
 /* =====================================================
    SETTINGS.JS
-   AI Provider Configuration (Gemini, Groq, OpenAI, Ollama, Local)
+   Dynamic System Settings, AI Engine Configuration,
+   Live Threshold Recalculations & Security Management
 ===================================================== */
 
-function renderSettings() {
+async function renderSettings() {
     const content = document.getElementById("pageContent");
     if (!content) return;
 
+    const user = getCurrentUser();
+    const role = (user?.role || "faculty").toLowerCase();
+
+    // Fetch existing settings from backend SQLite
+    const settings = await API.getSettings() || {};
+
+    const provider = settings.ai_provider || "local";
+    const apiKey = settings.api_key || "";
+    const baseUrl = settings.api_base_url || "";
+    const modelName = settings.model_name || "";
+    const attdCutoff = settings.attendance_threshold || "75";
+    const riskCgpaCutoff = settings.risk_cgpa_threshold || "7.5";
+
     content.innerHTML = `
         <div class="mb-4">
-            <h1 class="h3 fw-bold mb-1">System & AI Engine Configuration</h1>
-            <p class="text-muted small mb-0">Switch between Google Gemini, OpenAI, Groq, Ollama, or Local Offline AI Agent</p>
+            <h1 class="h3 fw-bold mb-1">⚙️ System & Intelligence Configuration</h1>
+            <p class="text-muted small mb-0">Manage dynamic academic risk thresholds, AI inference engine keys, and account security</p>
         </div>
 
         <div class="row g-4">
-            <!-- AI PROVIDER CARD -->
-            <div class="col-md-7">
-                <div class="card-box p-4">
-                    <div class="card-head border-bottom pb-3 mb-4">
-                        <h4 class="fw-bold mb-0"><i class="bi bi-cpu text-primary me-2"></i> Active AI Provider</h4>
+            <!-- 1. DYNAMIC RISK & ATTENDANCE THRESHOLDS -->
+            <div class="col-lg-6">
+                <div class="card-box h-100">
+                    <div class="card-head">
+                        <h3 class="fw-bold"><i class="bi bi-sliders text-danger me-2"></i> Academic Risk Thresholds</h3>
+                        <span class="badge bg-danger">Critical Sync</span>
                     </div>
+                    <p class="text-muted small mb-4">
+                        Modifying these thresholds will immediately recalculate risk scores across all dashboards, student 360° views, and autonomous agent reasoning.
+                    </p>
 
-                    <form id="aiSettingsForm">
+                    <form id="thresholdSettingsForm">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Select AI Provider</label>
-                            <select id="aiProviderSelect" class="form-select" onchange="handleProviderChange()">
-                                <option value="local">Local Offline Heuristic Agent (Zero API Key Needed)</option>
-                                <option value="gemini">Google Gemini API (Gemini 1.5 Flash)</option>
-                                <option value="groq">Groq Cloud (Fast Llama 3.1 / Mixtral)</option>
-                                <option value="openai">OpenAI API (GPT-4o / GPT-3.5)</option>
-                                <option value="ollama">Local Ollama Instance (Offline Open-Source LLMs)</option>
-                            </select>
+                            <label class="form-label fw-semibold">Mandatory Attendance Cutoff (%)</label>
+                            <div class="input-group">
+                                <input type="number" id="settingAttendanceThreshold" class="form-control" value="${attdCutoff}" min="1" max="100" required>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <small class="text-muted">Students falling below this attendance trigger warning anomalies.</small>
                         </div>
 
-                        <div class="mb-3" id="apiKeyGroup">
-                            <label class="form-label fw-bold">API Key</label>
-                            <input type="password" id="aiApiKey" class="form-control" placeholder="Enter API Key (e.g. AIzaSy... or gsk_...)">
-                            <small class="text-muted">Keys are stored locally in your SQLite database.</small>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">CGPA Risk Cutoff (0 - 10)</label>
+                            <input type="number" id="settingRiskCgpaThreshold" class="form-control" value="${riskCgpaCutoff}" step="0.1" min="0" max="10" required>
+                            <small class="text-muted">Benchmark GPA below which students receive remedial study plans.</small>
                         </div>
 
-                        <div class="mb-3 d-none" id="apiBaseUrlGroup">
-                            <label class="form-label fw-bold">Custom API Base URL (Optional)</label>
-                            <input type="text" id="aiBaseUrl" class="form-control" placeholder="https://api.openai.com/v1 or http://localhost:11434">
-                        </div>
-
-                        <div class="mb-3 d-none" id="modelNameGroup">
-                            <label class="form-label fw-bold">Model Name</label>
-                            <input type="text" id="aiModelName" class="form-control" placeholder="e.g. llama-3.1-8b-instant or gemini-1.5-flash">
-                        </div>
-
-                        <button type="submit" class="primary-btn mt-2">
-                            <i class="bi bi-check-lg"></i> Save AI Engine Settings
+                        <button type="submit" class="primary-btn w-100" id="saveThresholdBtn">
+                            <i class="bi bi-arrow-repeat"></i> Save & Recalculate All Student Risks
                         </button>
                     </form>
                 </div>
             </div>
 
-            <!-- ACADEMIC RISK THRESHOLDS CARD -->
-            <div class="col-md-5">
-                <div class="card-box p-4">
-                    <div class="card-head border-bottom pb-3 mb-4">
-                        <h4 class="fw-bold mb-0"><i class="bi bi-sliders text-success me-2"></i> Risk Thresholds</h4>
+            <!-- 2. AI ENGINE & INFERENCE PROVIDER -->
+            <div class="col-lg-6">
+                <div class="card-box h-100">
+                    <div class="card-head">
+                        <h3 class="fw-bold"><i class="bi bi-robot text-primary me-2"></i> AI Agent Provider & Model</h3>
+                        <span class="badge bg-primary">Multi-Engine</span>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Mandatory Attendance Cutoff (%)</label>
-                        <input type="number" id="thresholdAttendance" class="form-control" value="75">
-                        <small class="text-muted">Students below this attendance will trigger Critical Alerts.</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">High Academic Risk Cutoff (%)</label>
-                        <input type="number" id="thresholdRisk" class="form-control" value="60">
-                        <small class="text-muted">Risk index above this score triggers automatic 1-on-1 mentor booking.</small>
-                    </div>
-                    <button class="btn btn-outline-success" onclick="alert('Thresholds saved successfully!')">
-                        Save Risk Thresholds
-                    </button>
+
+                    <form id="aiEngineSettingsForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Active AI Engine</label>
+                            <select id="settingAiProvider" class="form-select" onchange="handleSettingsProviderChange()">
+                                <option value="local" ${provider === 'local' ? 'selected' : ''}>Local Agentic Reasoning Engine</option>
+                                <option value="gemini" ${provider === 'gemini' ? 'selected' : ''}>Google Gemini (API Key)</option>
+                                <option value="ollama" ${provider === 'ollama' ? 'selected' : ''}>Local Ollama (e.g. Llama 3.2)</option>
+                                <option value="groq" ${provider === 'groq' ? 'selected' : ''}>Groq High-Speed Cloud</option>
+                                <option value="openai" ${provider === 'openai' ? 'selected' : ''}>OpenAI (ChatGPT)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3 ${provider === 'local' || provider === 'ollama' ? 'd-none' : ''}" id="apiKeyGroup">
+                            <label class="form-label fw-semibold">API Key</label>
+                            <input type="password" id="settingApiKey" class="form-control" value="${apiKey}" placeholder="AIzaSy... or gsk_...">
+                        </div>
+
+                        <div class="mb-3 ${provider === 'local' || provider === 'gemini' ? 'd-none' : ''}" id="apiBaseUrlGroup">
+                            <label class="form-label fw-semibold">API Base URL</label>
+                            <input type="text" id="settingApiBaseUrl" class="form-control" value="${baseUrl}" placeholder="http://127.0.0.1:11434">
+                        </div>
+
+                        <div class="mb-4 ${provider === 'local' || provider === 'gemini' ? 'd-none' : ''}" id="modelNameGroup">
+                            <label class="form-label fw-semibold">Model Identifier</label>
+                            <input type="text" id="settingModelName" class="form-control" value="${modelName}" placeholder="llama-3.1-8b-instant or llama3.2">
+                        </div>
+
+                        <button type="submit" class="secondary-btn w-100" id="saveAiSettingsBtn">
+                            <i class="bi bi-check2-circle"></i> Update AI Engine Settings
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
+
+        <!-- 3. SECURITY & PASSWORD MANAGEMENT -->
+        <div class="row g-4 mt-1">
+            <div class="col-lg-6">
+                <div class="card-box">
+                    <div class="card-head">
+                        <h3 class="fw-bold"><i class="bi bi-shield-lock-fill text-dark me-2"></i> Account Security & Password</h3>
+                    </div>
+                    <p class="text-muted small mb-3">Update your login password for user <strong>${user?.display_name || user?.id}</strong> (${user?.id}).</p>
+                    <button class="secondary-btn" onclick="openChangePasswordModal(event)">
+                        <i class="bi bi-key-fill text-primary"></i> Change My Password
+                    </button>
+                </div>
+            </div>
+
+            ${role === 'admin' ? `
+                <div class="col-lg-6">
+                    <div class="card-box border-start border-4 border-dark">
+                        <div class="card-head">
+                            <h3 class="fw-bold"><i class="bi bi-people text-dark me-2"></i> Administrator User Access</h3>
+                        </div>
+                        <p class="text-muted small mb-3">Manage institutional accounts, assign faculty subject permissions, and manage credentials.</p>
+                        <button class="primary-btn" onclick="navigateTo('users')">
+                            <i class="bi bi-shield-check"></i> Open User Access Manager
+                        </button>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
     `;
 
-    // Load existing settings from SQLite
-    API.getSettings().then(settings => {
-        if (!settings) return;
-        if (settings.ai_provider) document.getElementById("aiProviderSelect").value = settings.ai_provider;
-        if (settings.api_key) document.getElementById("aiApiKey").value = settings.api_key;
-        if (settings.api_base_url) document.getElementById("aiBaseUrl").value = settings.api_base_url;
-        if (settings.model_name) document.getElementById("aiModelName").value = settings.model_name;
-        handleProviderChange();
-    });
+    // 1. Bind Thresholds Save Form
+    const thresholdForm = document.getElementById("thresholdSettingsForm");
+    if (thresholdForm) {
+        thresholdForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById("saveThresholdBtn");
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Recalculating Risks...`;
 
-    // Handle Form Submit
-    const form = document.getElementById("aiSettingsForm");
-    if (form) {
-        form.addEventListener("submit", async function(e) {
+            const attd = document.getElementById("settingAttendanceThreshold").value;
+            const gpa = document.getElementById("settingRiskCgpaThreshold").value;
+
+            // Save in DB
+            await API.saveSettings({
+                attendance_threshold: attd,
+                risk_cgpa_threshold: gpa
+            });
+
+            // Trigger backend risk recalculation
+            const res = await API.recalculateRisks();
+
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-arrow-repeat"></i> Save & Recalculate All Student Risks`;
+
+            alert(`✅ Thresholds updated successfully! All ${res?.updated_count || 'cohort'} students have been dynamically recalculated using the new cutoffs (${attd}% attendance, ${gpa} CGPA).`);
+
+            await loadLatestStudents();
+        });
+    }
+
+    // 2. Bind AI Settings Save Form
+    const aiForm = document.getElementById("aiEngineSettingsForm");
+    if (aiForm) {
+        aiForm.addEventListener("submit", async function(e) {
             e.preventDefault();
             const payload = {
-                ai_provider: document.getElementById("aiProviderSelect").value,
-                api_key: document.getElementById("aiApiKey").value.trim(),
-                api_base_url: document.getElementById("aiBaseUrl").value.trim(),
-                model_name: document.getElementById("aiModelName").value.trim()
+                ai_provider: document.getElementById("settingAiProvider").value,
+                api_key: document.getElementById("settingApiKey")?.value.trim() || "",
+                api_base_url: document.getElementById("settingApiBaseUrl")?.value.trim() || "",
+                model_name: document.getElementById("settingModelName")?.value.trim() || ""
             };
+
             const res = await API.saveSettings(payload);
             if (res && res.success) {
-                alert("AI Engine settings updated successfully!");
+                alert("AI Engine settings updated successfully! AI Agent will use this configuration.");
             } else {
-                alert("Settings saved locally.");
+                alert("Settings saved.");
             }
         });
     }
 }
 
-function handleProviderChange() {
-    const provider = document.getElementById("aiProviderSelect")?.value;
+function handleSettingsProviderChange() {
+    const provider = document.getElementById("settingAiProvider")?.value;
     const keyGroup = document.getElementById("apiKeyGroup");
     const urlGroup = document.getElementById("apiBaseUrlGroup");
     const modelGroup = document.getElementById("modelNameGroup");
@@ -130,7 +206,7 @@ function handleProviderChange() {
         if (urlGroup) urlGroup.classList.remove("d-none");
         if (modelGroup) modelGroup.classList.remove("d-none");
     } else {
-        // groq / openai
+        // Groq / OpenAI
         if (keyGroup) keyGroup.classList.remove("d-none");
         if (urlGroup) urlGroup.classList.remove("d-none");
         if (modelGroup) modelGroup.classList.remove("d-none");

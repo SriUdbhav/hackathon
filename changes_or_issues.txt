@@ -1,0 +1,30 @@
+1. Impove the login form UI/UX, also add UAC for facutly, mentor, students (automatically decided functionalities, should each of them have and include them. Common functalites, for each of them are : AI, ananlytics etc.. for students it should only about their individual metrics not overall or other students metrics. by default the username and password should be their own ID and also give a update password for each of the UAC, and also a forget password button in login form, that should just send an alert saying the password is sent to their mailID. also remeber me option is not working).
+
+2. the search box at the top is not working. In fact some sections don't even need that search box.
+
+3. Imporve dashboard add the following:
+    a. A stockmarkt style linear graph.
+    b. all important things that should be shown at a glance, like only high risk students, pending metorships etc... 
+    3. analytics, like overall class statics, like how much did attendane or assigments, overall scroe, average score increased or decreased etc... 
+    ----> Think about some important things to add in a dashbaord.
+
+4. In students section, disaply all the details about a student, including their parents etc... basically all the details filled in the add new student form. (also don't wrap detials, if they didn't fit, let them scroll horizontally in the window)
+
+5. basically analytics is super minimal, and doesn't have a lot of anylytics/details, imporve the this page UI/UX., dispaly all lot of important and meaningful details, using txt/graphs/charts etc... (use good libraris like chart.js etc... ).
+
+6. engagement section too looks empty, and also there is no crearly reson and what that section also does. fix it, 
+
+7. basically, faculaty mentor dashboard, when made to start the intervention that should start the intervention and also show, if it is pending or pause etc.. and then that should be reflected in the mentor UAC and student UAC, view, and when the metorship is completd in mentor or student UAC, it should update here, to maintain a histroy for each and every metorship, analytics, stats etc... 
+
+8. imporve the details/UI/UX for AI detection anomalies section, what it does, is not clear.
+
+9. In student 360, there is not enough info for each student, and also there is no way to switch the students. fix it.
+
+10. AI agent section no changes for now it is good.
+
+11. In reporsts, section, it should actaully include all the stats, dieagrams, graphsm, analytics, info, AI diagnoses etc... of the studesnt and like a professional corporate report, and should actually be downloadbely in different formats like .pdf, .md, .log or .csv (if possible with all the diagrams, graphs etc...).
+
+12. this is buggin me for sometime, the setting for AI is good and working, but the settings for Risk thresholds is not working, changing the risk thresolds, should be immedialtly updated across all the sections, UAC, AI etc... fix this !!!IMPORTANT.
+
+
+---> for now fix this, later we shall add some more things, refine UI/UX later. we will disscuss them.

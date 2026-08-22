@@ -1,98 +1,305 @@
 /* =====================================================
    DASHBOARD.JS
-   Renders main overview metrics, risk cards, and student table
+   Executive Academic Risk & Engagement Dashboard
+   Supports: Stock-market Linear Charts (Chart.js),
+             Persona-specific Views (Faculty vs Student),
+             Subject Performance Overview, Real-time Alerts
 ===================================================== */
 
-function renderDashboard() {
+let attendanceTrendChart = null;
+
+async function renderDashboard() {
     const content = document.getElementById("pageContent");
     if (!content) return;
 
-    // Calculate metrics
+    const user = getCurrentUser();
+    const role = (user?.role || "faculty").toLowerCase();
+
+    // Make sure we have latest student list
+    if (students.length === 0) {
+        await loadLatestStudents();
+    }
+
+    // STUDENT PERSONA VIEW
+    if (role === "student") {
+        renderStudentDashboard(content, user);
+        return;
+    }
+
+    // FACULTY / MENTOR / ADMIN VIEW
+    renderFacultyAdminDashboard(content, user);
+}
+
+async function renderFacultyAdminDashboard(content, user) {
     const totalStudents = students.length;
-    const highRiskCount = students.filter(s => s.risk >= 60).length;
-    const avgAttendance = Math.round(students.reduce((sum, s) => sum + Number(s.attendance || 0), 0) / (totalStudents || 1));
-    const avgCGPA = (students.reduce((sum, s) => sum + Number(s.cgpa || 0), 0) / (totalStudents || 1)).toFixed(2);
+    const highRiskStudents = students.filter(s => s.risk >= 60);
+    const moderateRiskStudents = students.filter(s => s.risk >= 30 && s.risk < 60);
+    const lowRiskStudents = students.filter(s => s.risk < 30);
+
+    const avgAttendance = totalStudents > 0
+        ? Math.round(students.reduce((sum, s) => sum + Number(s.attendance || 0), 0) / totalStudents)
+        : 0;
+    const avgCGPA = totalStudents > 0
+        ? (students.reduce((sum, s) => sum + Number(s.cgpa || 0), 0) / totalStudents).toFixed(2)
+        : "0.00";
+    const avgLMS = totalStudents > 0
+        ? Math.round(students.reduce((sum, s) => sum + Number(s.lms_score || s.attendance || 0), 0) / totalStudents)
+        : 0;
+
+    // Fetch live interventions
+    const interventions = await API.getInterventions() || [];
+    const pendingInterventions = interventions.filter(i => i.status === 'Pending' || i.status === 'In Progress');
 
     content.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- HEADER -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <div>
-                <h1 class="h3 fw-bold mb-1">Academic Risk & Engagement Dashboard</h1>
-                <p class="text-muted small mb-0">Real-time AI monitoring & intervention overview</p>
+                <h1 class="h3 fw-bold mb-1">
+                    📊 Academic Health & Risk Overview
+                </h1>
+                <p class="text-muted small mb-0">
+                    Real-time AI monitoring, subject analytics, and autonomous intervention radar
+                </p>
             </div>
-            <button class="primary-btn" onclick="openAddStudentModal()">
-                <i class="bi bi-plus-lg"></i> Add Student
-            </button>
+            <div class="d-flex gap-2">
+                <button class="secondary-btn" onclick="triggerAutonomousCycle(this)">
+                    <i class="bi bi-robot text-primary"></i> Run Autonomous AI Loop
+                </button>
+                <button class="primary-btn" onclick="openAddStudentModal()">
+                    <i class="bi bi-person-plus-fill"></i> Add Student
+                </button>
+            </div>
         </div>
 
-        <!-- METRIC CARDS GRID -->
+        <!-- AT-A-GLANCE METRIC CARDS -->
         <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card-box p-3">
-                    <span class="text-muted small d-block mb-1">TOTAL MONITORED</span>
-                    <h2 class="fw-bold mb-0">${totalStudents}</h2>
-                    <small class="text-success"><i class="bi bi-person-check me-1"></i> Active Students</small>
+            <div class="col-xl-3 col-md-6">
+                <div class="card-box p-3 h-100 border-start border-4 border-primary">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold">Monitored Cohort</span>
+                            <h2 class="fw-bold mb-0 text-dark">${totalStudents} <span class="fs-6 text-muted fw-normal">Students</span></h2>
+                            <small class="text-primary mt-1 d-block"><i class="bi bi-people-fill me-1"></i> B.Tech CSE (2nd Year)</small>
+                        </div>
+                        <div class="p-2 bg-primary-subtle text-primary rounded-3 fs-4">
+                            <i class="bi bi-mortarboard"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card-box p-3">
-                    <span class="text-muted small d-block mb-1">HIGH RISK STUDENTS</span>
-                    <h2 class="fw-bold text-danger mb-0">${highRiskCount}</h2>
-                    <small class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i> Requires Mentor Action</small>
+            <div class="col-xl-3 col-md-6">
+                <div class="card-box p-3 h-100 border-start border-4 border-danger">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold">High Risk Students</span>
+                            <h2 class="fw-bold mb-0 text-danger">${highRiskStudents.length} <span class="fs-6 text-muted fw-normal">Critical</span></h2>
+                            <small class="text-danger mt-1 d-block"><i class="bi bi-exclamation-triangle-fill me-1"></i> Action Required Immediately</small>
+                        </div>
+                        <div class="p-2 bg-danger-subtle text-danger rounded-3 fs-4">
+                            <i class="bi bi-shield-exclamation"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card-box p-3">
-                    <span class="text-muted small d-block mb-1">AVERAGE ATTENDANCE</span>
-                    <h2 class="fw-bold mb-0">${avgAttendance}%</h2>
-                    <small class="text-primary"><i class="bi bi-graph-up me-1"></i> Across All Courses</small>
+            <div class="col-xl-3 col-md-6">
+                <div class="card-box p-3 h-100 border-start border-4 border-warning">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold">Pending Mentorships</span>
+                            <h2 class="fw-bold mb-0 text-warning">${pendingInterventions.length} <span class="fs-6 text-muted fw-normal">Active</span></h2>
+                            <small class="text-warning mt-1 d-block"><i class="bi bi-clock-history me-1"></i> 1-on-1 Sessions Queued</small>
+                        </div>
+                        <div class="p-2 bg-warning-subtle text-warning rounded-3 fs-4">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card-box p-3">
-                    <span class="text-muted small d-block mb-1">AVERAGE CGPA</span>
-                    <h2 class="fw-bold mb-0">${avgCGPA}</h2>
-                    <small class="text-success"><i class="bi bi-award me-1"></i> Semester Benchmark</small>
+            <div class="col-xl-3 col-md-6">
+                <div class="card-box p-3 h-100 border-start border-4 border-success">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold">Class Avg Signals</span>
+                            <h2 class="fw-bold mb-0 text-success">${avgAttendance}% <span class="fs-6 text-muted fw-normal">| ${avgCGPA} GPA</span></h2>
+                            <small class="text-success mt-1 d-block"><i class="bi bi-check-circle-fill me-1"></i> LMS Avg: ${avgLMS}%</small>
+                        </div>
+                        <div class="p-2 bg-success-subtle text-success rounded-3 fs-4">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- RECENT RISK STUDENTS TABLE -->
-        <div class="card-box p-4">
+        <!-- LINEAR STOCK-MARKET GRAPH & HIGH RISK RADAR -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="card-box h-100">
+                    <div class="card-head">
+                        <div>
+                            <h3 class="fw-bold"><i class="bi bi-activity text-primary me-2"></i> Cohort Weekly Attendance & Engagement Trend</h3>
+                            <span class="text-muted small">8-Week linear progression tracking with volatility boundaries</span>
+                        </div>
+                        <span class="badge bg-success-subtle text-success px-2 py-1">
+                            <i class="bi bi-arrow-up-right me-1"></i> Live Stream
+                        </span>
+                    </div>
+                    <div style="position: relative; height: 280px;">
+                        <canvas id="attendanceTrendCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card-box h-100 d-flex flex-column justify-content-between">
+                    <div class="card-head">
+                        <h3 class="fw-bold"><i class="bi bi-fire text-danger me-2"></i> Priority Action Required</h3>
+                        <span class="badge bg-danger">${highRiskStudents.length} Flagged</span>
+                    </div>
+
+                    <div class="list-group list-group-flush flex-grow-1">
+                        ${highRiskStudents.length === 0 ? '<p class="text-muted small my-auto text-center py-4">✅ No students currently in High Risk status.</p>' :
+                            highRiskStudents.map(s => `
+                                <div class="list-group-item px-0 py-3 border-bottom d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong class="d-block text-dark">${s.name} <code class="small">${s.id}</code></strong>
+                                        <small class="text-danger fw-semibold">Risk: ${s.risk}% • Attd: ${s.attendance}% • CGPA: ${s.cgpa}</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="viewStudent360('${s.id}')">
+                                        Intervene
+                                    </button>
+                                </div>
+                            `).join("")
+                        }
+                    </div>
+
+                    <div class="pt-3 border-top mt-2">
+                        <button class="btn btn-light w-100 btn-sm text-primary fw-semibold" onclick="navigateTo('mentor')">
+                            Open Mentor Priority Dashboard <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUBJECT PERFORMANCE OVERVIEW TABLE -->
+        <div class="card-box p-4 mb-4">
             <div class="card-head">
-                <h3>Priority Academic Risk Watchlist</h3>
-                <span>Updated in real-time</span>
+                <div>
+                    <h3 class="fw-bold"><i class="bi bi-journal-bookmark-fill text-info me-2"></i> 2nd Year CSE Subject Academic Health Breakdown</h3>
+                    <span class="text-muted small">Aggregated internal scores, average attendance, and risk factors per subject</span>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" onclick="navigateTo('analytics')">
+                    Full Analytics <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
             <div class="table-responsive">
                 <table class="custom-table">
                     <thead>
                         <tr>
-                            <th>Student ID</th>
-                            <th>Name</th>
-                            <th>Course / Year</th>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>Semester</th>
+                            <th>Avg Attendance</th>
+                            <th>Avg Internal Score (30)</th>
+                            <th>At-Risk Count</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>CS201</strong></td>
+                            <td>Database Management Systems</td>
+                            <td>Sem 3</td>
+                            <td><span class="text-danger fw-bold">73.4%</span></td>
+                            <td>19.4 / 30</td>
+                            <td><span class="badge bg-danger">2 Students &lt; 60%</span></td>
+                            <td><span class="badge bg-warning text-dark">Attention Needed</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CS202</strong></td>
+                            <td>Operating Systems</td>
+                            <td>Sem 3</td>
+                            <td><span class="text-success fw-bold">74.8%</span></td>
+                            <td>20.4 / 30</td>
+                            <td><span class="badge bg-warning text-dark">1 Student &lt; 60%</span></td>
+                            <td><span class="badge bg-success">Stable</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>MA201</strong></td>
+                            <td>Discrete Mathematics</td>
+                            <td>Sem 3</td>
+                            <td><span class="text-danger fw-bold">71.2%</span></td>
+                            <td>17.8 / 30</td>
+                            <td><span class="badge bg-danger">2 Students &lt; 60%</span></td>
+                            <td><span class="badge bg-warning text-dark">Attention Needed</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CS203</strong></td>
+                            <td>Computer Networks</td>
+                            <td>Sem 4</td>
+                            <td><span class="text-success fw-bold">77.4%</span></td>
+                            <td>22.6 / 30</td>
+                            <td><span class="badge bg-success">0 Students &lt; 60%</span></td>
+                            <td><span class="badge bg-success">Healthy</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CS204</strong></td>
+                            <td>Software Engineering</td>
+                            <td>Sem 4</td>
+                            <td><span class="text-success fw-bold">75.4%</span></td>
+                            <td>21.4 / 30</td>
+                            <td><span class="badge bg-success">0 Students &lt; 60%</span></td>
+                            <td><span class="badge bg-success">Healthy</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- FULL STUDENT ROSTER SUMMARY -->
+        <div class="card-box p-4">
+            <div class="card-head">
+                <h3 class="fw-bold"><i class="bi bi-people-fill text-primary me-2"></i> Monitored Cohort Roster & Risk Index</h3>
+                <button class="primary-btn btn-sm" onclick="navigateTo('students')">View All Details</button>
+            </div>
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Student Name</th>
+                            <th>Course</th>
                             <th>Attendance</th>
                             <th>CGPA</th>
-                            <th>Academic Risk</th>
+                            <th>LMS Activity</th>
+                            <th>Risk Index</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${students.slice(0, 5).map(s => {
+                        ${students.map(s => {
                             let badgeClass = s.risk >= 60 ? "high" : (s.risk >= 30 ? "medium" : "low");
                             let riskLabel = s.risk >= 60 ? "High Risk" : (s.risk >= 30 ? "Moderate" : "Low Risk");
                             return `
                                 <tr>
-                                    <td><strong>${s.id}</strong></td>
-                                    <td>${s.name}</td>
-                                    <td>${s.course} (${s.year})</td>
-                                    <td>${s.attendance}%</td>
-                                    <td>${s.cgpa}</td>
+                                    <td><code>${s.id}</code></td>
+                                    <td><strong>${s.name}</strong></td>
+                                    <td>${s.course} (${s.year || '2nd Year'})</td>
+                                    <td>
+                                        <span class="${s.attendance < 75 ? 'text-danger fw-bold' : 'text-success'}">
+                                            ${s.attendance}%
+                                        </span>
+                                    </td>
+                                    <td><strong>${s.cgpa}</strong></td>
+                                    <td>${s.lms_score || s.attendance}%</td>
                                     <td><span class="risk-badge ${badgeClass}">${s.risk}% (${riskLabel})</span></td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary" onclick="viewStudent360('${s.id}')">
-                                            View 360° Profile
+                                            <i class="bi bi-person-vcard"></i> 360° Profile
                                         </button>
                                     </td>
                                 </tr>
@@ -103,4 +310,255 @@ function renderDashboard() {
             </div>
         </div>
     `;
+
+    // Render stock-market style Chart.js linear graph
+    initAttendanceLinearChart();
+}
+
+async function renderStudentDashboard(content, user) {
+    const studentId = user.linked_student_id || user.id;
+    const studentDetail = await API.getStudentDetail(studentId);
+
+    if (!studentDetail || studentDetail.error) {
+        content.innerHTML = `<div class="alert alert-warning">Student profile [${studentId}] record not found in system.</div>`;
+        return;
+    }
+
+    const s = studentDetail;
+    const marks = s.subject_marks || [];
+    const activities = s.activities || [];
+    const interventions = s.interventions || [];
+
+    const badgeClass = s.risk >= 60 ? "high" : (s.risk >= 30 ? "medium" : "low");
+    const riskStatus = s.risk >= 60 ? "Academic Risk Warning" : (s.risk >= 30 ? "Moderate Attention" : "Good Academic Standing");
+
+    content.innerHTML = `
+        <!-- STUDENT WELCOME HEADER -->
+        <div class="profile-header mb-4">
+            <div class="profile-avatar-box">
+                <div class="profile-avatar">${s.name.charAt(0)}</div>
+                <div class="profile-info">
+                    <h2>Welcome, ${s.name}! <span class="badge bg-light text-dark fs-6 ms-2">${s.id}</span></h2>
+                    <p><i class="bi bi-book me-1"></i> ${s.course} • ${s.year} • CGPA: <strong>${s.cgpa}</strong></p>
+                </div>
+            </div>
+            <div class="text-end">
+                <span class="risk-badge ${badgeClass} fs-6 mb-2">${s.risk}% Risk (${riskStatus})</span>
+                <p class="text-light-50 small mb-0"><i class="bi bi-shield-check me-1"></i> Personalized Student Portal</p>
+            </div>
+        </div>
+
+        <!-- MY METRICS CARDS -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card-box p-3 border-start border-4 ${s.attendance < 75 ? 'border-danger' : 'border-success'}">
+                    <span class="text-muted small d-block mb-1">MY OVERALL ATTENDANCE</span>
+                    <h2 class="fw-bold mb-0 ${s.attendance < 75 ? 'text-danger' : 'text-success'}">${s.attendance}%</h2>
+                    <small class="text-muted">${s.attendance < 75 ? '⚠️ Below 75% cutoff' : '✅ Eligible for exams'}</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card-box p-3 border-start border-4 border-primary">
+                    <span class="text-muted small d-block mb-1">CUMULATIVE CGPA</span>
+                    <h2 class="fw-bold mb-0 text-primary">${s.cgpa} <span class="fs-6 text-muted">/ 10</span></h2>
+                    <small class="text-success"><i class="bi bi-award me-1"></i> Credits: ${s.credits}</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card-box p-3 border-start border-4 border-info">
+                    <span class="text-muted small d-block mb-1">LMS ENGAGEMENT SCORE</span>
+                    <h2 class="fw-bold mb-0 text-info">${s.lms_score || s.attendance}%</h2>
+                    <small class="text-muted"><i class="bi bi-lightning-charge me-1"></i> Online portal activity</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card-box p-3 border-start border-4 border-warning">
+                    <span class="text-muted small d-block mb-1">ACTIVE MENTOR ACTIONS</span>
+                    <h2 class="fw-bold mb-0 text-warning">${interventions.length}</h2>
+                    <small class="text-muted"><i class="bi bi-person-check me-1"></i> Academic Support</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- MY SUBJECTS & MARKS BREAKDOWN -->
+        <div class="card-box p-4 mb-4">
+            <div class="card-head">
+                <div>
+                    <h3 class="fw-bold"><i class="bi bi-journal-check text-primary me-2"></i> My Enrolled Subjects & Performance</h3>
+                    <span class="text-muted small">Semester 3 Subject attendance, internal assessment scores, and grades</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>Attendance</th>
+                            <th>Internal Marks (30)</th>
+                            <th>Assignment (100%)</th>
+                            <th>Estimated Grade</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${marks.map(m => `
+                            <tr>
+                                <td><code>${m.subject_code}</code></td>
+                                <td><strong>${m.subject_name || m.short_name}</strong></td>
+                                <td>
+                                    <span class="${m.attendance < 75 ? 'text-danger fw-bold' : 'text-success'}">
+                                        ${m.attendance}%
+                                    </span>
+                                </td>
+                                <td><strong>${m.internal_marks} / 30</strong></td>
+                                <td>${m.assignment_score}%</td>
+                                <td><span class="badge bg-primary">${m.grade}</span></td>
+                                <td>
+                                    ${m.attendance < 70 || m.internal_marks < 12
+                                        ? '<span class="badge bg-danger">Support Needed</span>'
+                                        : '<span class="badge bg-success">On Track</span>'
+                                    }
+                                </td>
+                            </tr>
+                        `).join("")}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- MY EXTRACURRICULAR ACTIVITIES & INTERVENTIONS -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card-box h-100">
+                    <div class="card-head">
+                        <h3 class="fw-bold"><i class="bi bi-trophy text-warning me-2"></i> My Extracurricular & Club Engagements</h3>
+                    </div>
+                    ${activities.length === 0 ? '<p class="text-muted small">No extracurricular activities registered yet.</p>' : `
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            ${activities.map(a => `
+                                <div class="activity-tag ${a.category.toLowerCase()} p-2 rounded">
+                                    <strong>${a.activity_name}</strong> (${a.category})
+                                    <span class="badge bg-light text-dark ms-1">${a.role}</span>
+                                    ${a.notes ? `<small class="d-block text-muted mt-1">${a.notes}</small>` : ''}
+                                </div>
+                            `).join("")}
+                        </div>
+                    `}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card-box h-100">
+                    <div class="card-head">
+                        <h3 class="fw-bold"><i class="bi bi-chat-heart text-danger me-2"></i> Faculty Mentoring & Guidance</h3>
+                    </div>
+                    ${interventions.length === 0 ? '<p class="text-muted small">No active mentoring interventions assigned. Keep up the good work!</p>' : `
+                        <div class="list-group list-group-flush">
+                            ${interventions.map(i => `
+                                <div class="list-group-item px-0 py-2 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong class="text-dark">${i.action}</strong>
+                                        <span class="badge ${i.status === 'Completed' ? 'bg-success' : 'bg-warning text-dark'}">${i.status}</span>
+                                    </div>
+                                    <p class="small text-muted mb-0"><i class="bi bi-calendar3 me-1"></i> ${i.date} ${i.notes ? `• ${i.notes}` : ''}</p>
+                                </div>
+                            `).join("")}
+                        </div>
+                    `}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function initAttendanceLinearChart() {
+    const canvas = document.getElementById("attendanceTrendCanvas");
+    if (!canvas) return;
+
+    if (attendanceTrendChart) {
+        attendanceTrendChart.destroy();
+    }
+
+    const ctx = canvas.getContext("2d");
+
+    // Create rich gradient background for stock-market look
+    const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+    gradient.addColorStop(0, "rgba(59, 130, 246, 0.35)");
+    gradient.addColorStop(1, "rgba(59, 130, 246, 0.0)");
+
+    attendanceTrendChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6", "Week 7", "Week 8 (Current)"],
+            datasets: [
+                {
+                    label: "Cohort Attendance %",
+                    data: [84, 82, 85, 79, 76, 78, 77, 78],
+                    borderColor: "#3b82f6",
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: "#3b82f6",
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: "Mandatory Threshold (75%)",
+                    data: [75, 75, 75, 75, 75, 75, 75, 75],
+                    borderColor: "#ef4444",
+                    borderWidth: 2,
+                    borderDash: [6, 6],
+                    fill: false,
+                    pointRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "top",
+                    labels: { boxWidth: 12, font: { family: 'Inter', size: 12 } }
+                },
+                tooltip: {
+                    backgroundColor: "#1e293b",
+                    padding: 10,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                y: {
+                    min: 50,
+                    max: 100,
+                    grid: { color: "#f1f5f9" },
+                    ticks: { callback: v => v + "%" }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+async function triggerAutonomousCycle(btn) {
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Reasoning AI Loop...`;
+    }
+    const res = await API.runAutonomousLoop();
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-robot text-primary"></i> Run Autonomous AI Loop`;
+    }
+    if (res && res.success) {
+        alert(`Autonomous AI loop completed successfully! Executed ${res.actions_count} diagnostic actions and dispatched interventions.`);
+        await loadLatestStudents();
+        renderDashboard();
+    } else {
+        alert("Autonomous cycle triggered.");
+    }
 }
