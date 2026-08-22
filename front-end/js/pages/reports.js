@@ -1,9 +1,19 @@
 /* =====================================================
    REPORTS.JS
    Comprehensive Academic Intelligence Report Generator
-   Supports: Print-Optimized PDF Export, CSV Export,
+   Supports: Configurable Report Sections, Risk Filters,
+             Print-Optimized PDF Export, Custom CSV Export,
              Markdown (.md) Export & System Log (.log)
 ===================================================== */
+
+let reportConfig = {
+    includeRoster: true,
+    includeSubjects: true,
+    includeInterventions: true,
+    includeDemographics: true,
+    includeAiEngagement: true,
+    riskFilter: "ALL" // ALL, HIGH, AT_RISK
+};
 
 async function renderReports() {
     const content = document.getElementById("pageContent");
@@ -13,13 +23,6 @@ async function renderReports() {
         await loadLatestStudents();
     }
 
-    const total = students.length;
-    const highRisk = students.filter(s => s.risk >= 60);
-    const medRisk = students.filter(s => s.risk >= 30 && s.risk < 60);
-    const lowRisk = students.filter(s => s.risk < 30);
-    const avgAttendance = total ? Math.round(students.reduce((a, b) => a + Number(b.attendance || 0), 0) / total) : 0;
-    const avgCGPA = total ? (students.reduce((a, b) => a + Number(b.cgpa || 0), 0) / total).toFixed(2) : "0.00";
-
     const interventions = await API.getInterventions() || [];
     const agentLogs = await API.getAgentLogs() || [];
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -28,7 +31,7 @@ async function renderReports() {
         <!-- HEADER & EXPORT ACTION BUTTONS -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 no-print">
             <div>
-                <h1 class="h3 fw-bold mb-1">📑 Academic Intelligence & Executive Reports</h1>
+                <h1 class="h3 fw-bold mb-1">Academic Intelligence & Executive Reports</h1>
                 <p class="text-muted small mb-0">Generate institutional risk dossiers, accreditation audits, and exportable datasets</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
@@ -47,53 +50,143 @@ async function renderReports() {
             </div>
         </div>
 
+        <!-- REPORT CONFIGURATION SETTINGS PANEL -->
+        <div class="card-box p-4 mb-4 no-print" style="border-left: 4px solid var(--accent);">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-sliders text-primary me-2"></i> Report Inclusions & Configuration
+                </h5>
+                <span class="badge bg-primary">Dynamic Customizer</span>
+            </div>
+            <p class="small mb-3" style="color: var(--text-soft);">
+                Customize which sections and data attributes are included in the generated audit report and export files.
+            </p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="cfgIncludeRoster" ${reportConfig.includeRoster ? 'checked' : ''} onchange="updateReportConfig()">
+                        <label class="form-check-label fw-semibold" for="cfgIncludeRoster">1. Student Risk Roster</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="cfgIncludeDemographics" ${reportConfig.includeDemographics ? 'checked' : ''} onchange="updateReportConfig()">
+                        <label class="form-check-label small text-muted" for="cfgIncludeDemographics">↳ Include Demographics (Parents/City)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="cfgIncludeSubjects" ${reportConfig.includeSubjects ? 'checked' : ''} onchange="updateReportConfig()">
+                        <label class="form-check-label fw-semibold" for="cfgIncludeSubjects">2. Subject Performance Table</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="cfgIncludeAiEngagement" ${reportConfig.includeAiEngagement ? 'checked' : ''} onchange="updateReportConfig()">
+                        <label class="form-check-label small text-muted" for="cfgIncludeAiEngagement">↳ Include LMS & Multi-Signal Telemetry</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="cfgIncludeInterventions" ${reportConfig.includeInterventions ? 'checked' : ''} onchange="updateReportConfig()">
+                        <label class="form-check-label fw-semibold" for="cfgIncludeInterventions">3. Intervention Log & Pipeline</label>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <label class="small text-muted mb-0">Cohort Scope:</label>
+                        <select id="cfgRiskFilter" class="form-select form-select-sm" style="width: auto;" onchange="updateReportConfig()">
+                            <option value="ALL" ${reportConfig.riskFilter === 'ALL' ? 'selected' : ''}>All Students</option>
+                            <option value="AT_RISK" ${reportConfig.riskFilter === 'AT_RISK' ? 'selected' : ''}>At-Risk Only (&ge; 30%)</option>
+                            <option value="HIGH" ${reportConfig.riskFilter === 'HIGH' ? 'selected' : ''}>High Risk Only (&ge; 60%)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- REPORT CANVAS (Printable Document Container) -->
-        <div id="printableReportContainer" class="card-box p-5 bg-white shadow-sm border">
-            <!-- REPORT HEADER -->
-            <div class="border-bottom pb-4 mb-4 d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="fw-bold mb-1 text-primary">VIGNAN UNIVERSITY</h2>
-                    <h5 class="fw-semibold text-dark mb-1">Department of Computer Science & Engineering</h5>
-                    <p class="text-muted small mb-0">Cohort Academic Risk & Early Intervention Intelligence Report</p>
-                </div>
-                <div class="text-end">
-                    <span class="badge bg-dark fs-6 mb-1">OFFICIAL AUDIT REPORT</span>
-                    <p class="text-muted small mb-0">Generated: <strong>${today}</strong></p>
-                    <p class="text-muted small mb-0">System: <strong>EduStudent Sight AI v2.4</strong></p>
+        <div id="printableReportContainer" class="card-box p-5 shadow-sm">
+            ${generateReportHtml(today, interventions)}
+        </div>
+    `;
+}
+
+function updateReportConfig() {
+    reportConfig.includeRoster = document.getElementById("cfgIncludeRoster")?.checked ?? true;
+    reportConfig.includeDemographics = document.getElementById("cfgIncludeDemographics")?.checked ?? true;
+    reportConfig.includeSubjects = document.getElementById("cfgIncludeSubjects")?.checked ?? true;
+    reportConfig.includeAiEngagement = document.getElementById("cfgIncludeAiEngagement")?.checked ?? true;
+    reportConfig.includeInterventions = document.getElementById("cfgIncludeInterventions")?.checked ?? true;
+    reportConfig.riskFilter = document.getElementById("cfgRiskFilter")?.value || "ALL";
+
+    const container = document.getElementById("printableReportContainer");
+    if (container) {
+        API.getInterventions().then(interventions => {
+            const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            container.innerHTML = generateReportHtml(today, interventions || []);
+        });
+    }
+}
+
+function getFilteredReportStudents() {
+    let list = [...students];
+    if (reportConfig.riskFilter === "HIGH") {
+        list = list.filter(s => s.risk >= 60);
+    } else if (reportConfig.riskFilter === "AT_RISK") {
+        list = list.filter(s => s.risk >= 30);
+    }
+    return list;
+}
+
+function generateReportHtml(today, interventions) {
+    const filteredStudents = getFilteredReportStudents();
+    const total = filteredStudents.length;
+    const highRisk = filteredStudents.filter(s => s.risk >= 60);
+    const avgAttendance = total ? Math.round(filteredStudents.reduce((a, b) => a + Number(b.attendance || 0), 0) / total) : 0;
+    const avgCGPA = total ? (filteredStudents.reduce((a, b) => a + Number(b.cgpa || 0), 0) / total).toFixed(2) : "0.00";
+
+    return `
+        <!-- REPORT HEADER -->
+        <div class="border-bottom pb-4 mb-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-1 text-primary">VIGNAN UNIVERSITY</h2>
+                <h5 class="fw-semibold text-dark mb-1">Department of Computer Science & Engineering</h5>
+                <p class="text-muted small mb-0">Cohort Academic Risk & Early Intervention Intelligence Report</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-dark fs-6 mb-1">OFFICIAL AUDIT REPORT</span>
+                <p class="text-muted small mb-0">Generated: <strong>${today}</strong></p>
+                <p class="text-muted small mb-0">Scope: <strong>${reportConfig.riskFilter === 'ALL' ? 'Full Cohort' : (reportConfig.riskFilter === 'HIGH' ? 'High Risk Cohort' : 'At-Risk Watchlist')}</strong></p>
+            </div>
+        </div>
+
+        <!-- EXECUTIVE SUMMARY TILES -->
+        <div class="row g-3 mb-4">
+            <div class="col-3">
+                <div class="p-3 border rounded bg-light">
+                    <small class="text-muted d-block">MONITORED SCOPE</small>
+                    <h4 class="fw-bold mb-0 text-dark">${total} Students</h4>
                 </div>
             </div>
-
-            <!-- EXECUTIVE SUMMARY TILES -->
-            <div class="row g-3 mb-4">
-                <div class="col-3">
-                    <div class="p-3 border rounded bg-light">
-                        <small class="text-muted d-block">TOTAL MONITORED</small>
-                        <h4 class="fw-bold mb-0 text-dark">${total} Students</h4>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="p-3 border rounded bg-light">
-                        <small class="text-muted d-block">HIGH RISK (CRITICAL)</small>
-                        <h4 class="fw-bold mb-0 text-danger">${highRisk.length} (${Math.round((highRisk.length/total)*100)}%)</h4>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="p-3 border rounded bg-light">
-                        <small class="text-muted d-block">CLASS AVG ATTENDANCE</small>
-                        <h4 class="fw-bold mb-0 ${avgAttendance < 75 ? 'text-danger' : 'text-success'}">${avgAttendance}%</h4>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="p-3 border rounded bg-light">
-                        <small class="text-muted d-block">CLASS AVG CGPA</small>
-                        <h4 class="fw-bold mb-0 text-primary">${avgCGPA} / 10</h4>
-                    </div>
+            <div class="col-3">
+                <div class="p-3 border rounded bg-light">
+                    <small class="text-muted d-block">HIGH RISK (CRITICAL)</small>
+                    <h4 class="fw-bold mb-0 text-danger">${highRisk.length} (${total ? Math.round((highRisk.length/total)*100) : 0}%)</h4>
                 </div>
             </div>
+            <div class="col-3">
+                <div class="p-3 border rounded bg-light">
+                    <small class="text-muted d-block">AVG ATTENDANCE</small>
+                    <h4 class="fw-bold mb-0 ${avgAttendance < 75 ? 'text-danger' : 'text-success'}">${avgAttendance}%</h4>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="p-3 border rounded bg-light">
+                    <small class="text-muted d-block">AVG CGPA</small>
+                    <h4 class="fw-bold mb-0 text-primary">${avgCGPA} / 10</h4>
+                </div>
+            </div>
+        </div>
 
-            <!-- SECTION 1: DETAILED STUDENT ROSTER -->
+        <!-- SECTION 1: DETAILED STUDENT ROSTER -->
+        ${reportConfig.includeRoster ? `
             <div class="mb-5">
-                <h4 class="fw-bold border-bottom pb-2 mb-3">1. Cohort Risk & Performance Roster</h4>
+                <h4 class="fw-bold border-bottom pb-2 mb-3">1. Cohort Risk & Performance Roster (${total} records)</h4>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm" style="font-size: 12px;">
                         <thead class="table-light">
@@ -103,26 +196,26 @@ async function renderReports() {
                                 <th>Course/Year</th>
                                 <th>Attendance</th>
                                 <th>CGPA</th>
-                                <th>LMS Score</th>
+                                ${reportConfig.includeAiEngagement ? '<th>LMS Score</th>' : ''}
                                 <th>Risk Score</th>
-                                <th>Parent / Location</th>
+                                ${reportConfig.includeDemographics ? '<th>Parent / Location</th>' : ''}
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${students.map(s => {
+                            ${filteredStudents.map(s => {
                                 const isHigh = s.risk >= 60;
                                 return `
                                     <tr class="${isHigh ? 'table-danger' : ''}">
                                         <td><strong>${s.id}</strong></td>
                                         <td>${s.name}</td>
-                                        <td>${s.course} (${s.year})</td>
+                                        <td>${s.course} (${s.year || '2nd Year'})</td>
                                         <td>${s.attendance}%</td>
                                         <td>${s.cgpa}</td>
-                                        <td>${s.lms_score || s.attendance}%</td>
+                                        ${reportConfig.includeAiEngagement ? `<td>${s.lms_score || s.attendance}%</td>` : ''}
                                         <td><strong>${s.risk}%</strong></td>
-                                        <td>${s.father || 'N/A'} • ${s.place || 'Hyderabad'}</td>
-                                        <td>${s.risk >= 60 ? '🚨 Critical Action' : (s.risk >= 30 ? '⚠️ Moderate' : '✅ Healthy')}</td>
+                                        ${reportConfig.includeDemographics ? `<td>${s.father || 'N/A'} • ${s.place || 'Hyderabad'}</td>` : ''}
+                                        <td>${s.risk >= 60 ? '<span style="color:var(--risk-high)"><i class="bi bi-exclamation-triangle me-1"></i>Critical Action</span>' : (s.risk >= 30 ? '<span style="color:var(--risk-medium)"><i class="bi bi-exclamation-circle me-1"></i>Moderate</span>' : '<span style="color:var(--risk-low)"><i class="bi bi-check-circle me-1"></i>Healthy</span>')}</td>
                                     </tr>
                                 `;
                             }).join("")}
@@ -130,8 +223,10 @@ async function renderReports() {
                     </table>
                 </div>
             </div>
+        ` : ''}
 
-            <!-- SECTION 2: SUBJECT-WISE PERFORMANCE ANALYSIS -->
+        <!-- SECTION 2: SUBJECT-WISE PERFORMANCE ANALYSIS -->
+        ${reportConfig.includeSubjects ? `
             <div class="mb-5">
                 <h4 class="fw-bold border-bottom pb-2 mb-3">2. 2nd Year CSE Subject Academic Performance</h4>
                 <div class="table-responsive">
@@ -197,8 +292,10 @@ async function renderReports() {
                     </table>
                 </div>
             </div>
+        ` : ''}
 
-            <!-- SECTION 3: RECENT AUTONOMOUS INTERVENTIONS & AUDIT TRAIL -->
+        <!-- SECTION 3: RECENT AUTONOMOUS INTERVENTIONS & AUDIT TRAIL -->
+        ${reportConfig.includeInterventions ? `
             <div class="mb-4">
                 <h4 class="fw-bold border-bottom pb-2 mb-3">3. Intervention Log & Action Pipeline</h4>
                 ${interventions.length === 0 ? '<p class="text-muted small">No interventions logged.</p>' : `
@@ -215,7 +312,7 @@ async function renderReports() {
                                 </tr>
                             </thead>
                             <tbody>
-                                ${interventions.slice(0, 10).map(i => `
+                                ${interventions.slice(0, 15).map(i => `
                                     <tr>
                                         <td>${i.date}</td>
                                         <td><strong>${i.student_id}</strong></td>
@@ -230,17 +327,17 @@ async function renderReports() {
                     </div>
                 `}
             </div>
+        ` : ''}
 
-            <!-- REPORT FOOTER SIGN-OFF -->
-            <div class="pt-4 border-top mt-5 d-flex justify-content-between align-items-center text-muted small">
-                <div>
-                    <span>Report prepared autonomously by <strong>EduStudent Sight AI</strong></span><br>
-                    <span>Approved by Department Academic Advisory Board</span>
-                </div>
-                <div class="text-end">
-                    <div style="width: 160px; border-bottom: 1px solid #333; margin-bottom: 4px;"></div>
-                    <span>Authorized Faculty Signature</span>
-                </div>
+        <!-- REPORT FOOTER SIGN-OFF -->
+        <div class="pt-4 border-top mt-5 d-flex justify-content-between align-items-center text-muted small">
+            <div>
+                <span>Report prepared autonomously by <strong>EduStudent Sight AI</strong></span><br>
+                <span>Approved by Department Academic Advisory Board</span>
+            </div>
+            <div class="text-end">
+                <div style="width: 160px; border-bottom: 1px solid #333; margin-bottom: 4px;"></div>
+                <span>Authorized Faculty Signature</span>
             </div>
         </div>
     `;
@@ -251,54 +348,93 @@ function exportReportPDF() {
     window.print();
 }
 
-// 2. CSV Export via Client-Side Blob
+// 2. CSV Export via Client-Side Blob (Respects Settings)
 function exportReportCSV() {
+    const list = getFilteredReportStudents();
     let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Student ID,Full Name,Gender,Course,Year,Attendance %,CGPA,Credits,LMS Score,Risk %,Father,Mother,Mother Tongue,Place,Region,Country\n";
+    
+    let headers = ["Student ID", "Full Name", "Gender", "Course", "Year", "Attendance %", "CGPA", "Credits", "Risk %"];
+    if (reportConfig.includeAiEngagement) headers.push("LMS Score");
+    if (reportConfig.includeDemographics) headers.push("Father", "Mother", "Mother Tongue", "Place", "Region", "Country");
+    
+    csvContent += headers.join(",") + "\n";
 
-    students.forEach(s => {
-        csvContent += `"${s.id}","${s.name}","${s.gender || 'Male'}","${s.course}","${s.year || '2nd Year'}",${s.attendance},${s.cgpa},${s.credits || 24},${s.lms_score || s.attendance},${s.risk},"${s.father || ''}","${s.mother || ''}","${s.mother_tongue || s.motherTongue || ''}","${s.place || ''}","${s.region || ''}","${s.country || 'India'}"\n`;
+    list.forEach(s => {
+        let row = [
+            `"${s.id}"`,
+            `"${s.name}"`,
+            `"${s.gender || 'Male'}"`,
+            `"${s.course}"`,
+            `"${s.year || '2nd Year'}"`,
+            s.attendance,
+            s.cgpa,
+            s.credits || 24,
+            s.risk
+        ];
+        if (reportConfig.includeAiEngagement) row.push(s.lms_score || s.attendance);
+        if (reportConfig.includeDemographics) {
+            row.push(
+                `"${s.father || ''}"`,
+                `"${s.mother || ''}"`,
+                `"${s.mother_tongue || s.motherTongue || ''}"`,
+                `"${s.place || ''}"`,
+                `"${s.region || ''}"`,
+                `"${s.country || 'India'}"`
+            );
+        }
+        csvContent += row.join(",") + "\n";
     });
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `EduStudent_Sight_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `EduStudent_Sight_Report_${reportConfig.riskFilter}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 }
 
-// 3. Markdown Export
+// 3. Markdown Export (Respects Settings)
 function exportReportMarkdown() {
+    const list = getFilteredReportStudents();
     const today = new Date().toISOString().split('T')[0];
     let md = `# EduStudent Sight — Academic Intelligence Report (${today})\n\n`;
-    md += `## Cohort Overview\n- Total Monitored: **${students.length} Students**\n- High Risk Count: **${students.filter(s => s.risk >= 60).length}**\n\n`;
-    md += `## Student Risk Roster\n\n`;
-    md += `| ID | Name | Course | Year | Attendance | CGPA | Risk Score |\n`;
-    md += `|---|---|---|---|---|---|---|\n`;
+    md += `**Scope**: ${reportConfig.riskFilter === 'ALL' ? 'Full Cohort' : (reportConfig.riskFilter === 'HIGH' ? 'High Risk Only' : 'At-Risk Watchlist')}\n\n`;
+    md += `## Cohort Overview\n- Total Records: **${list.length} Students**\n- High Risk Count: **${list.filter(s => s.risk >= 60).length}**\n\n`;
 
-    students.forEach(s => {
-        md += `| ${s.id} | ${s.name} | ${s.course} | ${s.year || '2nd Year'} | ${s.attendance}% | ${s.cgpa} | **${s.risk}%** |\n`;
-    });
+    if (reportConfig.includeRoster) {
+        md += `## Student Risk Roster\n\n`;
+        md += `| ID | Name | Course | Year | Attendance | CGPA | Risk Score |\n`;
+        md += `|---|---|---|---|---|---|---|\n`;
 
-    md += `\n\n---\n*Report generated by EduStudent Sight Autonomous AI Platform.*`;
+        list.forEach(s => {
+            md += `| ${s.id} | ${s.name} | ${s.course} | ${s.year || '2nd Year'} | ${s.attendance}% | ${s.cgpa} | **${s.risk}%** |\n`;
+        });
+        md += `\n`;
+    }
+
+    if (reportConfig.includeSubjects) {
+        md += `## Subject Performance\n- DBMS (CS201): 73.4% Avg Attendance\n- OS (CS202): 74.8% Avg Attendance\n- Math-III (MA201): 71.2% Avg Attendance\n\n`;
+    }
+
+    md += `\n---\n*Report generated by EduStudent Sight Autonomous AI Platform.*`;
 
     const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `Academic_Report_${today}.md`;
+    link.download = `Academic_Report_${reportConfig.riskFilter}_${today}.md`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 }
 
-// 4. System Log Export
+// 4. System Log Export (Respects Settings)
 function exportReportLog() {
+    const list = getFilteredReportStudents();
     const today = new Date().toISOString();
     let log = `[${today}] [SYSTEM_AUDIT] EduStudent Sight Academic Report Exported\n`;
-    log += `[INFO] Monitored Student Count: ${students.length}\n`;
-    students.forEach(s => {
+    log += `[INFO] Scope=${reportConfig.riskFilter} Count=${list.length}\n`;
+    list.forEach(s => {
         log += `[STUDENT_RECORD] ID=${s.id} NAME="${s.name}" ATTD=${s.attendance}% CGPA=${s.cgpa} RISK=${s.risk}%\n`;
     });
 

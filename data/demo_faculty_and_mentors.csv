@@ -1,0 +1,16 @@
+id,display_name,gender,role,designation,subjects,extra_roles,email,phone,password
+FAC101,Dr. Rajeshwar Sharma,Male,faculty,"Prof & Head, CSE","CS201, CS202","HOD, Academic Council",r.sharma@univ.edu,+91 9848011221,Sharma@2026
+FAC102,Dr. Ananya Mukhopadhyay,Female,faculty,"Associate Prof, CSE","CS201, CS203",Class Advisor (2nd Yr),a.mukherjee@univ.edu,+91 9848011222,Ananya@2026
+FAC103,Prof. K. Venkatesh Rao,Male,faculty,"Assistant Prof, CSE","CS202, CS204",Lab Incharge - Systems,k.venkatesh@univ.edu,+91 9848011223,Venkat@2026
+FAC104,Dr. Preethi Sundaram,Female,faculty,"Associate Prof, Math",MA201,Exam Coordinator,p.sundaram@univ.edu,+91 9848011224,Preethi@2026
+FAC105,Prof. S. Ranganathan,Male,faculty,"Assistant Prof, CSE","CS203, CS204",Placement Faculty Lead,s.rangan@univ.edu,+91 9848011225,Ranga@2026
+FAC106,Dr. Kavita Joshi,Female,faculty,"Assistant Prof, AI&DS","AI201, CS201",AI Club Faculty Lead,k.joshi@univ.edu,+91 9848011226,Kavita@2026
+FAC107,Prof. Amit Verma,Male,faculty,"Assistant Prof, IT","CS202, CS203",Cybersecurity Cell Lead,a.verma@univ.edu,+91 9848011227,Verma@2026
+FAC108,Dr. Sunita Deshmukh,Female,faculty,"Professor, ECE","EC201, EC202",Dean Student Affairs Committee,s.deshmukh@univ.edu,+91 9848011228,Sunita@2026
+FAC109,Prof. G. Nageshwar Rao,Male,faculty,"Assistant Prof, CSE","CS201, CS204",Attendance Nodal Officer,g.nageshwar@univ.edu,+91 9848011229,Nagesh@2026
+FAC110,Dr. B. Radhika Reddy,Female,faculty,"Associate Prof, CSE","CS202, MA201",Curriculum Committee,b.radhika@univ.edu,+91 9848011230,Radhika@2026
+MEN201,Dr. Snehalatha Devi,Female,mentor,Lead Academic Counselor,"CS201, CS202, MA201","Senior Counselor, Wellness Cell",s.devi.counselor@univ.edu,+91 9700011101,Mentor@2026
+MEN202,Prof. Vikramaditya Sen,Male,mentor,Faculty Mentor & Advisor,"CS201, CS203","Hostel 1 Warden, Peer Tutoring Lead",v.sen.mentor@univ.edu,+91 9700011102,Vikram@2026
+MEN203,Dr. M. Gayatri Rao,Female,mentor,Retention & Remedial Mentor,"MA201, CS204",Remedial Clinic Incharge,m.gayatri@univ.edu,+91 9700011103,Gayatri@2026
+MEN204,Prof. Sandeep Kulkarni,Male,mentor,Student Career Mentor,"CS202, CS204",Industry Mentorship Liaison,s.kulkarni@univ.edu,+91 9700011104,Sandeep@2026
+MEN205,Dr. P. Shobha Rani,Female,mentor,First-Generation Scholar Mentor,"CS201, MA201",Special Support Cell,p.shobha@univ.edu,+91 9700011105,Shobha@2026

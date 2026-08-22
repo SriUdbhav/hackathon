@@ -1,0 +1,4 @@
+id,display_name,gender,role,designation,subjects,extra_roles,email,phone,password
+admin,System Administrator,Male,admin,Chief IT & Campus Systems Officer,ALL,"Super Admin, Data Officer",admin@univ.edu,+91 9800000001,admin123
+dean_academics,Dr. M. Srinivasa Murthy,Male,admin,Dean of Academic Affairs,ALL,"Academic Head, Senate Chair",dean.academics@univ.edu,+91 9800000002,Dean@2026
+coe_admin,Dr. T. Hemalatha,Female,admin,Controller of Examinations,ALL,"Examination Controller, Results Head",coe@univ.edu,+91 9800000003,ExamAdmin@2026

@@ -2,11 +2,13 @@
 # DB.PY
 # SQLite Database Setup, Tables, Seeding & Settings
 # Supports: UAC (Admin/Faculty/Mentor/Student),
-#           Per-Subject Marks, Extracurricular Activities
+#           Per-Subject Marks, Extracurricular Activities,
+#           Signup Requests Queue & Email Audit Logs
 # =====================================================
 
 import sqlite3
 import os
+import datetime
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "database.db")
 
@@ -39,7 +41,9 @@ def init_db():
             mother_tongue TEXT,
             place TEXT,
             region TEXT,
-            country TEXT
+            country TEXT,
+            email TEXT,
+            phone TEXT
         )
     """)
 
@@ -52,11 +56,45 @@ def init_db():
             display_name TEXT,
             linked_student_id TEXT,
             subjects TEXT,
-            extra_roles TEXT
+            extra_roles TEXT,
+            email TEXT,
+            phone TEXT
         )
     """)
 
-    # ---- 3. SUBJECTS TABLE (year/semester specific) ----
+    # ---- 3. SIGNUP REQUESTS TABLE (Pending Admin Approval) ----
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS signup_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL,
+            display_name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            phone TEXT,
+            subjects TEXT,
+            extra_roles TEXT,
+            status TEXT DEFAULT 'Pending',
+            rejection_reason TEXT,
+            created_at TEXT NOT NULL,
+            reviewed_at TEXT
+        )
+    """)
+
+    # ---- 4. EMAIL LOGS TABLE (Audit trail of dispatched emails) ----
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS email_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipient TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            body_html TEXT NOT NULL,
+            body_text TEXT,
+            email_type TEXT NOT NULL,
+            sent_at TEXT NOT NULL
+        )
+    """)
+
+    # ---- 5. SUBJECTS TABLE (year/semester specific) ----
     c.execute("""
         CREATE TABLE IF NOT EXISTS subjects (
             code TEXT PRIMARY KEY,
@@ -68,7 +106,7 @@ def init_db():
         )
     """)
 
-    # ---- 4. SUBJECT MARKS (per-student per-subject) ----
+    # ---- 6. SUBJECT MARKS (per-student per-subject) ----
     c.execute("""
         CREATE TABLE IF NOT EXISTS subject_marks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,7 +121,7 @@ def init_db():
         )
     """)
 
-    # ---- 5. EXTRACURRICULAR ACTIVITIES (master list) ----
+    # ---- 7. EXTRACURRICULAR ACTIVITIES (master list) ----
     c.execute("""
         CREATE TABLE IF NOT EXISTS extracurriculars (
             id TEXT PRIMARY KEY,
@@ -93,7 +131,7 @@ def init_db():
         )
     """)
 
-    # ---- 6. STUDENT ACTIVITIES (student ↔ activity mapping) ----
+    # ---- 8. STUDENT ACTIVITIES (student ↔ activity mapping) ----
     c.execute("""
         CREATE TABLE IF NOT EXISTS student_activities (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,7 +144,7 @@ def init_db():
         )
     """)
 
-    # ---- 7. INTERVENTIONS TABLE ----
+    # ---- 9. INTERVENTIONS TABLE ----
     c.execute("""
         CREATE TABLE IF NOT EXISTS interventions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -122,7 +160,7 @@ def init_db():
         )
     """)
 
-    # ---- 8. NOTIFICATIONS TABLE ----
+    # ---- 10. NOTIFICATIONS TABLE ----
     c.execute("""
         CREATE TABLE IF NOT EXISTS notifications (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -130,11 +168,12 @@ def init_db():
             message TEXT NOT NULL,
             type TEXT DEFAULT 'info',
             date TEXT NOT NULL,
-            student_id TEXT
+            student_id TEXT,
+            read INTEGER DEFAULT 0
         )
     """)
 
-    # ---- 9. AGENT LOGS TABLE ----
+    # ---- 11. AGENT LOGS TABLE ----
     c.execute("""
         CREATE TABLE IF NOT EXISTS agent_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -146,13 +185,43 @@ def init_db():
         )
     """)
 
-    # ---- 10. SETTINGS TABLE ----
+    # ---- 12. SETTINGS TABLE ----
     c.execute("""
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
             value TEXT
         )
     """)
+
+    # =====================================================
+    # MIGRATIONS (for existing databases)
+    # =====================================================
+    def add_column_if_missing(table, col_def):
+        try:
+            c.execute(f"ALTER TABLE {table} ADD COLUMN {col_def}")
+        except Exception:
+            pass  # Already exists
+
+    add_column_if_missing("notifications", "read INTEGER DEFAULT 0")
+    add_column_if_missing("users", "email TEXT")
+    add_column_if_missing("users", "phone TEXT")
+    add_column_if_missing("students", "email TEXT")
+    add_column_if_missing("students", "phone TEXT")
+
+    # Backfill default emails and phones for existing records
+    c.execute("UPDATE students SET email = LOWER(id) || '@vignan.ac.in' WHERE email IS NULL OR email = ''")
+    c.execute("UPDATE students SET phone = '+91 98480 12345' WHERE (phone IS NULL OR phone = '') AND id = '25CS001'")
+    c.execute("UPDATE students SET phone = '+91 98480 23456' WHERE (phone IS NULL OR phone = '') AND id = '25CS002'")
+    c.execute("UPDATE students SET phone = '+91 98480 34567' WHERE (phone IS NULL OR phone = '') AND id = '25CS003'")
+    c.execute("UPDATE students SET phone = '+91 98480 45678' WHERE (phone IS NULL OR phone = '') AND id = '25CS004'")
+    c.execute("UPDATE students SET phone = '+91 98480 56789' WHERE (phone IS NULL OR phone = '') AND id = '25CS005'")
+    c.execute("UPDATE students SET phone = '+91 98480 99999' WHERE phone IS NULL OR phone = ''")
+
+    c.execute("UPDATE users SET email = 'admin@vignan.ac.in' WHERE id = 'admin' AND (email IS NULL OR email = '')")
+    c.execute("UPDATE users SET email = LOWER(id) || '@vignan.ac.in' WHERE (email IS NULL OR email = '')")
+    c.execute("UPDATE users SET phone = '+91 90000 00001' WHERE (phone IS NULL OR phone = '') AND id = 'admin'")
+    c.execute("UPDATE users SET phone = '+91 90000 11111' WHERE (phone IS NULL OR phone = '') AND id = 'FAC001'")
+    c.execute("UPDATE users SET phone = '+91 90000 00000' WHERE phone IS NULL OR phone = ''")
 
     # =====================================================
     # SEED DATA (only if tables are empty)
@@ -162,35 +231,62 @@ def init_db():
     c.execute("SELECT COUNT(*) FROM students")
     if c.fetchone()[0] == 0:
         students_data = [
-            ("25CS001", "V.Sri Udbhav",    "Male",   "CSE", "2nd Year", 8.2, 24, 82, 88, 18, "Ramesh Kumar",  "Lakshmi Kumar", "Telugu", "Hyderabad",  "South India", "India"),
-            ("25CS002", "Y.Hemanth Reddy",  "Male",   "CSE", "2nd Year", 7.4, 23, 68, 60, 55, "Reddy Kumar",   "Padma",         "Telugu", "Vijayawada", "South India", "India"),
-            ("25CS003", "T.Gopi",           "Male",   "CSE", "2nd Year", 7.8, 22, 73, 70, 42, "Srinivas",      "Anitha",        "Telugu", "Guntur",     "South India", "India"),
-            ("25CS004", "Sneha Rao",        "Female", "CSE", "2nd Year", 8.7, 25, 91, 95,  8, "Rao Kumar",     "Sunitha",       "Telugu", "Hyderabad",  "South India", "India"),
-            ("25CS005", "Arjun Patel",      "Male",   "CSE", "2nd Year", 6.9, 20, 61, 50, 72, "Mahesh Patel",  "Kavitha",       "Hindi",  "Mumbai",     "West India",  "India"),
+            ("25CS001", "V.Sri Udbhav",    "Male",   "CSE", "2nd Year", 8.2, 24, 82, 88, 18, "Ramesh Kumar",  "Lakshmi Kumar", "Telugu", "Hyderabad",  "South India", "India", "sriudbhav.25cs@vignan.ac.in",  "+91 98480 12345"),
+            ("25CS002", "Y.Hemanth Reddy",  "Male",   "CSE", "2nd Year", 7.4, 23, 68, 60, 55, "Reddy Kumar",   "Padma",         "Telugu", "Vijayawada", "South India", "India", "hemanth.25cs@vignan.ac.in",    "+91 98480 23456"),
+            ("25CS003", "T.Gopi",           "Male",   "CSE", "2nd Year", 7.8, 22, 73, 70, 42, "Srinivas",      "Anitha",        "Telugu", "Guntur",     "South India", "India", "gopi.25cs@vignan.ac.in",       "+91 98480 34567"),
+            ("25CS004", "Sneha Rao",        "Female", "CSE", "2nd Year", 8.7, 25, 91, 95,  8, "Rao Kumar",     "Sunitha",       "Telugu", "Hyderabad",  "South India", "India", "sneha.25cs@vignan.ac.in",      "+91 98480 45678"),
+            ("25CS005", "Arjun Patel",      "Male",   "CSE", "2nd Year", 6.9, 20, 61, 50, 72, "Mahesh Patel",  "Kavitha",       "Hindi",  "Mumbai",     "West India",  "India", "arjun.25cs@vignan.ac.in",      "+91 98480 56789"),
         ]
-        c.executemany("INSERT INTO students VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", students_data)
+        c.executemany("INSERT INTO students VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", students_data)
 
     # -- Seed Users (UAC) --
     c.execute("SELECT COUNT(*) FROM users")
     if c.fetchone()[0] == 0:
         users_data = [
             # Admin
-            ("admin",   "admin123",  "admin",   "System Administrator",  None,      None,              None),
+            ("admin",   "admin123",  "admin",   "System Administrator",  None,      None,              None,                                  "admin@vignan.ac.in",        "+91 90000 00001"),
             # Faculty
-            ("FAC001",  "FAC001",    "faculty", "Dr. Ramesh Kumar",      None,      "CS201,CS202",     "Class Teacher,2nd Year Coordinator"),
-            ("FAC002",  "FAC002",    "faculty", "Dr. Priya Sharma",      None,      "CS203,CS204",     None),
-            ("FAC003",  "FAC003",    "faculty", "Prof. Venkat Rao",      None,      "MA201",           "HOD Mathematics"),
+            ("FAC001",  "FAC001",    "faculty", "Dr. Ramesh Kumar",      None,      "CS201,CS202",     "Class Teacher,2nd Year Coordinator", "dr.ramesh@vignan.ac.in",     "+91 90000 11111"),
+            ("FAC002",  "FAC002",    "faculty", "Dr. Priya Sharma",      None,      "CS203,CS204",     None,                                  "dr.priya@vignan.ac.in",      "+91 90000 22222"),
+            ("FAC003",  "FAC003",    "faculty", "Prof. Venkat Rao",      None,      "MA201",           "HOD Mathematics",                     "prof.venkat@vignan.ac.in",   "+91 90000 33333"),
             # Mentor
-            ("MEN001",  "MEN001",    "mentor",  "Prof. Sunitha Devi",    None,      "CS201,CS203",     None),
-            ("MEN002",  "MEN002",    "mentor",  "Dr. Anil Kumar",        None,      "CS202,CS204",     None),
+            ("MEN001",  "MEN001",    "mentor",  "Prof. Sunitha Devi",    None,      "CS201,CS203",     None,                                  "prof.sunitha@vignan.ac.in",  "+91 90000 44444"),
+            ("MEN002",  "MEN002",    "mentor",  "Dr. Anil Kumar",        None,      "CS202,CS204",     None,                                  "dr.anil@vignan.ac.in",       "+91 90000 55555"),
             # Students (password = their own ID)
-            ("25CS001", "25CS001",   "student", "V.Sri Udbhav",         "25CS001", None,              None),
-            ("25CS002", "25CS002",   "student", "Y.Hemanth Reddy",      "25CS002", None,              None),
-            ("25CS003", "25CS003",   "student", "T.Gopi",               "25CS003", None,              None),
-            ("25CS004", "25CS004",   "student", "Sneha Rao",            "25CS004", None,              None),
-            ("25CS005", "25CS005",   "student", "Arjun Patel",          "25CS005", None,              None),
+            ("25CS001", "25CS001",   "student", "V.Sri Udbhav",         "25CS001", None,              None,                                  "sriudbhav.25cs@vignan.ac.in","+91 98480 12345"),
+            ("25CS002", "25CS002",   "student", "Y.Hemanth Reddy",      "25CS002", None,              None,                                  "hemanth.25cs@vignan.ac.in",  "+91 98480 23456"),
+            ("25CS003", "25CS003",   "student", "T.Gopi",               "25CS003", None,              None,                                  "gopi.25cs@vignan.ac.in",     "+91 98480 34567"),
+            ("25CS004", "25CS004",   "student", "Sneha Rao",            "25CS004", None,              None,                                  "sneha.25cs@vignan.ac.in",    "+91 98480 45678"),
+            ("25CS005", "25CS005",   "student", "Arjun Patel",          "25CS005", None,              None,                                  "arjun.25cs@vignan.ac.in",    "+91 98480 56789"),
         ]
-        c.executemany("INSERT INTO users VALUES (?,?,?,?,?,?,?)", users_data)
+        c.executemany("INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?)", users_data)
+
+    # -- Seed Sample Pending Signup Request --
+    c.execute("SELECT COUNT(*) FROM signup_requests")
+    if c.fetchone()[0] == 0:
+        c.execute("""
+            INSERT INTO signup_requests (user_id, password, role, display_name, email, phone, subjects, extra_roles, status, rejection_reason, created_at, reviewed_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "FAC004", "Welcome@123", "faculty", "Dr. Kavitha Menon", "kavitha.menon@vignan.ac.in",
+            "+91 98765 43210", "CS301,CS302", "AI Lab Incharge", "Pending", None,
+            datetime.date.today().isoformat(), None
+        ))
+
+    # -- Seed Sample Sent Email Log --
+    c.execute("SELECT COUNT(*) FROM email_logs")
+    if c.fetchone()[0] == 0:
+        c.execute("""
+            INSERT INTO email_logs (recipient, subject, body_html, body_text, email_type, sent_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            "dr.ramesh@vignan.ac.in",
+            "Welcome to EduStudent Sight — Account Credentials & Activation",
+            "<p>Dear Dr. Ramesh Kumar, your Faculty account has been activated.</p>",
+            "Dear Dr. Ramesh Kumar, your Faculty account has been activated.",
+            "Account Approved",
+            datetime.datetime.now().isoformat()
+        ))
 
     # -- Seed Subjects (year-specific) --
     c.execute("SELECT COUNT(*) FROM subjects")

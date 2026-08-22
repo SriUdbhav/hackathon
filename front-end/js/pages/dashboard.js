@@ -27,10 +27,10 @@ async function renderDashboard() {
     }
 
     // FACULTY / MENTOR / ADMIN VIEW
-    renderFacultyAdminDashboard(content, user);
+    renderFacultyAdminDashboard(content, user, role);
 }
 
-async function renderFacultyAdminDashboard(content, user) {
+async function renderFacultyAdminDashboard(content, user, role) {
     const totalStudents = students.length;
     const highRiskStudents = students.filter(s => s.risk >= 60);
     const moderateRiskStudents = students.filter(s => s.risk >= 30 && s.risk < 60);
@@ -50,38 +50,46 @@ async function renderFacultyAdminDashboard(content, user) {
     const interventions = await API.getInterventions() || [];
     const pendingInterventions = interventions.filter(i => i.status === 'Pending' || i.status === 'In Progress');
 
+    // Role-specific controls: only admin sees autonomous loop, only admin/faculty see add student
+    const showAutonomousBtn = role === 'admin';
+    const showAddStudentBtn = role === 'admin' || role === 'faculty';
+
     content.innerHTML = `
         <!-- HEADER -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <div>
                 <h1 class="h3 fw-bold mb-1">
-                    📊 Academic Health & Risk Overview
+                    Academic Health & Risk Overview
                 </h1>
-                <p class="text-muted small mb-0">
-                    Real-time AI monitoring, subject analytics, and autonomous intervention radar
+                <p class="small mb-0" style="color: var(--text-soft);">
+                    Real-time academic monitoring, cohort signals, and predictive diagnostic radar
                 </p>
             </div>
             <div class="d-flex gap-2">
-                <button class="secondary-btn" onclick="triggerAutonomousCycle(this)">
-                    <i class="bi bi-robot text-primary"></i> Run Autonomous AI Loop
-                </button>
-                <button class="primary-btn" onclick="openAddStudentModal()">
-                    <i class="bi bi-person-plus-fill"></i> Add Student
-                </button>
+                ${showAutonomousBtn ? `
+                    <button class="secondary-btn d-flex align-items-center gap-2" onclick="triggerAutonomousCycle(this)">
+                        <i class="bi bi-cpu text-primary"></i> Run Autonomous AI Diagnostic
+                    </button>
+                ` : ''}
+                ${showAddStudentBtn ? `
+                    <button class="primary-btn d-flex align-items-center gap-2" onclick="openAddStudentModal()">
+                        <i class="bi bi-person-plus"></i> Add Student
+                    </button>
+                ` : ''}
             </div>
         </div>
 
         <!-- AT-A-GLANCE METRIC CARDS -->
         <div class="row g-3 mb-4">
             <div class="col-xl-3 col-md-6">
-                <div class="card-box p-3 h-100 border-start border-4 border-primary">
+                <div class="stat-card-modern accent-blue">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold">Monitored Cohort</span>
+                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Monitored Cohort</span>
                             <h2 class="fw-bold mb-0 text-dark">${totalStudents} <span class="fs-6 text-muted fw-normal">Students</span></h2>
-                            <small class="text-primary mt-1 d-block"><i class="bi bi-people-fill me-1"></i> B.Tech CSE (2nd Year)</small>
+                            <small class="text-primary mt-2 d-inline-flex align-items-center"><i class="bi bi-people-fill me-1"></i> B.Tech CSE (2nd Year)</small>
                         </div>
-                        <div class="p-2 bg-primary-subtle text-primary rounded-3 fs-4">
+                        <div class="stat-icon-box">
                             <i class="bi bi-mortarboard"></i>
                         </div>
                     </div>
@@ -89,14 +97,14 @@ async function renderFacultyAdminDashboard(content, user) {
             </div>
 
             <div class="col-xl-3 col-md-6">
-                <div class="card-box p-3 h-100 border-start border-4 border-danger">
+                <div class="stat-card-modern accent-red">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold">High Risk Students</span>
+                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">High Risk Students</span>
                             <h2 class="fw-bold mb-0 text-danger">${highRiskStudents.length} <span class="fs-6 text-muted fw-normal">Critical</span></h2>
-                            <small class="text-danger mt-1 d-block"><i class="bi bi-exclamation-triangle-fill me-1"></i> Action Required Immediately</small>
+                            <small class="text-danger mt-2 d-inline-flex align-items-center"><i class="bi bi-exclamation-triangle-fill me-1"></i> Action Required</small>
                         </div>
-                        <div class="p-2 bg-danger-subtle text-danger rounded-3 fs-4">
+                        <div class="stat-icon-box">
                             <i class="bi bi-shield-exclamation"></i>
                         </div>
                     </div>
@@ -104,14 +112,14 @@ async function renderFacultyAdminDashboard(content, user) {
             </div>
 
             <div class="col-xl-3 col-md-6">
-                <div class="card-box p-3 h-100 border-start border-4 border-warning">
+                <div class="stat-card-modern accent-yellow">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold">Pending Mentorships</span>
+                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Pending Mentorships</span>
                             <h2 class="fw-bold mb-0 text-warning">${pendingInterventions.length} <span class="fs-6 text-muted fw-normal">Active</span></h2>
-                            <small class="text-warning mt-1 d-block"><i class="bi bi-clock-history me-1"></i> 1-on-1 Sessions Queued</small>
+                            <small class="text-warning mt-2 d-inline-flex align-items-center"><i class="bi bi-clock-history me-1"></i> 1-on-1 Sessions Queued</small>
                         </div>
-                        <div class="p-2 bg-warning-subtle text-warning rounded-3 fs-4">
+                        <div class="stat-icon-box">
                             <i class="bi bi-person-lines-fill"></i>
                         </div>
                     </div>
@@ -119,14 +127,14 @@ async function renderFacultyAdminDashboard(content, user) {
             </div>
 
             <div class="col-xl-3 col-md-6">
-                <div class="card-box p-3 h-100 border-start border-4 border-success">
+                <div class="stat-card-modern accent-green">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold">Class Avg Signals</span>
+                            <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Cohort Avg Signals</span>
                             <h2 class="fw-bold mb-0 text-success">${avgAttendance}% <span class="fs-6 text-muted fw-normal">| ${avgCGPA} GPA</span></h2>
-                            <small class="text-success mt-1 d-block"><i class="bi bi-check-circle-fill me-1"></i> LMS Avg: ${avgLMS}%</small>
+                            <small class="text-success mt-2 d-inline-flex align-items-center"><i class="bi bi-check-circle-fill me-1"></i> LMS Avg: ${avgLMS}%</small>
                         </div>
-                        <div class="p-2 bg-success-subtle text-success rounded-3 fs-4">
+                        <div class="stat-icon-box">
                             <i class="bi bi-graph-up-arrow"></i>
                         </div>
                     </div>
@@ -156,12 +164,12 @@ async function renderFacultyAdminDashboard(content, user) {
             <div class="col-lg-4">
                 <div class="card-box h-100 d-flex flex-column justify-content-between">
                     <div class="card-head">
-                        <h3 class="fw-bold"><i class="bi bi-fire text-danger me-2"></i> Priority Action Required</h3>
+                        <h3 class="fw-bold"><i class="bi bi-shield-exclamation text-danger me-2"></i> Priority Interventions Required</h3>
                         <span class="badge bg-danger">${highRiskStudents.length} Flagged</span>
                     </div>
 
                     <div class="list-group list-group-flush flex-grow-1">
-                        ${highRiskStudents.length === 0 ? '<p class="text-muted small my-auto text-center py-4">✅ No students currently in High Risk status.</p>' :
+                        ${highRiskStudents.length === 0 ? '<p class="text-muted small my-auto text-center py-4"><i class="bi bi-check-circle me-1"></i>No students currently in High Risk status.</p>' :
                             highRiskStudents.map(s => `
                                 <div class="list-group-item px-0 py-3 border-bottom d-flex justify-content-between align-items-center">
                                     <div>
@@ -185,86 +193,14 @@ async function renderFacultyAdminDashboard(content, user) {
             </div>
         </div>
 
-        <!-- SUBJECT PERFORMANCE OVERVIEW TABLE -->
-        <div class="card-box p-4 mb-4">
-            <div class="card-head">
-                <div>
-                    <h3 class="fw-bold"><i class="bi bi-journal-bookmark-fill text-info me-2"></i> 2nd Year CSE Subject Academic Health Breakdown</h3>
-                    <span class="text-muted small">Aggregated internal scores, average attendance, and risk factors per subject</span>
-                </div>
-                <button class="btn btn-sm btn-outline-secondary" onclick="navigateTo('analytics')">
-                    Full Analytics <i class="bi bi-chevron-right"></i>
-                </button>
-            </div>
-            <div class="table-responsive">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>Subject Code</th>
-                            <th>Subject Name</th>
-                            <th>Semester</th>
-                            <th>Avg Attendance</th>
-                            <th>Avg Internal Score (30)</th>
-                            <th>At-Risk Count</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>CS201</strong></td>
-                            <td>Database Management Systems</td>
-                            <td>Sem 3</td>
-                            <td><span class="text-danger fw-bold">73.4%</span></td>
-                            <td>19.4 / 30</td>
-                            <td><span class="badge bg-danger">2 Students &lt; 60%</span></td>
-                            <td><span class="badge bg-warning text-dark">Attention Needed</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CS202</strong></td>
-                            <td>Operating Systems</td>
-                            <td>Sem 3</td>
-                            <td><span class="text-success fw-bold">74.8%</span></td>
-                            <td>20.4 / 30</td>
-                            <td><span class="badge bg-warning text-dark">1 Student &lt; 60%</span></td>
-                            <td><span class="badge bg-success">Stable</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>MA201</strong></td>
-                            <td>Discrete Mathematics</td>
-                            <td>Sem 3</td>
-                            <td><span class="text-danger fw-bold">71.2%</span></td>
-                            <td>17.8 / 30</td>
-                            <td><span class="badge bg-danger">2 Students &lt; 60%</span></td>
-                            <td><span class="badge bg-warning text-dark">Attention Needed</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CS203</strong></td>
-                            <td>Computer Networks</td>
-                            <td>Sem 4</td>
-                            <td><span class="text-success fw-bold">77.4%</span></td>
-                            <td>22.6 / 30</td>
-                            <td><span class="badge bg-success">0 Students &lt; 60%</span></td>
-                            <td><span class="badge bg-success">Healthy</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CS204</strong></td>
-                            <td>Software Engineering</td>
-                            <td>Sem 4</td>
-                            <td><span class="text-success fw-bold">75.4%</span></td>
-                            <td>21.4 / 30</td>
-                            <td><span class="badge bg-success">0 Students &lt; 60%</span></td>
-                            <td><span class="badge bg-success">Healthy</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- FULL STUDENT ROSTER SUMMARY -->
+        <!-- STUDENT QUICK ROSTER (Simplified for Faculty) -->
         <div class="card-box p-4">
             <div class="card-head">
-                <h3 class="fw-bold"><i class="bi bi-people-fill text-primary me-2"></i> Monitored Cohort Roster & Risk Index</h3>
-                <button class="primary-btn btn-sm" onclick="navigateTo('students')">View All Details</button>
+                <div>
+                    <h3 class="fw-bold"><i class="bi bi-people-fill text-primary me-2"></i> Student Cohort Overview</h3>
+                    <span class="text-muted small">Quick risk snapshot — <strong>${highRiskStudents.length}</strong> high risk, <strong>${moderateRiskStudents.length}</strong> moderate, <strong>${lowRiskStudents.length}</strong> healthy</span>
+                </div>
+                <button class="primary-btn btn-sm" onclick="navigateTo('students')">View Full Records</button>
             </div>
             <div class="table-responsive">
                 <table class="custom-table">
@@ -272,10 +208,8 @@ async function renderFacultyAdminDashboard(content, user) {
                         <tr>
                             <th>ID</th>
                             <th>Student Name</th>
-                            <th>Course</th>
                             <th>Attendance</th>
                             <th>CGPA</th>
-                            <th>LMS Activity</th>
                             <th>Risk Index</th>
                             <th>Actions</th>
                         </tr>
@@ -288,18 +222,16 @@ async function renderFacultyAdminDashboard(content, user) {
                                 <tr>
                                     <td><code>${s.id}</code></td>
                                     <td><strong>${s.name}</strong></td>
-                                    <td>${s.course} (${s.year || '2nd Year'})</td>
                                     <td>
                                         <span class="${s.attendance < 75 ? 'text-danger fw-bold' : 'text-success'}">
                                             ${s.attendance}%
                                         </span>
                                     </td>
                                     <td><strong>${s.cgpa}</strong></td>
-                                    <td>${s.lms_score || s.attendance}%</td>
                                     <td><span class="risk-badge ${badgeClass}">${s.risk}% (${riskLabel})</span></td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary" onclick="viewStudent360('${s.id}')">
-                                            <i class="bi bi-person-vcard"></i> 360° Profile
+                                            <i class="bi bi-person-vcard"></i> 360°
                                         </button>
                                     </td>
                                 </tr>
@@ -351,31 +283,31 @@ async function renderStudentDashboard(content, user) {
         <!-- MY METRICS CARDS -->
         <div class="row g-3 mb-4">
             <div class="col-md-3">
-                <div class="card-box p-3 border-start border-4 ${s.attendance < 75 ? 'border-danger' : 'border-success'}">
-                    <span class="text-muted small d-block mb-1">MY OVERALL ATTENDANCE</span>
+                <div class="stat-card-modern ${s.attendance < 75 ? 'accent-red' : 'accent-green'}">
+                    <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">My Attendance</span>
                     <h2 class="fw-bold mb-0 ${s.attendance < 75 ? 'text-danger' : 'text-success'}">${s.attendance}%</h2>
-                    <small class="text-muted">${s.attendance < 75 ? '⚠️ Below 75% cutoff' : '✅ Eligible for exams'}</small>
+                    <small class="text-muted mt-2 d-inline-flex align-items-center">${s.attendance < 75 ? '<i class="bi bi-exclamation-triangle text-danger me-1"></i>Below 75% cutoff' : '<i class="bi bi-check-circle text-success me-1"></i>Eligible for exams'}</small>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card-box p-3 border-start border-4 border-primary">
-                    <span class="text-muted small d-block mb-1">CUMULATIVE CGPA</span>
-                    <h2 class="fw-bold mb-0 text-primary">${s.cgpa} <span class="fs-6 text-muted">/ 10</span></h2>
-                    <small class="text-success"><i class="bi bi-award me-1"></i> Credits: ${s.credits}</small>
+                <div class="stat-card-modern accent-blue">
+                    <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Cumulative CGPA</span>
+                    <h2 class="fw-bold mb-0 text-primary">${s.cgpa} <span class="fs-6 text-muted fw-normal">/ 10</span></h2>
+                    <small class="text-muted mt-2 d-inline-flex align-items-center"><i class="bi bi-award text-primary me-1"></i> Credits: ${s.credits}</small>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card-box p-3 border-start border-4 border-info">
-                    <span class="text-muted small d-block mb-1">LMS ENGAGEMENT SCORE</span>
-                    <h2 class="fw-bold mb-0 text-info">${s.lms_score || s.attendance}%</h2>
-                    <small class="text-muted"><i class="bi bi-lightning-charge me-1"></i> Online portal activity</small>
+                <div class="stat-card-modern accent-yellow">
+                    <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">LMS Engagement</span>
+                    <h2 class="fw-bold mb-0 text-warning">${s.lms_score || s.attendance}%</h2>
+                    <small class="text-muted mt-2 d-inline-flex align-items-center"><i class="bi bi-lightning-charge text-warning me-1"></i> Portal activity</small>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card-box p-3 border-start border-4 border-warning">
-                    <span class="text-muted small d-block mb-1">ACTIVE MENTOR ACTIONS</span>
-                    <h2 class="fw-bold mb-0 text-warning">${interventions.length}</h2>
-                    <small class="text-muted"><i class="bi bi-person-check me-1"></i> Academic Support</small>
+                <div class="stat-card-modern accent-green">
+                    <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Active Mentorships</span>
+                    <h2 class="fw-bold mb-0 text-success">${interventions.length}</h2>
+                    <small class="text-muted mt-2 d-inline-flex align-items-center"><i class="bi bi-person-check text-success me-1"></i> Academic Support</small>
                 </div>
             </div>
         </div>

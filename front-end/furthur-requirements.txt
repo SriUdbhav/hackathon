@@ -1,0 +1,33 @@
+ADMIN:
+
+1. add a clear all button for notifications (this is not just for Admin but for all the other people).
+
+Faculty:
+
+1. only show very important metrics in dashboard, (don't remove graphs etc.. just only show important detials, and students info).
+
+2. in metor priority section in faculty, facutaly, can only schedule a mentor session he/her can't now mark a session as complete. so fix that UAC breach. But he/her can still view the progress of the mentor.
+
+3. In student 360 incllude proper search/filtering since if there are too many sutdents as there will be (like about 10000 students). search. 
+
+4. remove AI agent settings from faculty only admin should have access to ai agent settings only can use AI but not change or setting in AI like api keys etc... 
+
+MENTOR:
+
+some sections for mentor doesn't make any sense or atleast dones't have proper results etc.. once go through the entire mentor section and fix any things be it info etc... and also imporve UX/UI expecially in the book one on one session.
+
+STUDENT:
+
+this is the main seciton, that has so many UAC problems, like in AI agent they were able to access other students deatils, and even in search, there we shwoing other students records, in fact I think student deson't require a search function. and also in notification, he is getting notification about other students too.
+
+---> now some fix globally (regardless of UAC)<----
+
+1. fix notifications, problem imporve their UfI/UX, and also clearall notifications button.
+
+2. search functionality in all the required sections like students section, student 360 section, that too super improved search like regex, fuzzy searching etc... 
+
+3. !important, in reports, add settings like what detials to be included in the reports, etc... 
+
+4. also support .csv or .excel file to import large number of students, fcautly or mentors, for admin only and studetns import access to both faccutly and mentor too. 
+
+make sure to fix all, UAC related things.

@@ -2,6 +2,7 @@
    SETTINGS.JS
    Dynamic System Settings, AI Engine Configuration,
    Live Threshold Recalculations & Security Management
+   UAC: AI settings only visible to admin
 ===================================================== */
 
 async function renderSettings() {
@@ -23,13 +24,13 @@ async function renderSettings() {
 
     content.innerHTML = `
         <div class="mb-4">
-            <h1 class="h3 fw-bold mb-1">⚙️ System & Intelligence Configuration</h1>
-            <p class="text-muted small mb-0">Manage dynamic academic risk thresholds, AI inference engine keys, and account security</p>
+            <h1 class="h3 fw-bold mb-1">System & Intelligence Configuration</h1>
+            <p class="text-muted small mb-0">Manage dynamic academic risk thresholds${role === 'admin' ? ', AI inference engine keys,' : ''} and account security</p>
         </div>
 
         <div class="row g-4">
             <!-- 1. DYNAMIC RISK & ATTENDANCE THRESHOLDS -->
-            <div class="col-lg-6">
+            <div class="${role === 'admin' ? 'col-lg-6' : 'col-lg-8'}">
                 <div class="card-box h-100">
                     <div class="card-head">
                         <h3 class="fw-bold"><i class="bi bi-sliders text-danger me-2"></i> Academic Risk Thresholds</h3>
@@ -56,53 +57,63 @@ async function renderSettings() {
                         </div>
 
                         <button type="submit" class="primary-btn w-100" id="saveThresholdBtn">
-                            <i class="bi bi-arrow-repeat"></i> Save & Recalculate All Student Risks
+                            <i class="bi bi-sliders2"></i> Save & Recalculate All Student Risks
                         </button>
                     </form>
                 </div>
             </div>
 
-            <!-- 2. AI ENGINE & INFERENCE PROVIDER -->
-            <div class="col-lg-6">
-                <div class="card-box h-100">
-                    <div class="card-head">
-                        <h3 class="fw-bold"><i class="bi bi-robot text-primary me-2"></i> AI Agent Provider & Model</h3>
-                        <span class="badge bg-primary">Multi-Engine</span>
+            <!-- 2. AI ENGINE & INFERENCE PROVIDER (Admin Only) -->
+            ${role === 'admin' ? `
+                <div class="col-lg-6">
+                    <div class="card-box h-100">
+                        <div class="card-head">
+                            <h3 class="fw-bold"><i class="bi bi-cpu text-primary me-2"></i> AI Engine Provider & Model</h3>
+                            <span class="badge bg-primary">Multi-Engine</span>
+                        </div>
+
+                        <form id="aiEngineSettingsForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Active AI Engine</label>
+                                <select id="settingAiProvider" class="form-select" onchange="handleSettingsProviderChange()">
+                                    <option value="local" ${provider === 'local' ? 'selected' : ''}>Local Agentic Reasoning Engine</option>
+                                    <option value="gemini" ${provider === 'gemini' ? 'selected' : ''}>Google Gemini (API Key)</option>
+                                    <option value="ollama" ${provider === 'ollama' ? 'selected' : ''}>Local Ollama (e.g. Llama 3.2)</option>
+                                    <option value="groq" ${provider === 'groq' ? 'selected' : ''}>Groq High-Speed Cloud</option>
+                                    <option value="openai" ${provider === 'openai' ? 'selected' : ''}>OpenAI (ChatGPT)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3 ${provider === 'local' || provider === 'ollama' ? 'd-none' : ''}" id="apiKeyGroup">
+                                <label class="form-label fw-semibold">API Key</label>
+                                <input type="password" id="settingApiKey" class="form-control" value="${apiKey}" placeholder="AIzaSy... or gsk_...">
+                            </div>
+
+                            <div class="mb-3 ${provider === 'local' || provider === 'gemini' ? 'd-none' : ''}" id="apiBaseUrlGroup">
+                                <label class="form-label fw-semibold">API Base URL</label>
+                                <input type="text" id="settingApiBaseUrl" class="form-control" value="${baseUrl}" placeholder="http://127.0.0.1:11434">
+                            </div>
+
+                            <div class="mb-4 ${provider === 'local' || provider === 'gemini' ? 'd-none' : ''}" id="modelNameGroup">
+                                <label class="form-label fw-semibold">Model Identifier</label>
+                                <input type="text" id="settingModelName" class="form-control" value="${modelName}" placeholder="llama-3.1-8b-instant or llama3.2">
+                            </div>
+
+                            <button type="submit" class="secondary-btn w-100" id="saveAiSettingsBtn">
+                                <i class="bi bi-check2-circle"></i> Update AI Engine Settings
+                            </button>
+                        </form>
                     </div>
-
-                    <form id="aiEngineSettingsForm">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Active AI Engine</label>
-                            <select id="settingAiProvider" class="form-select" onchange="handleSettingsProviderChange()">
-                                <option value="local" ${provider === 'local' ? 'selected' : ''}>Local Agentic Reasoning Engine</option>
-                                <option value="gemini" ${provider === 'gemini' ? 'selected' : ''}>Google Gemini (API Key)</option>
-                                <option value="ollama" ${provider === 'ollama' ? 'selected' : ''}>Local Ollama (e.g. Llama 3.2)</option>
-                                <option value="groq" ${provider === 'groq' ? 'selected' : ''}>Groq High-Speed Cloud</option>
-                                <option value="openai" ${provider === 'openai' ? 'selected' : ''}>OpenAI (ChatGPT)</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3 ${provider === 'local' || provider === 'ollama' ? 'd-none' : ''}" id="apiKeyGroup">
-                            <label class="form-label fw-semibold">API Key</label>
-                            <input type="password" id="settingApiKey" class="form-control" value="${apiKey}" placeholder="AIzaSy... or gsk_...">
-                        </div>
-
-                        <div class="mb-3 ${provider === 'local' || provider === 'gemini' ? 'd-none' : ''}" id="apiBaseUrlGroup">
-                            <label class="form-label fw-semibold">API Base URL</label>
-                            <input type="text" id="settingApiBaseUrl" class="form-control" value="${baseUrl}" placeholder="http://127.0.0.1:11434">
-                        </div>
-
-                        <div class="mb-4 ${provider === 'local' || provider === 'gemini' ? 'd-none' : ''}" id="modelNameGroup">
-                            <label class="form-label fw-semibold">Model Identifier</label>
-                            <input type="text" id="settingModelName" class="form-control" value="${modelName}" placeholder="llama-3.1-8b-instant or llama3.2">
-                        </div>
-
-                        <button type="submit" class="secondary-btn w-100" id="saveAiSettingsBtn">
-                            <i class="bi bi-check2-circle"></i> Update AI Engine Settings
-                        </button>
-                    </form>
                 </div>
-            </div>
+            ` : `
+                <div class="col-lg-4">
+                    <div class="card-box h-100 d-flex flex-column justify-content-center align-items-center text-center p-4">
+                        <i class="bi bi-shield-lock fs-1 text-muted mb-3"></i>
+                        <h5 class="fw-bold text-dark">AI Settings Restricted</h5>
+                        <p class="text-muted small mb-0">AI engine configuration (API keys, model selection) is managed by system administrators only. Contact your admin to change AI settings.</p>
+                    </div>
+                </div>
+            `}
         </div>
 
         <!-- 3. SECURITY & PASSWORD MANAGEMENT -->
@@ -159,13 +170,13 @@ async function renderSettings() {
             btn.disabled = false;
             btn.innerHTML = `<i class="bi bi-arrow-repeat"></i> Save & Recalculate All Student Risks`;
 
-            alert(`✅ Thresholds updated successfully! All ${res?.updated_count || 'cohort'} students have been dynamically recalculated using the new cutoffs (${attd}% attendance, ${gpa} CGPA).`);
+            alert(`Thresholds updated successfully! All ${res?.updated_count || 'cohort'} students have been dynamically recalculated using the new cutoffs (${attd}% attendance, ${gpa} CGPA).`);
 
             await loadLatestStudents();
         });
     }
 
-    // 2. Bind AI Settings Save Form
+    // 2. Bind AI Settings Save Form (admin only)
     const aiForm = document.getElementById("aiEngineSettingsForm");
     if (aiForm) {
         aiForm.addEventListener("submit", async function(e) {

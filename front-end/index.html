@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="soft-white">
 
 <head>
     <meta charset="UTF-8">
@@ -10,12 +10,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Inter + JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Design Tokens (loaded after Bootstrap, before all app CSS) -->
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/pages.css">
@@ -28,6 +30,19 @@
 ===================================================== -->
 <div id="loginPage" class="login-page">
     <div class="login-box" style="max-width: 480px;">
+        <!-- Theme switcher on login page -->
+        <div class="theme-switcher login-theme-switcher" id="loginThemeSwitcher">
+            <button class="theme-btn active" data-theme-value="soft-white" title="Light theme">
+                <i class="bi bi-sun"></i>
+            </button>
+            <button class="theme-btn" data-theme-value="sepia" title="Sepia theme">
+                <i class="bi bi-book"></i>
+            </button>
+            <button class="theme-btn" data-theme-value="dark" title="Catppuccin Mocha Lavender Theme">
+                <i class="bi bi-moon-stars"></i>
+            </button>
+        </div>
+
         <div class="brand-login">
             <div class="brand-logo">
                 <i class="bi bi-mortarboard-fill"></i>
@@ -38,71 +53,185 @@
             </div>
         </div>
 
-        <div class="login-title">
-            <span>UNIFIED ACCESS CONTROL</span>
-            <h2>Sign in to your account</h2>
-            <p>Access customized dashboards for Faculty, Mentors, Students & Admins.</p>
+        <!-- Auth Mode Toggle (Sign In vs Apply for Account) -->
+        <div class="auth-tabs d-flex mb-4 p-1 bg-light rounded-3 border">
+            <button type="button" class="btn btn-sm flex-fill fw-semibold auth-tab-btn active" id="tabSignIn" onclick="switchAuthTab('signin')">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+            </button>
+            <button type="button" class="btn btn-sm flex-fill fw-semibold auth-tab-btn" id="tabSignUp" onclick="switchAuthTab('signup')">
+                <i class="bi bi-person-plus me-1"></i> Apply for Account
+            </button>
         </div>
 
-        <form id="loginForm">
-            <label>User ID or Email</label>
-            <div class="input-box">
-                <i class="bi bi-person-badge"></i>
-                <input type="text" id="loginUserId" placeholder="e.g. 25CS001 or admin or FAC001" required autocomplete="username">
+        <!-- 1. SIGN IN VIEW -->
+        <div id="signInView">
+            <div class="login-title">
+                <span>UNIFIED ACCESS CONTROL</span>
+                <h2>Sign in to your account</h2>
+                <p>Access customized dashboards for Faculty, Mentors, Students & Admins.</p>
             </div>
 
-            <label>Password</label>
-            <div class="input-box">
-                <i class="bi bi-lock"></i>
-                <input type="password" id="loginPassword" placeholder="Enter password" required autocomplete="current-password">
-                <button type="button" class="password-toggle" id="passwordToggle">
-                    <i class="bi bi-eye"></i>
+            <form id="loginForm">
+                <label>User ID or Email</label>
+                <div class="input-box">
+                    <i class="bi bi-person-badge"></i>
+                    <input type="text" id="loginUserId" placeholder="e.g. 25CS001 or admin or FAC001" required autocomplete="username">
+                </div>
+
+                <label>Password</label>
+                <div class="input-box">
+                    <i class="bi bi-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Enter password" required autocomplete="current-password">
+                    <button type="button" class="password-toggle" id="passwordToggle">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+
+                <div class="remember-row d-flex justify-content-between align-items-center mb-3">
+                    <label class="remember d-flex align-items-center gap-2 mb-0">
+                        <input type="checkbox" id="rememberMe">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" id="forgotPasswordBtn" class="forgot-link">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <span>Sign in</span>
+                    <i class="bi bi-arrow-right"></i>
                 </button>
+
+                <div id="loginError" class="login-error"></div>
+            </form>
+
+            <!-- Quick Persona Demo Switcher -->
+            <div class="demo-login mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="demo-login-header"><i class="bi bi-info-circle me-1"></i> Quick demo logins</span>
+                </div>
+                <div class="d-grid gap-1">
+                    <button type="button" class="demo-login-btn" onclick="fillDemoLogin('admin', 'admin123')">
+                        <span class="demo-login-role"><i class="bi bi-shield-check demo-icon"></i> <strong>Admin</strong> <span class="demo-role-desc">(Full System Access)</span></span>
+                        <code class="demo-creds">admin / admin123</code>
+                    </button>
+                    <button type="button" class="demo-login-btn" onclick="fillDemoLogin('FAC001', 'FAC001')">
+                        <span class="demo-login-role"><i class="bi bi-mortarboard demo-icon"></i> <strong>Faculty</strong> <span class="demo-role-desc">(Dr. Ramesh — DBMS, OS)</span></span>
+                        <code class="demo-creds">FAC001 / FAC001</code>
+                    </button>
+                    <button type="button" class="demo-login-btn" onclick="fillDemoLogin('MEN001', 'MEN001')">
+                        <span class="demo-login-role"><i class="bi bi-compass demo-icon"></i> <strong>Mentor</strong> <span class="demo-role-desc">(Prof. Sunitha — CN, SE)</span></span>
+                        <code class="demo-creds">MEN001 / MEN001</code>
+                    </button>
+                    <button type="button" class="demo-login-btn" onclick="fillDemoLogin('25CS001', '25CS001')">
+                        <span class="demo-login-role"><i class="bi bi-person demo-icon"></i> <strong>Student</strong> <span class="demo-role-desc">(V. Sri Udbhav — Own Stats)</span></span>
+                        <code class="demo-creds">25CS001 / 25CS001</code>
+                    </button>
+                    <button type="button" class="demo-login-btn" onclick="fillDemoLogin('25CS005', '25CS005')">
+                        <span class="demo-login-role"><i class="bi bi-exclamation-triangle demo-icon demo-icon-risk"></i> <strong>Student</strong> <span class="demo-role-desc">(Arjun Patel — High Risk)</span></span>
+                        <code class="demo-creds">25CS005 / 25CS005</code>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. FACULTY & MENTOR REGISTRATION REQUEST VIEW -->
+        <div id="signUpView" class="d-none">
+            <div class="login-title">
+                <span>INSTITUTIONAL REGISTRATION</span>
+                <h2>Faculty & Mentor Signup</h2>
+                <p>Submit your official department registration. Administrator will verify against university records before activating your account.</p>
             </div>
 
-            <div class="remember-row d-flex justify-content-between align-items-center mb-3">
-                <label class="remember d-flex align-items-center gap-2 mb-0">
-                    <input type="checkbox" id="rememberMe">
-                    <span>Remember me</span>
-                </label>
-                <a href="#" id="forgotPasswordBtn" class="text-decoration-none small text-primary fw-semibold">Forgot password?</a>
-            </div>
+            <form id="signupForm">
+                <div class="row g-3 mb-2">
+                    <div class="col-md-6">
+                        <label>Full Name</label>
+                        <div class="input-box">
+                            <i class="bi bi-person"></i>
+                            <input type="text" id="signupDisplayName" placeholder="e.g. Dr. Kavitha Menon" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label>University User ID</label>
+                        <div class="input-box">
+                            <i class="bi bi-person-badge"></i>
+                            <input type="text" id="signupUserId" placeholder="e.g. FAC004 or MEN002" required>
+                        </div>
+                    </div>
+                </div>
 
-            <button type="submit" class="login-btn">
-                <span>Sign in</span>
-                <i class="bi bi-arrow-right"></i>
-            </button>
+                <div class="row g-3 mb-2">
+                    <div class="col-md-6">
+                        <label>Institutional Email</label>
+                        <div class="input-box">
+                            <i class="bi bi-envelope"></i>
+                            <input type="email" id="signupEmail" placeholder="name@vignan.ac.in" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Mobile / Phone Number</label>
+                        <div class="input-box">
+                            <i class="bi bi-telephone"></i>
+                            <input type="tel" id="signupPhone" placeholder="+91 98765 43210" required>
+                        </div>
+                    </div>
+                </div>
 
-            <div id="loginError" class="login-error"></div>
-        </form>
+                <div class="mb-2">
+                    <label>Role</label>
+                    <div class="input-box">
+                        <i class="bi bi-shield-shaded"></i>
+                        <select id="signupRole" class="form-select border-0 bg-transparent p-0" style="box-shadow:none;">
+                            <option value="faculty">Faculty (Teaching & Assessment)</option>
+                            <option value="mentor">Mentor (Student Counseling & Guidance)</option>
+                        </select>
+                    </div>
+                </div>
 
-        <!-- Quick Persona Demo Switcher -->
-        <div class="demo-login mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold text-muted small"><i class="bi bi-key-fill me-1"></i> Quick Demo Logins:</span>
-            </div>
-            <div class="d-grid gap-1">
-                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemoLogin('admin', 'admin123')">
-                    <span>👑 <strong>Admin</strong> (Full System Access)</span>
-                    <code class="small">admin / admin123</code>
+                <div class="mb-2">
+                    <label>Assigned Subjects (Course codes separated by comma)</label>
+                    <div class="input-box">
+                        <i class="bi bi-book"></i>
+                        <input type="text" id="signupSubjects" placeholder="e.g. CS201, CS202, CS301 (or Unknown if not assigned yet)">
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label>Additional Responsibilities (Optional)</label>
+                    <div class="input-box">
+                        <i class="bi bi-briefcase"></i>
+                        <input type="text" id="signupExtraRoles" placeholder="e.g. Class Teacher, Coordinator, Lab Incharge (or Unknown)">
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label>Password</label>
+                        <div class="input-box">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" id="signupPassword" placeholder="Create password" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Confirm Password</label>
+                        <div class="input-box">
+                            <i class="bi bi-shield-lock"></i>
+                            <input type="password" id="signupConfirmPassword" placeholder="Confirm password" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 mb-3 border small text-muted">
+                    <i class="bi bi-info-circle-fill text-primary me-1"></i>
+                    <strong>Admin Verification:</strong> Administrator will manually verify your <strong>University ID</strong> against the institutional faculty register before approval. An official notification with credentials will be emailed to you upon activation.
+                </div>
+
+                <button type="submit" class="login-btn" id="signupSubmitBtn">
+                    <span>Submit Application for Approval</span>
+                    <i class="bi bi-send-check"></i>
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemoLogin('FAC001', 'FAC001')">
-                    <span>👨‍🏫 <strong>Faculty</strong> (Dr. Ramesh - DBMS, OS)</span>
-                    <code class="small">FAC001 / FAC001</code>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemoLogin('MEN001', 'MEN001')">
-                    <span>🤝 <strong>Mentor</strong> (Prof. Sunitha - CN, SE)</span>
-                    <code class="small">MEN001 / MEN001</code>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemoLogin('25CS001', '25CS001')">
-                    <span>🎓 <strong>Student</strong> (V. Sri Udbhav - Own Stats)</span>
-                    <code class="small">25CS001 / 25CS001</code>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemoLogin('25CS005', '25CS005')">
-                    <span>⚠️ <strong>Student</strong> (Arjun Patel - High Risk)</span>
-                    <code class="small">25CS005 / 25CS005</code>
-                </button>
-            </div>
+
+                <div id="signupStatus" class="mt-3"></div>
+            </form>
         </div>
     </div>
 </div>
@@ -169,7 +298,7 @@
             </button>
 
             <button class="nav-item" data-page="aiagent" id="navAiAgent">
-                <i class="bi bi-robot"></i>
+                <i class="bi bi-cpu"></i>
                 <span>AI Agent</span>
             </button>
 
@@ -229,14 +358,29 @@
             </div>
 
             <div class="top-actions">
+                <!-- Theme Switcher -->
+                <div class="theme-switcher" id="appThemeSwitcher">
+                    <button class="theme-btn active" data-theme-value="soft-white" title="Light theme">
+                        <i class="bi bi-sun"></i>
+                    </button>
+                    <button class="theme-btn" data-theme-value="sepia" title="Sepia theme">
+                        <i class="bi bi-book"></i>
+                    </button>
+                    <button class="theme-btn" data-theme-value="dark" title="Catppuccin Mocha Lavender Theme">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+                </div>
+
                 <button class="icon-btn" id="notificationButton" title="Notifications">
                     <i class="bi bi-bell"></i>
-                    <span class="notification-dot" id="topNotifDot">3</span>
+                    <span class="notification-dot d-none" id="topNotifDot">0</span>
                 </button>
 
                 <!-- Dynamic User Pill -->
                 <div class="administrator dropdown-toggle cursor-pointer" id="userProfilePill" onclick="toggleUserDropdown()">
-                    <div class="admin-avatar" id="topbarAvatar">👨🏻‍💼</div>
+                    <div class="admin-avatar" id="topbarAvatar">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
                     <div>
                         <strong id="topbarUserName">Administrator</strong>
                         <small id="topbarUserRole">Admin</small>
@@ -250,7 +394,7 @@
                         <span id="dropMenuDetail" class="small text-muted">Role: Admin</span>
                     </div>
                     <a href="#" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2" onclick="openChangePasswordModal(event)">
-                        <i class="bi bi-key text-primary"></i> Change Password
+                        <i class="bi bi-key"></i> Change Password
                     </a>
                     <a href="#" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2 text-danger" onclick="logout(event)">
                         <i class="bi bi-box-arrow-right"></i> Sign Out
@@ -292,70 +436,86 @@
         </div>
 
         <form id="studentForm">
+            <div class="p-2 mb-3 bg-light rounded border small text-muted">
+                <i class="bi bi-info-circle text-primary me-1"></i>
+                <strong>Manual Entry:</strong> All fields must be entered manually. If information is not available, enter <code>0</code> for numeric metrics and <code>Unknown</code> for text fields.
+            </div>
+
             <div class="form-grid">
                 <div class="form-group">
-                    <label>Student Name</label>
-                    <input id="studentName" required placeholder="Full Name">
+                    <label>Student Full Name <span class="text-danger">*</span></label>
+                    <input id="studentName" required placeholder="e.g. Rahul Sharma (or Unknown)">
                 </div>
                 <div class="form-group">
-                    <label>Student ID</label>
+                    <label>Student ID (Roll Number) <span class="text-danger">*</span></label>
                     <input id="studentId" required placeholder="e.g. 25CS006">
                 </div>
                 <div class="form-group">
-                    <label>Gender</label>
-                    <select id="studentGender">
+                    <label>Gender <span class="text-danger">*</span></label>
+                    <select id="studentGender" required>
+                        <option value="" disabled selected>-- Select Gender --</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
+                        <option value="Other">Other / Unknown</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Course</label>
-                    <input id="studentCourse" value="CSE">
+                    <label>Course / Branch <span class="text-danger">*</span></label>
+                    <input id="studentCourse" required placeholder="e.g. CSE, ECE, IT (or Unknown)">
                 </div>
                 <div class="form-group">
-                    <label>Year</label>
-                    <select id="studentYear">
+                    <label>Academic Year <span class="text-danger">*</span></label>
+                    <select id="studentYear" required>
+                        <option value="" disabled selected>-- Select Year --</option>
                         <option value="1st Year">1st Year</option>
-                        <option value="2nd Year" selected>2nd Year</option>
+                        <option value="2nd Year">2nd Year</option>
                         <option value="3rd Year">3rd Year</option>
                         <option value="4th Year">4th Year</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>CGPA (0 - 10)</label>
-                    <input id="studentCGPA" type="number" step="0.01" min="0" max="10" value="8.0">
+                    <label>CGPA (0.00 - 10.00) <span class="text-danger">*</span></label>
+                    <input id="studentCGPA" type="number" step="0.01" min="0" max="10" required placeholder="Enter CGPA (or 0 if N/A)">
                 </div>
                 <div class="form-group">
-                    <label>Attendance % (0 - 100)</label>
-                    <input id="studentAttendance" type="number" min="0" max="100" value="80">
+                    <label>Attendance % (0 - 100) <span class="text-danger">*</span></label>
+                    <input id="studentAttendance" type="number" min="0" max="100" required placeholder="Enter % (or 0 if N/A)">
                 </div>
                 <div class="form-group">
-                    <label>Credits Earned</label>
-                    <input id="studentCredits" type="number" value="24">
+                    <label>Credits Earned <span class="text-danger">*</span></label>
+                    <input id="studentCredits" type="number" min="0" required placeholder="Enter credits (or 0 if N/A)">
                 </div>
                 <div class="form-group">
                     <label>Father's Name</label>
-                    <input id="fatherName" placeholder="Father's name">
+                    <input id="fatherName" placeholder="Father's name (or Unknown)">
                 </div>
                 <div class="form-group">
                     <label>Mother's Name</label>
-                    <input id="motherName" placeholder="Mother's name">
+                    <input id="motherName" placeholder="Mother's name (or Unknown)">
                 </div>
                 <div class="form-group">
                     <label>Mother Tongue</label>
-                    <input id="motherTongue" placeholder="Telugu / Hindi / English" value="Telugu">
+                    <input id="motherTongue" placeholder="e.g. Telugu, Hindi, English (or Unknown)">
                 </div>
                 <div class="form-group">
                     <label>Place / City</label>
-                    <input id="studentPlace" placeholder="City" value="Hyderabad">
+                    <input id="studentPlace" placeholder="City (or Unknown)">
                 </div>
                 <div class="form-group">
                     <label>Region</label>
-                    <input id="studentRegion" placeholder="Region" value="South India">
+                    <input id="studentRegion" placeholder="e.g. South India (or Unknown)">
                 </div>
                 <div class="form-group">
                     <label>Country</label>
-                    <input id="studentCountry" value="India">
+                    <input id="studentCountry" placeholder="e.g. India (or Unknown)">
+                </div>
+                <div class="form-group">
+                    <label>Student Email</label>
+                    <input id="studentEmail" type="email" placeholder="student@vignan.ac.in (or Unknown)">
+                </div>
+                <div class="form-group">
+                    <label>Phone / Mobile</label>
+                    <input id="studentPhone" type="tel" placeholder="+91 98480 00000 (or Unknown)">
                 </div>
             </div>
 
@@ -399,6 +559,76 @@
     </div>
 </div>
 
+<!-- 3. REJECTION REASON MODAL (Admin Approval Gatekeeper) -->
+<div id="rejectionReasonModal" class="modal-overlay">
+    <div class="student-modal" style="max-width: 500px;">
+        <div class="modal-head">
+            <div>
+                <span class="text-danger">ADMINISTRATIVE ACTION</span>
+                <h2>Reject Signup Application</h2>
+            </div>
+            <button class="modal-close" onclick="closeRejectionModal()"><i class="bi bi-x"></i></button>
+        </div>
+        <div class="p-3">
+            <p class="text-muted small mb-3">
+                Please provide the official reason for rejecting this application for <strong id="rejectApplicantName">Applicant</strong> (<code id="rejectApplicantId">ID</code>). This reason will be automatically formatted and emailed to <strong id="rejectApplicantEmail">email</strong>.
+            </p>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Quick Pre-set Reasons</label>
+                <select id="rejectPresetSelect" class="form-select mb-2" onchange="applyRejectPreset(this.value)">
+                    <option value="">-- Choose pre-set reason or write custom --</option>
+                    <option value="Institutional credentials and department affiliation could not be verified.">Invalid / unverified institutional credentials</option>
+                    <option value="Subject allotment quota for the selected department is currently full.">Subject allotment quota is full</option>
+                    <option value="Application is a duplicate submission. Please log in using your existing account.">Duplicate application</option>
+                    <option value="Incomplete academic qualifications and departmental permissions provided.">Incomplete department documentation</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Official Explanation / Feedback</label>
+                <textarea id="rejectionReasonText" class="form-control" rows="3" placeholder="Explain the specific reason for rejecting this application..." required></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="secondary-btn" onclick="closeRejectionModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="submitRejectionAction()">
+                    <i class="bi bi-x-circle me-1"></i> Confirm & Dispatch Rejection Email
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. EMAIL PREVIEW MODAL -->
+<div id="emailPreviewModal" class="modal-overlay">
+    <div class="student-modal" style="max-width: 640px;">
+        <div class="modal-head">
+            <div>
+                <span>EMAIL DISPATCH AUDIT</span>
+                <h2>Dispatched Email Preview</h2>
+            </div>
+            <button class="modal-close" onclick="closeEmailPreviewModal()"><i class="bi bi-x"></i></button>
+        </div>
+        <div class="p-3">
+            <div class="mb-2 d-flex justify-content-between text-muted small border-bottom pb-2">
+                <span><strong>To:</strong> <span id="emailModalRecipient">-</span></span>
+                <span><strong>Type:</strong> <span id="emailModalType" class="badge bg-primary">-</span></span>
+                <span><strong>Sent:</strong> <span id="emailModalDate">-</span></span>
+            </div>
+            <div class="mb-3">
+                <strong>Subject:</strong> <span id="emailModalSubject" class="text-dark">-</span>
+            </div>
+            <div id="emailModalBody" class="border rounded p-3 bg-white" style="max-height: 380px; overflow-y: auto;">
+                <!-- Rendered HTML Email -->
+            </div>
+            <div class="d-flex justify-content-end mt-3">
+                <button type="button" class="secondary-btn" onclick="closeEmailPreviewModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- Marked.js Markdown Renderer -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -406,6 +636,8 @@
 <!-- Application Scripts -->
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/chart-theme.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/pages/dashboard.js"></script>
 <script src="js/pages/students.js"></script>

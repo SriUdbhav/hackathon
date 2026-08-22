@@ -18,27 +18,29 @@ async function renderEngagement() {
         <!-- HEADER & EXPLAINER CARD -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h1 class="h3 fw-bold mb-1">⚡ Multi-Signal Engagement Index</h1>
-                <p class="text-muted small mb-0">Holistic synthesis of physical attendance, LMS activity, assignment submission & GPA velocity</p>
+                <h1 class="h3 fw-bold mb-1">Multi-Signal Engagement Index</h1>
+                <p class="small mb-0" style="color: var(--text-soft);">Holistic synthesis of physical attendance, LMS activity, assignment submission & GPA velocity</p>
             </div>
             <span class="badge bg-primary fs-6 px-3 py-2">
                 <i class="bi bi-shield-check me-1"></i> AI Multi-Signal Formula
             </span>
         </div>
 
-        <div class="card-box p-4 bg-light border-primary mb-4">
+        <div class="formula-banner mb-4">
             <div class="d-flex align-items-start gap-3">
-                <div class="fs-2 text-primary"><i class="bi bi-info-circle-fill"></i></div>
-                <div>
-                    <h5 class="fw-bold mb-1">How is the Engagement Index Calculated?</h5>
-                    <p class="text-muted small mb-2">
-                        Rather than looking at attendance alone, our autonomous engine aggregates 4 weighted telemetry streams to prevent blind spots:
+                <div class="stat-icon-box" style="color: var(--accent); background: var(--accent-soft); width: 38px; height: 38px; font-size: 18px;">
+                    <i class="bi bi-info-circle-fill"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="fw-bold mb-1" style="color: var(--text);">How is the Engagement Index Calculated?</h5>
+                    <p class="small mb-3" style="color: var(--text-soft);">
+                        Rather than looking at attendance alone, our diagnostic model aggregates 4 weighted telemetry streams to prevent blind spots:
                     </p>
-                    <div class="d-flex flex-wrap gap-3 small">
-                        <span class="badge bg-white text-dark border p-2"><i class="bi bi-check2-circle text-primary me-1"></i> Attendance (35%)</span>
-                        <span class="badge bg-white text-dark border p-2"><i class="bi bi-check2-circle text-success me-1"></i> CGPA Scaled (30%)</span>
-                        <span class="badge bg-white text-dark border p-2"><i class="bi bi-check2-circle text-info me-1"></i> LMS Portal Activity (25%)</span>
-                        <span class="badge bg-white text-dark border p-2"><i class="bi bi-check2-circle text-warning me-1"></i> Assignment Lab Rate (10%)</span>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="formula-tag"><i class="bi bi-check2-circle text-primary me-2"></i> Attendance (35%)</span>
+                        <span class="formula-tag"><i class="bi bi-check2-circle text-success me-2"></i> CGPA Scaled (30%)</span>
+                        <span class="formula-tag"><i class="bi bi-check2-circle text-info me-2"></i> LMS Portal Activity (25%)</span>
+                        <span class="formula-tag"><i class="bi bi-check2-circle text-warning me-2"></i> Assignment Lab Rate (10%)</span>
                     </div>
                 </div>
             </div>
@@ -59,7 +61,7 @@ async function renderEngagement() {
         <div class="card-box p-4">
             <div class="card-head">
                 <h3 class="fw-bold"><i class="bi bi-grid-3x3-gap-fill text-dark me-2"></i> Individual Signal Telemetry Matrix</h3>
-                <span class="text-muted small">🟢 Healthy (&ge;75%) | 🟡 Caution (60-74%) | 🔴 Critical (&lt;60%)</span>
+                <span class="text-muted small"><span class="status-indicator healthy"></span> Healthy (&ge;75%) | <span class="status-indicator caution"></span> Caution (60-74%) | <span class="status-indicator critical"></span> Critical (&lt;60%)</span>
             </div>
             <div class="table-responsive">
                 <table class="custom-table">
@@ -82,9 +84,9 @@ async function renderEngagement() {
                             const cgpaScore = Math.round(s.cgpa * 10);
                             const engIndex = Math.round((s.attendance * 0.35) + (cgpaScore * 0.30) + (lmsScore * 0.35));
 
-                            const attdDot = s.attendance >= 75 ? '🟢' : (s.attendance >= 65 ? '🟡' : '🔴');
-                            const lmsDot = lmsScore >= 75 ? '🟢' : (lmsScore >= 60 ? '🟡' : '🔴');
-                            const gpaDot = s.cgpa >= 7.5 ? '🟢' : (s.cgpa >= 6.5 ? '🟡' : '🔴');
+                            const attdDot = s.attendance >= 75 ? '<span class="status-indicator healthy"></span>' : (s.attendance >= 65 ? '<span class="status-indicator caution"></span>' : '<span class="status-indicator critical"></span>');
+                            const lmsDot = lmsScore >= 75 ? '<span class="status-indicator healthy"></span>' : (lmsScore >= 60 ? '<span class="status-indicator caution"></span>' : '<span class="status-indicator critical"></span>');
+                            const gpaDot = s.cgpa >= 7.5 ? '<span class="status-indicator healthy"></span>' : (s.cgpa >= 6.5 ? '<span class="status-indicator caution"></span>' : '<span class="status-indicator critical"></span>');
 
                             const statusBadge = engIndex >= 75
                                 ? '<span class="badge bg-success">High Engagement</span>'
