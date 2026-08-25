@@ -17,7 +17,7 @@ function renderPage(page) {
     if (searchContainer) {
         if (role === "student") {
             searchContainer.classList.add("d-none");
-        } else if (["settings", "reports", "users", "aiagent"].includes(page)) {
+        } else if (["settings", "reports", "users", "aiagent", "profile"].includes(page)) {
             searchContainer.style.opacity = "0.4";
             searchContainer.style.pointerEvents = "none";
         } else {
@@ -60,6 +60,9 @@ function renderPage(page) {
         case "settings":
             renderSettings();
             break;
+        case "profile":
+            renderProfile();
+            break;
         case "users":
             renderUsers();
             break;
@@ -68,7 +71,10 @@ function renderPage(page) {
     }
 }
 
+let currentActivePage = "dashboard";
+
 function navigateTo(page) {
+    currentActivePage = page;
     document.querySelectorAll(".nav-item").forEach(item => {
         item.classList.remove("active");
         if (item.dataset.page === page) {

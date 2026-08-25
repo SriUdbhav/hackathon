@@ -86,7 +86,13 @@ async function renderSettings() {
 
                             <div class="mb-3 ${provider === 'local' || provider === 'ollama' ? 'd-none' : ''}" id="apiKeyGroup">
                                 <label class="form-label fw-semibold">API Key</label>
-                                <input type="password" id="settingApiKey" class="form-control" value="${apiKey}" placeholder="AIzaSy... or gsk_...">
+                                <div class="input-group">
+                                    <input type="password" id="settingApiKey" class="form-control" value="${apiKey}" placeholder="Paste your API key here..." onfocus="handleApiKeyFocus(this)">
+                                    <button class="btn" type="button" onclick="toggleApiKeyVisibility()" style="background: var(--bg-sunken); border: 1px solid var(--border); color: var(--text-muted);" title="Toggle visibility">
+                                        <i class="bi bi-eye" id="apiKeyEyeIcon"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Stored securely. You can also set keys in <code>backend/.env</code> file.</small>
                             </div>
 
                             <div class="mb-3 ${provider === 'local' || provider === 'gemini' ? 'd-none' : ''}" id="apiBaseUrlGroup">
@@ -221,5 +227,28 @@ function handleSettingsProviderChange() {
         if (keyGroup) keyGroup.classList.remove("d-none");
         if (urlGroup) urlGroup.classList.remove("d-none");
         if (modelGroup) modelGroup.classList.remove("d-none");
+    }
+}
+
+function toggleApiKeyVisibility() {
+    const input = document.getElementById("settingApiKey");
+    const icon = document.getElementById("apiKeyEyeIcon");
+    if (!input) return;
+    if (input.type === "password") {
+        input.type = "text";
+        if (icon) icon.className = "bi bi-eye-slash";
+    } else {
+        input.type = "password";
+        if (icon) icon.className = "bi bi-eye";
+    }
+}
+
+function handleApiKeyFocus(input) {
+    // If the current value is masked (contains •), clear it so the user can type a fresh key
+    if (input && input.value && input.value.includes("•")) {
+        input.value = "";
+        input.type = "text"; // Show text so user can see what they're pasting
+        const icon = document.getElementById("apiKeyEyeIcon");
+        if (icon) icon.className = "bi bi-eye-slash";
     }
 }

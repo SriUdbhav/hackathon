@@ -24,29 +24,60 @@ class LLMProvider:
         provider = (settings.get("ai_provider") or "local").lower()
         api_key = settings.get("api_key", "").strip()
 
+        # Fallback: resolve API key from .env if not set in DB
+        if not api_key:
+            env_map = {"gemini": "GEMINI_API_KEY", "openai": "OPENAI_API_KEY", "groq": "GROQ_API_KEY"}
+            api_key = os.environ.get(env_map.get(provider, ""), "")
+
         # 1. Google Gemini API
         if provider == "gemini" and api_key:
             model_candidates = [
                 settings.get("model_name") or "gemini-3.6-flash",
+                "gemini-3.6-flash",
                 "gemini-3.7-flash",
-                "gemini-3.1-flash-lite",
-                "gemini-3.1-pro-preview"
+                "gemini-3.5-flash",
+                "gemini-3.5-flash-lite",
             ]
+            # Deduplicate while preserving order
+            seen = set()
+            unique_models = []
+            for m in model_candidates:
+                if m not in seen:
+                    seen.add(m)
+                    unique_models.append(m)
+            model_candidates = unique_models
+            all_rate_limited = True
             for model in model_candidates:
                 try:
                     return LLMProvider._call_gemini_multiturn(prompt, system_prompt, api_key, model, history)
                 except urllib.error.HTTPError as e:
+                    body = ""
+                    try:
+                        body = e.read().decode("utf-8", errors="replace")[:500]
+                    except Exception:
+                        pass
                     if e.code == 429:
                         print(f"[Gemini 429 Rate Limit on {model}]: Backing off and trying next candidate...")
                         time.sleep(1.2)
                         continue
                     else:
-                        print(f"[Gemini Error on {model}]: {e}")
+                        all_rate_limited = False
+                        print(f"[Gemini Error on {model}]: HTTP {e.code} — {body}")
                         continue
                 except Exception as e:
+                    all_rate_limited = False
                     print(f"[Gemini Error on {model}]: {e}")
                     continue
-            print("[Gemini]: All Gemini candidate models failed or rate-limited. Falling back to Local Agent.")
+
+            if all_rate_limited:
+                print("[Gemini]: All models returned 429 — API quota exceeded.")
+                return ("⚠️ **Gemini API Quota Exceeded**\n\n"
+                        "Your Gemini API key has hit its rate limit. This typically resets after a minute. "
+                        "You can:\n"
+                        "- Wait a minute and try again\n"
+                        "- Check your quota at [Google AI Studio](https://aistudio.google.com/apikey)\n"
+                        "- Switch to a different AI provider (Ollama, Groq) in Settings")
+            print("[Gemini]: All Gemini candidate models failed. Falling back to Local Agent.")
 
         # 2. OpenAI / Groq / Compatible API
         elif provider in ["openai", "groq"] and api_key:
@@ -92,7 +123,7 @@ class LLMProvider:
 
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=12) as response:
+        with urllib.request.urlopen(req, timeout=30) as response:
             res_json = json.loads(response.read().decode("utf-8"))
             return res_json["candidates"][0]["content"]["parts"][0]["text"]
 

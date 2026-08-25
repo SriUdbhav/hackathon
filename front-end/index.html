@@ -304,6 +304,11 @@
 
             <div class="nav-label" id="navLabelManagement">MANAGEMENT</div>
 
+            <button class="nav-item" data-page="profile" id="navProfile">
+                <i class="bi bi-person-circle"></i>
+                <span>My Profile</span>
+            </button>
+
             <button class="nav-item" data-page="notifications" id="navNotifications">
                 <i class="bi bi-bell"></i>
                 <span>Notifications</span>
@@ -393,6 +398,9 @@
                         <strong id="dropMenuName" class="d-block text-truncate">User</strong>
                         <span id="dropMenuDetail" class="small text-muted">Role: Admin</span>
                     </div>
+                    <a href="#" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2" onclick="navigateTo('profile'); toggleUserDropdown(); event.preventDefault();">
+                        <i class="bi bi-person-circle text-primary"></i> My Profile
+                    </a>
                     <a href="#" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2" onclick="openChangePasswordModal(event)">
                         <i class="bi bi-key"></i> Change Password
                     </a>
@@ -634,23 +642,24 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <!-- Application Scripts -->
-<script src="js/config.js"></script>
-<script src="js/api.js"></script>
-<script src="js/theme.js"></script>
-<script src="js/chart-theme.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/pages/dashboard.js"></script>
-<script src="js/pages/students.js"></script>
-<script src="js/pages/student360.js"></script>
-<script src="js/pages/analytics.js"></script>
-<script src="js/pages/engagement.js"></script>
-<script src="js/pages/mentor.js"></script>
-<script src="js/pages/anomalies.js"></script>
-<script src="js/pages/aiagent.js"></script>
-<script src="js/pages/notifications.js"></script>
-<script src="js/pages/reports.js"></script>
-<script src="js/pages/settings.js"></script>
-<script src="js/main.js"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/api.js?v=4"></script>
+<script src="js/theme.js?v=4"></script>
+<script src="js/chart-theme.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
+<script src="js/pages/dashboard.js?v=4"></script>
+<script src="js/pages/students.js?v=4"></script>
+<script src="js/pages/student360.js?v=4"></script>
+<script src="js/pages/analytics.js?v=4"></script>
+<script src="js/pages/engagement.js?v=4"></script>
+<script src="js/pages/mentor.js?v=4"></script>
+<script src="js/pages/anomalies.js?v=4"></script>
+<script src="js/pages/aiagent.js?v=4"></script>
+<script src="js/pages/notifications.js?v=4"></script>
+<script src="js/pages/reports.js?v=4"></script>
+<script src="js/pages/settings.js?v=4"></script>
+<script src="js/pages/profile.js?v=4"></script>
+<script src="js/main.js?v=4"></script>
 
 </body>
 </html>

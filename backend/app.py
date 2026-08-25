@@ -12,6 +12,30 @@ from agent import AcademicInterventionAgent
 import datetime
 import csv
 import io
+import os
+
+
+# =====================================================
+# .ENV LOADER (no python-dotenv dependency required)
+# =====================================================
+def _load_dotenv(path=None):
+    """Load key=value pairs from a .env file into os.environ."""
+    if path is None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(path):
+        return
+    with open(path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and value:
+                os.environ.setdefault(key, value)
+
+_load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -162,6 +186,59 @@ def delete_user(user_id):
     conn.commit()
     conn.close()
     return jsonify({"success": True, "message": f"User {user_id} deleted."})
+
+
+# =====================================================
+# 1C. USER PROFILE ENDPOINT
+# =====================================================
+
+@app.route("/api/profile/<user_id>", methods=["GET"])
+def get_profile(user_id):
+    """Get complete profile for a user, merging users + students tables."""
+    conn = db.get_db_connection()
+    user = conn.execute("SELECT * FROM users WHERE LOWER(id) = LOWER(?) OR LOWER(display_name) = LOWER(?) OR LOWER(COALESCE(email,'')) = LOWER(?)", (user_id, user_id, user_id)).fetchone()
+    if not user:
+        conn.close()
+        return jsonify({"success": False, "message": "User not found."}), 404
+
+    profile = {
+        "id": user["id"],
+        "display_name": user["display_name"],
+        "role": user["role"],
+        "email": user["email"] if "email" in user.keys() else None,
+        "phone": user["phone"] if "phone" in user.keys() else None,
+        "subjects": user["subjects"],
+        "extra_roles": user["extra_roles"],
+        "linked_student_id": user["linked_student_id"],
+    }
+
+    # If the user is a student with a linked student record, merge academic data
+    linked_id = user["linked_student_id"] or user["id"]
+    student = conn.execute("SELECT * FROM students WHERE LOWER(id) = LOWER(?)", (linked_id,)).fetchone()
+    if student:
+        profile["student_data"] = {
+            "id": student["id"],
+            "name": student["name"],
+            "gender": student["gender"],
+            "course": student["course"],
+            "year": student["year"],
+            "cgpa": student["cgpa"],
+            "credits": student["credits"],
+            "attendance": student["attendance"],
+            "lms_score": student["lms_score"],
+            "risk": student["risk"],
+            "father": student["father"],
+            "mother": student["mother"],
+            "mother_tongue": student["mother_tongue"],
+            "place": student["place"],
+            "region": student["region"],
+            "country": student["country"],
+            "email": student["email"] if "email" in student.keys() else None,
+            "phone": student["phone"] if "phone" in student.keys() else None,
+        }
+
+    conn.close()
+    return jsonify({"success": True, "profile": profile})
 
 
 # =====================================================
@@ -534,6 +611,29 @@ def delete_student(student_id):
     return jsonify({"success": True, "message": f"Student {student_id} deleted."})
 
 
+@app.route("/api/students/bulk-delete", methods=["POST"])
+def bulk_delete_students():
+    """Admin/Faculty: Delete multiple students at once."""
+    data = request.get_json() or {}
+    ids = data.get("ids", [])
+    if not ids:
+        return jsonify({"success": False, "message": "No student IDs provided."}), 400
+
+    conn = db.get_db_connection()
+    deleted = 0
+    for sid in ids:
+        conn.execute("DELETE FROM interventions WHERE student_id = ?", (sid,))
+        conn.execute("DELETE FROM subject_marks WHERE student_id = ?", (sid,))
+        conn.execute("DELETE FROM student_activities WHERE student_id = ?", (sid,))
+        conn.execute("DELETE FROM notifications WHERE student_id = ?", (sid,))
+        conn.execute("DELETE FROM users WHERE id = ? AND role = 'student'", (sid,))
+        conn.execute("DELETE FROM students WHERE id = ?", (sid,))
+        deleted += 1
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "deleted": deleted, "message": f"Deleted {deleted} student records."})
+
+
 @app.route("/api/recalculate-risks", methods=["POST"])
 def recalculate_risks():
     """Recalculates risk scores for ALL students using current threshold settings."""
@@ -749,12 +849,48 @@ def get_agent_logs():
 
 @app.route("/api/settings", methods=["GET"])
 def get_settings():
-    return jsonify(db.get_system_settings())
+    """Return settings with API key masked for security."""
+    settings = db.get_system_settings()
+
+    # Resolve API key: DB first, then .env fallback per provider
+    raw_key = settings.get("api_key", "")
+    provider = (settings.get("ai_provider") or "local").lower()
+    if not raw_key:
+        env_map = {"gemini": "GEMINI_API_KEY", "openai": "OPENAI_API_KEY", "groq": "GROQ_API_KEY"}
+        raw_key = os.environ.get(env_map.get(provider, ""), "")
+
+    # Mask the key: show only last 4 characters
+    if raw_key and len(raw_key) > 4:
+        settings["api_key"] = "••••••••" + raw_key[-4:]
+    elif raw_key:
+        settings["api_key"] = "••••"
+    else:
+        settings["api_key"] = ""
+
+    return jsonify(settings)
+
+
+def _resolve_api_key(provider):
+    """Get the real (unmasked) API key for a given provider from DB or .env."""
+    settings = db.get_system_settings()
+    raw_key = (settings.get("api_key") or "").strip()
+    if not raw_key:
+        env_map = {"gemini": "GEMINI_API_KEY", "openai": "OPENAI_API_KEY", "groq": "GROQ_API_KEY"}
+        raw_key = os.environ.get(env_map.get(provider, ""), "")
+    return raw_key
 
 
 @app.route("/api/settings", methods=["POST"])
 def update_settings():
+    """Save settings. If api_key contains mask characters (•), skip overwriting it."""
     data = request.get_json() or {}
+
+    # Protect masked key from overwrite
+    if "api_key" in data:
+        submitted_key = data["api_key"]
+        if "•" in submitted_key or not submitted_key:
+            del data["api_key"]  # Don't overwrite with masked or empty value
+
     db.save_system_settings(data)
     return jsonify({"success": True, "message": "Settings updated."})
 

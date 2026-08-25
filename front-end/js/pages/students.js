@@ -33,7 +33,10 @@ async function renderStudents() {
                 <h1 class="h3 fw-bold mb-1">Comprehensive Student Database</h1>
                 <p class="text-muted small mb-0">Complete cohort records with demographic info, multi-signal indicators & risk indices</p>
             </div>
-            <div class="d-flex gap-2 flex-wrap">
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                <button class="btn btn-outline-danger btn-sm d-none" id="bulkDeleteBtn" onclick="handleBulkDeleteStudents()" style="border-radius: 8px; font-weight: 600;">
+                    <i class="bi bi-trash3"></i> Delete Selected (<span id="bulkDeleteCount">0</span>)
+                </button>
                 <button class="secondary-btn" onclick="openImportStudentsModal()">
                     <i class="bi bi-file-earmark-arrow-up text-success"></i> Import CSV/Excel
                 </button>
@@ -77,6 +80,9 @@ async function renderStudents() {
                 <table class="custom-table" id="studentsTable" style="white-space: nowrap;">
                     <thead>
                         <tr>
+                            <th style="width: 40px; text-align: center; background: var(--bg-sunken);">
+                                <input type="checkbox" id="selectAllStudents" onchange="toggleSelectAllStudents(this)" style="cursor: pointer; width: 16px; height: 16px;">
+                            </th>
                             <th class="sticky-start cursor-pointer" onclick="sortStudentsBy('id')" style="background: var(--bg-sunken); color: var(--text);">
                                 Student ID ${getSortIcon('id')}
                             </th>
@@ -109,6 +115,7 @@ async function renderStudents() {
                             </th>
                             <th>Region</th>
                             <th>Country</th>
+                            <th>Contact Info</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -317,13 +324,16 @@ function toggleStudentsRegex() {
 
 function generateStudentsTableRows(dataList) {
     if (!dataList || dataList.length === 0) {
-        return `<tr><td colspan="18" class="text-center text-muted py-4">No student records found matching filter criteria.</td></tr>`;
+        return `<tr><td colspan="20" class="text-center text-muted py-4">No student records found matching filter criteria.</td></tr>`;
     }
     return dataList.map(s => {
         let badgeClass = s.risk >= 60 ? "high" : (s.risk >= 30 ? "medium" : "low");
         let riskLabel = s.risk >= 60 ? "High Risk" : (s.risk >= 30 ? "Moderate" : "Low Risk");
         return `
             <tr>
+                <td style="text-align: center;">
+                    <input type="checkbox" class="student-select-cb" data-student-id="${s.id}" data-student-name="${s.name}" onchange="updateBulkDeleteCount()" style="cursor: pointer; width: 16px; height: 16px;">
+                </td>
                 <td class="sticky-start" style="background: var(--bg-elevated); color: var(--text);"><code>${s.id}</code></td>
                 <td><strong>${s.name}</strong></td>
                 <td>${s.gender || 'Male'}</td>
@@ -343,6 +353,7 @@ function generateStudentsTableRows(dataList) {
                 <td>${s.mother_tongue || s.motherTongue || 'Telugu'}</td>
                 <td>${s.place || 'Hyderabad'}</td>
                 <td>${s.region || 'South India'}</td>
+                <td>${s.country || 'India'}</td>
                 <td>
                     <div class="small">
                         ${s.email ? `<div><i class="bi bi-envelope me-1 text-muted"></i>${s.email}</div>` : ''}
@@ -578,5 +589,83 @@ function initStudentModalEvents() {
                 alert("Error adding student: " + (response?.message || "Please check the entered values."));
             }
         });
+    }
+}
+
+
+// =====================================================
+// MASS DELETE / BULK DELETE
+// =====================================================
+
+function toggleSelectAllStudents(masterCheckbox) {
+    const checked = masterCheckbox.checked;
+    document.querySelectorAll(".student-select-cb").forEach(cb => {
+        cb.checked = checked;
+    });
+    updateBulkDeleteCount();
+}
+
+function updateBulkDeleteCount() {
+    const selected = document.querySelectorAll(".student-select-cb:checked");
+    const count = selected.length;
+    const btn = document.getElementById("bulkDeleteBtn");
+    const countSpan = document.getElementById("bulkDeleteCount");
+    if (btn) {
+        if (count > 0) {
+            btn.classList.remove("d-none");
+        } else {
+            btn.classList.add("d-none");
+        }
+    }
+    if (countSpan) countSpan.textContent = count;
+
+    // Update select-all checkbox state
+    const all = document.querySelectorAll(".student-select-cb");
+    const selectAll = document.getElementById("selectAllStudents");
+    if (selectAll) {
+        selectAll.checked = all.length > 0 && count === all.length;
+        selectAll.indeterminate = count > 0 && count < all.length;
+    }
+}
+
+async function handleBulkDeleteStudents() {
+    const selected = document.querySelectorAll(".student-select-cb:checked");
+    const ids = Array.from(selected).map(cb => cb.dataset.studentId);
+    const count = ids.length;
+
+    if (count === 0) return;
+
+    // Safety confirmation — type DELETE
+    const confirmText = prompt(
+        `⚠️ You are about to permanently delete ${count} student record${count > 1 ? 's' : ''} ` +
+        `and ALL associated data (marks, activities, interventions, notifications).\n\n` +
+        `This action CANNOT be undone.\n\n` +
+        `Type "DELETE" to confirm:`
+    );
+    if (confirmText !== "DELETE") {
+        if (confirmText !== null) {
+            alert("Deletion cancelled. You must type exactly \"DELETE\" to confirm.");
+        }
+        return;
+    }
+
+    const btn = document.getElementById("bulkDeleteBtn");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Deleting ${count} records...`;
+    }
+
+    const res = await API.bulkDeleteStudents(ids);
+
+    if (res && res.success) {
+        alert(`Successfully deleted ${res.deleted} student records.`);
+        await loadLatestStudents();
+        renderStudents();
+    } else {
+        alert("Bulk delete failed: " + (res?.message || "Unknown error"));
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-trash3"></i> Delete Selected (<span id="bulkDeleteCount">${count}</span>)`;
+        }
     }
 }

@@ -53,6 +53,10 @@ const API = {
         });
     },
 
+    getProfile(userId) {
+        return this._fetch(`/profile/${encodeURIComponent(userId)}`);
+    },
+
     // ===================== SIGNUP REQUESTS & APPROVAL =====================
     async submitSignupRequest(data) {
         const res = await this._fetch("/signup-requests", {
@@ -190,6 +194,13 @@ const API = {
 
     deleteStudent(studentId) {
         return this._fetch(`/students/${studentId}`, { method: "DELETE" });
+    },
+
+    bulkDeleteStudents(ids) {
+        return this._fetch("/students/bulk-delete", {
+            method: "POST",
+            body: JSON.stringify({ ids })
+        });
     },
 
     recalculateRisks() {

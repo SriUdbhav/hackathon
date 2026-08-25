@@ -156,8 +156,9 @@ function showApp() {
 
     loadLatestStudents().then(() => {
         if (typeof renderPage === "function") {
-            // Students start on Student 360 or Dashboard
-            renderPage("dashboard");
+            // Only render dashboard if user hasn't already navigated elsewhere
+            const activePage = (typeof currentActivePage !== "undefined") ? currentActivePage : "dashboard";
+            renderPage(activePage);
         }
     });
 }
