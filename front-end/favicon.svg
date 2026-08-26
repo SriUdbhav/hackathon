@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Rect -->
+  <rect width="64" height="64" rx="16" fill="url(#grad)"/>
+  
+  <!-- Graduation Cap (Mortarboard) -->
+  <!-- Top diamond -->
+  <polygon points="32,14 54,24 32,34 10,24" fill="#ffffff"/>
+  
+  <!-- Cap skull cap base -->
+  <path d="M18,28.5 L18,39 C18,44.5 24.2,49 32,49 C39.8,49 46,44.5 46,39 L46,28.5 L32,35 Z" fill="#ffffff" opacity="0.95"/>
+  
+  <!-- Tassel button -->
+  <circle cx="32" cy="24" r="2.5" fill="#facc15"/>
+  
+  <!-- Tassel ribbon & fringe -->
+  <path d="M32,24 Q48,27 50,37" stroke="#facc15" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="50" cy="38" r="2" fill="#facc15"/>
+</svg>
