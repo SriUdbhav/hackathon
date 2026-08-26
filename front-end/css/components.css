@@ -11,6 +11,12 @@
     border-radius: var(--radius);
     padding: 24px;
     margin-bottom: 24px;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s ease;
+}
+
+.card-box:hover {
+    box-shadow: var(--shadow);
+    border-color: var(--border-soft);
 }
 
 .card-head {
@@ -25,6 +31,7 @@
     font-weight: 600;
     margin: 0;
     color: var(--text);
+    transition: color 0.2s ease;
 }
 
 .card-head span {
@@ -45,12 +52,39 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    transition: opacity 0.2s;
     font-family: var(--font-body);
+    position: relative;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.22s ease,
+                background 0.2s ease,
+                opacity 0.2s ease;
+}
+
+.primary-btn i {
+    display: inline-flex;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .primary-btn:hover {
-    opacity: 0.88;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    opacity: 1;
+}
+
+[data-theme="dark"] .primary-btn:hover {
+    box-shadow: 0 4px 14px rgba(180, 190, 254, 0.35);
+}
+
+[data-theme="sepia"] .primary-btn:hover {
+    box-shadow: 0 4px 14px rgba(175, 58, 3, 0.3);
+}
+
+.primary-btn:hover i {
+    transform: translateX(3px);
+}
+
+.primary-btn:active {
+    transform: translateY(0) scale(0.98);
 }
 
 .secondary-btn {
@@ -62,12 +96,27 @@
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s;
     font-family: var(--font-body);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s ease,
+                color 0.2s ease,
+                background 0.2s ease,
+                box-shadow 0.2s ease;
 }
 
 .secondary-btn:hover {
     background: var(--bg-sunken);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.secondary-btn:active {
+    transform: translateY(0) scale(0.98);
 }
 
 /* BADGES */
@@ -81,12 +130,23 @@
     gap: 6px;
     font-family: var(--font-mono);
     letter-spacing: 0.3px;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.risk-badge:hover {
+    transform: translateY(-1px) scale(1.04);
 }
 
 .risk-badge.high {
     background: var(--risk-high-soft);
     color: var(--risk-high);
     border: 1px solid rgba(210, 15, 57, 0.3);
+    animation: riskHighPulse 3.5s infinite ease-in-out;
+}
+
+@keyframes riskHighPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.3); }
+    50% { box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12); }
 }
 
 .risk-badge.medium {
@@ -102,6 +162,18 @@
 }
 
 /* UNIVERSAL THEME-AWARE BOOTSTRAP OVERRIDES */
+.btn {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
 .form-control,
 .form-select,
 input.form-control,
@@ -110,6 +182,7 @@ select.form-select {
     color: var(--text) !important;
     border: 1px solid var(--border) !important;
     border-radius: var(--radius);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
 }
 
 .form-control:focus,
@@ -117,7 +190,18 @@ select.form-select {
     background-color: var(--bg-elevated) !important;
     color: var(--text) !important;
     border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(30, 102, 245, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    transform: translateY(-1px);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    box-shadow: 0 0 0 3px rgba(180, 190, 254, 0.2) !important;
+}
+
+[data-theme="sepia"] .form-control:focus,
+[data-theme="sepia"] .form-select:focus {
+    box-shadow: 0 0 0 3px rgba(175, 58, 3, 0.15) !important;
 }
 
 .form-control::placeholder {
@@ -129,17 +213,28 @@ select.form-select {
     background-color: var(--bg-sunken) !important;
     color: var(--text) !important;
     border: 1px solid var(--border) !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .input-group-text i {
     color: var(--accent) !important;
     font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.input-group:focus-within .input-group-text i {
+    transform: scale(1.15);
 }
 
 .list-group-item {
     background-color: transparent !important;
     color: var(--text) !important;
     border-color: var(--border-soft) !important;
+    transition: background 0.18s ease;
+}
+
+.list-group-item:hover {
+    background-color: var(--bg-sunken) !important;
 }
 
 .badge.bg-light {
@@ -195,6 +290,11 @@ select.form-select {
 .progress {
     background-color: var(--bg-sunken) !important;
     border: 1px solid var(--border-soft);
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* TABLES */
@@ -227,6 +327,7 @@ select.form-select {
     font-size: 13px;
     white-space: nowrap;
     color: var(--text);
+    transition: background 0.18s ease;
 }
 
 /* Numeric columns: monospace + right-align */
@@ -235,7 +336,11 @@ select.form-select {
     font-variant-numeric: tabular-nums;
 }
 
-.custom-table tr:hover {
+.custom-table tr {
+    transition: background 0.18s ease;
+}
+
+.custom-table tr:hover td {
     background: var(--bg-sunken);
 }
 
@@ -246,8 +351,9 @@ select.form-select {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 2000;
     display: flex;
     align-items: center;
@@ -255,7 +361,7 @@ select.form-select {
     padding: 20px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.15s ease;
+    transition: opacity 0.25s ease;
 }
 
 .modal-overlay.active {
@@ -268,17 +374,17 @@ select.form-select {
     width: 680px;
     max-width: 100%;
     max-height: 90vh;
-    border-radius: 12px;
+    border-radius: 14px;
     overflow-y: auto;
-    padding: 30px;
-    box-shadow: var(--shadow);
+    padding: 32px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
     border: 1px solid var(--border);
-    transform: translateY(4px);
-    transition: transform 0.15s ease;
+    transform: scale(0.94) translateY(16px);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
 }
 
 .modal-overlay.active .student-modal {
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
 }
 
 .modal-head {
@@ -316,11 +422,13 @@ select.form-select {
     font-size: 20px;
     cursor: pointer;
     color: var(--text-soft);
-    transition: background 0.15s;
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease, color 0.15s ease;
 }
 
 .modal-close:hover {
     background: var(--border);
+    color: var(--danger);
+    transform: rotate(90deg) scale(1.12);
 }
 
 .form-grid {
@@ -352,12 +460,14 @@ select.form-select {
     background: var(--bg-elevated);
     color: var(--text);
     font-family: var(--font-body);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .form-group input:focus,
 .form-group select:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(30, 102, 245, 0.08);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    transform: translateY(-1px);
 }
 
 .modal-actions {
@@ -383,16 +493,19 @@ select.form-select {
     min-width: 220px;
     z-index: 1050;
     overflow: hidden;
+    animation: dropdownSlideFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .user-dropdown-menu .dropdown-item {
     font-size: 13px;
     color: var(--text);
-    transition: background 0.15s ease;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .user-dropdown-menu .dropdown-item:hover {
     background: var(--bg-sunken);
+    padding-left: 18px;
+    color: var(--accent);
 }
 
 /* SEARCH DROPDOWN */
@@ -408,6 +521,7 @@ select.form-select {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     z-index: 1100;
+    animation: dropdownSlideFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .search-item {
@@ -419,10 +533,13 @@ select.form-select {
     cursor: pointer;
     font-size: 13px;
     color: var(--text);
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .search-item:hover {
     background: var(--bg-sunken);
+    padding-left: 18px;
+    color: var(--accent);
 }
 
 .search-item:last-child {
@@ -441,6 +558,11 @@ select.form-select {
     background: var(--accent-soft);
     color: var(--accent);
     border: 1px solid var(--border-soft);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.activity-tag:hover {
+    transform: translateY(-1px) scale(1.05);
 }
 
 .activity-tag.hackathon { background: var(--risk-high-soft); color: var(--risk-high); border-color: var(--border-soft); }
@@ -456,6 +578,11 @@ select.form-select {
     border-radius: 50%;
     margin-right: 4px;
     vertical-align: middle;
+    transition: transform 0.2s ease;
+}
+
+.status-indicator:hover {
+    transform: scale(1.25);
 }
 
 .status-indicator.healthy { background: var(--risk-low); }
@@ -466,12 +593,14 @@ select.form-select {
 .notif-card {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
-    transition: all 0.2s ease;
+    border-radius: var(--radius);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.2s ease;
 }
 
 .notif-card:hover {
     box-shadow: var(--shadow);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    border-color: var(--accent);
 }
 
 .notif-unread {
@@ -502,6 +631,7 @@ select.form-select {
     box-shadow: var(--shadow-hover);
     z-index: 9999;
     margin-top: 6px;
+    animation: dropdownSlideFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .student360-result {
@@ -509,12 +639,13 @@ select.form-select {
     border-bottom: 1px solid var(--border-soft);
     cursor: pointer;
     font-size: 13px;
-    transition: all 0.15s ease;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .student360-result:hover {
     background: var(--bg-sunken);
     padding-left: 18px;
+    color: var(--accent);
 }
 
 .student360-result.active {
@@ -536,7 +667,12 @@ select.form-select {
 }
 
 .s360-filter-btn:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.s360-filter-btn:active {
+    transform: translateY(0) scale(0.97);
 }
 
 /* ANOMALY CARDS GRID (Modern & Multi-Column) */
@@ -545,14 +681,15 @@ select.form-select {
     border: 1px solid var(--border);
     border-radius: 12px;
     box-shadow: var(--shadow);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
     position: relative;
     overflow: hidden;
 }
 
 .anomaly-card-modern:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-hover);
+    border-color: var(--accent);
 }
 
 /* HIGHLIGHT MARK */
@@ -565,20 +702,22 @@ mark {
 
 /* MENTOR CARDS */
 .mentor-student-card {
-    transition: all 0.2s;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.22s ease;
 }
 
 .mentor-student-card:hover {
     border-color: var(--accent) !important;
     box-shadow: var(--shadow);
+    transform: translateY(-3px);
 }
 
 .mentor-pipeline-item {
-    transition: background 0.15s;
+    transition: transform 0.2s ease, background 0.18s ease;
 }
 
 .mentor-pipeline-item:hover {
     background: var(--bg-sunken);
+    transform: translateX(4px);
 }
 
 /* TOAST ANIMATION */
@@ -602,13 +741,14 @@ mark {
     position: relative;
     overflow: hidden;
     box-shadow: var(--shadow);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
     height: 100%;
 }
 
 .stat-card-modern:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--border);
 }
 
 .stat-card-modern::before {
@@ -618,6 +758,11 @@ mark {
     left: 0;
     right: 0;
     height: 3px;
+    transition: height 0.2s ease;
+}
+
+.stat-card-modern:hover::before {
+    height: 4px;
 }
 
 .stat-card-modern.accent-blue::before { background: var(--accent); }
@@ -636,6 +781,12 @@ mark {
     background: var(--bg-sunken);
     color: var(--text-soft);
     flex-shrink: 0;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.stat-card-modern:hover .stat-icon-box {
+    transform: scale(1.14) rotate(-4deg);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .stat-card-modern.accent-blue .stat-icon-box { color: var(--accent); background: var(--accent-soft); }
@@ -650,6 +801,12 @@ mark {
     border-radius: 12px;
     padding: 20px 24px;
     box-shadow: var(--shadow);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.formula-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
 }
 
 .formula-tag {
@@ -662,6 +819,11 @@ mark {
     font-weight: 500;
     display: inline-flex;
     align-items: center;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.formula-tag:hover {
+    transform: scale(1.04);
 }
 
 /* THEME-AWARE AI CHAT STUDIO COMPONENTS */
@@ -686,6 +848,23 @@ mark {
     width: 100%;
     word-break: break-word;
     line-height: 1.65;
+    animation: messageIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.ai-bubble-bot:hover {
+    box-shadow: var(--shadow);
+}
+
+@keyframes messageIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .ai-bubble-bot .markdown-body {
@@ -771,13 +950,17 @@ mark {
 }
 
 .copy-ai-btn {
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     cursor: pointer;
 }
 .copy-ai-btn:hover {
-    background: var(--bg-card) !important;
+    background: var(--bg-sunken) !important;
     color: var(--accent) !important;
     border-color: var(--accent) !important;
+    transform: scale(1.08);
+}
+.copy-ai-btn:active {
+    transform: scale(0.95);
 }
 
 .ai-bubble-bot pre {
@@ -809,17 +992,26 @@ mark {
     font-weight: 500;
     line-height: 1.5;
     font-size: 13.5px;
+    animation: messageIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-bubble-user:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
 }
 
 .ai-input-box {
     background: var(--bg-elevated) !important;
     color: var(--text) !important;
     border: 1px solid var(--border) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .ai-input-box:focus {
     border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(30, 102, 245, 0.08) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+    transform: translateY(-1px);
 }
 
 .ai-trace-card {
@@ -827,6 +1019,12 @@ mark {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 14px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-trace-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
 }
 
 /* PRINT STYLES FOR CORPORATE REPORTS */
@@ -860,7 +1058,7 @@ mark {
     padding: 4px 10px;
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -870,10 +1068,15 @@ mark {
 .chart-toggle-btn:hover {
     color: var(--text);
     background: rgba(0, 0, 0, 0.04);
+    transform: translateY(-1px);
 }
 
 [data-theme="dark"] .chart-toggle-btn:hover {
     background: rgba(255, 255, 255, 0.06);
+}
+
+.chart-toggle-btn:active {
+    transform: translateY(0) scale(0.97);
 }
 
 .chart-toggle-btn.active {
@@ -892,14 +1095,15 @@ mark {
     border-radius: 12px;
     padding: 16px 20px;
     box-shadow: var(--shadow-sm);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s ease;
     position: relative;
     overflow: hidden;
 }
 
 .anomaly-kpi-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     box-shadow: var(--shadow);
+    border-color: var(--border);
 }
 
 .anomaly-kpi-card::before {
@@ -922,6 +1126,12 @@ mark {
     border-radius: 12px;
     padding: 18px 22px;
     position: relative;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.anomaly-insight-banner:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
 [data-theme="dark"] .anomaly-insight-banner {
@@ -941,14 +1151,19 @@ mark {
     border: 1px solid var(--border);
     color: var(--text-soft);
     cursor: pointer;
-    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     user-select: none;
 }
 
 .anomaly-filter-pill:hover {
     border-color: var(--accent);
     color: var(--accent);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.anomaly-filter-pill:active {
+    transform: translateY(0) scale(0.97);
 }
 
 .anomaly-filter-pill.active {
@@ -964,6 +1179,11 @@ mark {
     border-radius: 10px;
     font-size: 11px;
     font-weight: 700;
+    transition: transform 0.2s ease;
+}
+
+.anomaly-filter-pill:hover .pill-count {
+    transform: scale(1.08);
 }
 
 .anomaly-filter-pill.active .pill-count {
@@ -994,13 +1214,19 @@ mark {
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .page-btn:hover:not(:disabled) {
     background: var(--bg-sunken);
     border-color: var(--accent);
     color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.page-btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.96);
 }
 
 .page-btn.active {
@@ -1008,6 +1234,7 @@ mark {
     border-color: var(--accent);
     color: var(--accent-contrast);
     font-weight: 700;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 
 .page-btn:disabled {
@@ -1034,4 +1261,9 @@ mark {
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    transition: transform 0.2s ease;
+}
+
+.distribution-badge:hover {
+    transform: scale(1.05);
 }

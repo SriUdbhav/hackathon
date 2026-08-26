@@ -26,6 +26,14 @@ function renderPage(page) {
         }
     }
 
+    // Trigger smooth entrance animation on pageContent
+    const pageContent = document.getElementById("pageContent");
+    if (pageContent) {
+        pageContent.style.animation = "none";
+        void pageContent.offsetHeight; // trigger reflow
+        pageContent.style.animation = "";
+    }
+
     switch (page) {
         case "dashboard":
             renderDashboard();
