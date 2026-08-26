@@ -205,6 +205,7 @@ def init_db():
     add_column_if_missing("notifications", "read INTEGER DEFAULT 0")
     add_column_if_missing("users", "email TEXT")
     add_column_if_missing("users", "phone TEXT")
+    add_column_if_missing("users", "status TEXT DEFAULT 'Active'")
     add_column_if_missing("students", "email TEXT")
     add_column_if_missing("students", "phone TEXT")
 
@@ -219,8 +220,17 @@ def init_db():
 
     c.execute("UPDATE users SET email = 'admin@vignan.ac.in' WHERE id = 'admin' AND (email IS NULL OR email = '')")
     c.execute("UPDATE users SET email = LOWER(id) || '@vignan.ac.in' WHERE (email IS NULL OR email = '')")
-    c.execute("UPDATE users SET phone = '+91 90000 00001' WHERE (phone IS NULL OR phone = '') AND id = 'admin'")
-    c.execute("UPDATE users SET phone = '+91 90000 11111' WHERE (phone IS NULL OR phone = '') AND id = 'FAC001'")
+    c.execute("UPDATE users SET phone = '+91 90000 00001' WHERE id = 'admin'")
+    c.execute("UPDATE users SET phone = '+91 90000 11111' WHERE LOWER(id) = 'fac001'")
+    c.execute("UPDATE users SET phone = '+91 90000 22222' WHERE LOWER(id) = 'fac002'")
+    c.execute("UPDATE users SET phone = '+91 90000 33333' WHERE LOWER(id) = 'fac003'")
+    c.execute("UPDATE users SET phone = '+91 90000 44444' WHERE LOWER(id) = 'men001'")
+    c.execute("UPDATE users SET phone = '+91 90000 55555' WHERE LOWER(id) = 'men002'")
+    c.execute("UPDATE users SET phone = '+91 98480 12345' WHERE LOWER(id) = '25cs001'")
+    c.execute("UPDATE users SET phone = '+91 98480 23456' WHERE LOWER(id) = '25cs002'")
+    c.execute("UPDATE users SET phone = '+91 98480 34567' WHERE LOWER(id) = '25cs003'")
+    c.execute("UPDATE users SET phone = '+91 98480 45678' WHERE LOWER(id) = '25cs004'")
+    c.execute("UPDATE users SET phone = '+91 98480 56789' WHERE LOWER(id) = '25cs005'")
     c.execute("UPDATE users SET phone = '+91 90000 00000' WHERE phone IS NULL OR phone = ''")
 
     # =====================================================

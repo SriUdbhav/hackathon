@@ -5,11 +5,16 @@
              Per-Subject Marks, Extracurriculars, Multi-Signal Radar
 ===================================================== */
 
-let selectedStudentId = "25CS001";
+let selectedStudentId = sessionStorage.getItem("eduSelectedStudentId") || "25CS001";
 let student360RadarChart = null;
 
 function viewStudent360(id) {
-    selectedStudentId = id;
+    if (id) {
+        selectedStudentId = id;
+        try {
+            sessionStorage.setItem("eduSelectedStudentId", id);
+        } catch (e) {}
+    }
     if (typeof navigateTo === "function") {
         navigateTo("student360");
     } else {
@@ -27,6 +32,8 @@ async function renderStudent360() {
     // Lock to own profile if student
     if (role === "student") {
         selectedStudentId = user.linked_student_id || user.id;
+    } else {
+        selectedStudentId = sessionStorage.getItem("eduSelectedStudentId") || selectedStudentId || "25CS001";
     }
 
     if (students.length === 0) {

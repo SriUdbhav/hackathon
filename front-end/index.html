@@ -68,9 +68,10 @@
             <div class="login-title">
                 <span>UNIFIED ACCESS CONTROL</span>
                 <h2>Sign in to your account</h2>
-                <p>Access customized dashboards for Faculty, Mentors, Students & Admins.</p>
+                <p>Access customized dashboards for Faculty, Mentors, Students &amp; Admins.</p>
             </div>
 
+            <!-- PASSWORD LOGIN FORM -->
             <form id="loginForm">
                 <label>User ID or Email</label>
                 <div class="input-box">
@@ -168,22 +169,23 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <label>Mobile / Phone Number</label>
+                        <label>Role</label>
                         <div class="input-box">
-                            <i class="bi bi-telephone"></i>
-                            <input type="tel" id="signupPhone" placeholder="+91 98765 43210" required>
+                            <i class="bi bi-shield-shaded"></i>
+                            <select id="signupRole" class="form-select border-0 bg-transparent p-0" style="box-shadow:none;">
+                                <option value="faculty">Faculty (Teaching & Assessment)</option>
+                                <option value="mentor">Mentor (Student Counseling & Guidance)</option>
+                            </select>
                         </div>
                     </div>
                 </div>
 
-                <div class="mb-2">
-                    <label>Role</label>
-                    <div class="input-box">
-                        <i class="bi bi-shield-shaded"></i>
-                        <select id="signupRole" class="form-select border-0 bg-transparent p-0" style="box-shadow:none;">
-                            <option value="faculty">Faculty (Teaching & Assessment)</option>
-                            <option value="mentor">Mentor (Student Counseling & Guidance)</option>
-                        </select>
+                <!-- PHONE NUMBER -->
+                <div class="mb-3">
+                    <label class="mb-1 fw-semibold">Mobile / Phone Number</label>
+                    <div class="input-box m-0">
+                        <i class="bi bi-telephone"></i>
+                        <input type="tel" id="signupPhone" placeholder="Enter mobile number" required>
                     </div>
                 </div>
 
@@ -304,6 +306,17 @@
 
             <div class="nav-label" id="navLabelManagement">MANAGEMENT</div>
 
+            <button class="nav-item d-none" data-page="users" id="navUsers">
+                <i class="bi bi-person-check"></i>
+                <span>Approvals</span>
+                <b class="nav-badge red d-none" id="approvalsBadge">0</b>
+            </button>
+
+            <button class="nav-item d-none" data-page="faculty" id="navFaculty">
+                <i class="bi bi-person-workspace"></i>
+                <span>Faculty & Mentors</span>
+            </button>
+
             <button class="nav-item" data-page="profile" id="navProfile">
                 <i class="bi bi-person-circle"></i>
                 <span>My Profile</span>
@@ -323,11 +336,6 @@
             <button class="nav-item" data-page="settings" id="navSettings">
                 <i class="bi bi-gear"></i>
                 <span>Settings</span>
-            </button>
-
-            <button class="nav-item" data-page="users" id="navUsers">
-                <i class="bi bi-shield-lock"></i>
-                <span>User Access</span>
             </button>
         </div>
 
@@ -398,13 +406,13 @@
                         <strong id="dropMenuName" class="d-block text-truncate">User</strong>
                         <span id="dropMenuDetail" class="small text-muted">Role: Admin</span>
                     </div>
-                    <a href="#" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2" onclick="navigateTo('profile'); toggleUserDropdown(); event.preventDefault();">
+                    <a href="javascript:void(0)" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2" onclick="navigateTo('profile'); toggleUserDropdown();">
                         <i class="bi bi-person-circle text-primary"></i> My Profile
                     </a>
-                    <a href="#" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2" onclick="openChangePasswordModal(event)">
+                    <a href="javascript:void(0)" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2" onclick="openChangePasswordModal(event)">
                         <i class="bi bi-key"></i> Change Password
                     </a>
-                    <a href="#" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2 text-danger" onclick="logout(event)">
+                    <a href="javascript:void(0)" class="dropdown-item px-3 py-2 text-decoration-none d-flex align-items-center gap-2 text-danger" onclick="logout(event)">
                         <i class="bi bi-box-arrow-right"></i> Sign Out
                     </a>
                 </div>
@@ -523,7 +531,23 @@
                 </div>
                 <div class="form-group">
                     <label>Phone / Mobile</label>
-                    <input id="studentPhone" type="tel" placeholder="+91 98480 00000 (or Unknown)">
+                    <div class="d-flex gap-2">
+                        <select id="studentCountryCode" class="form-select" style="width: 145px; font-size: 12.5px; font-weight: 500; background: var(--bg-elevated); color: var(--text); border-color: var(--border);" onchange="updatePhoneLimit('studentCountryCode', 'studentPhone')">
+                            <option value="+91" data-len="10" data-code="+91" selected>🇮🇳 +91 (India)</option>
+                            <option value="+1" data-len="10" data-code="+1">🇺🇸 +1 (US)</option>
+                            <option value="+44" data-len="10" data-code="+44">🇬🇧 +44 (UK)</option>
+                            <option value="+971" data-len="9" data-code="+971">🇦🇪 +971 (UAE)</option>
+                            <option value="+65" data-len="8" data-code="+65">🇸🇬 +65 (Singapore)</option>
+                            <option value="+61" data-len="9" data-code="+61">🇦🇺 +61 (Australia)</option>
+                            <option value="+1-CA" data-len="10" data-code="+1">🇨🇦 +1 (Canada)</option>
+                            <option value="+49" data-len="11" data-code="+49">🇩🇪 +49 (Germany)</option>
+                            <option value="+81" data-len="10" data-code="+81">🇯🇵 +81 (Japan)</option>
+                            <option value="+966" data-len="9" data-code="+966">🇸🇦 +966 (Saudi Arabia)</option>
+                            <option value="+60" data-len="9" data-code="+60">🇲🇾 +60 (Malaysia)</option>
+                            <option value="+33" data-len="9" data-code="+33">🇫🇷 +33 (France)</option>
+                        </select>
+                        <input id="studentPhone" type="tel" class="form-control flex-grow-1" placeholder="10-digit number" maxlength="10" oninput="formatPhoneDigits(this)" style="background: var(--bg-elevated); color: var(--text); border-color: var(--border);">
+                    </div>
                 </div>
             </div>
 
@@ -567,19 +591,19 @@
     </div>
 </div>
 
-<!-- 3. REJECTION REASON MODAL (Admin Approval Gatekeeper) -->
+<!-- 3. DECLINE REASON MODAL (Admin Approval Gatekeeper) -->
 <div id="rejectionReasonModal" class="modal-overlay">
     <div class="student-modal" style="max-width: 500px;">
         <div class="modal-head">
             <div>
                 <span class="text-danger">ADMINISTRATIVE ACTION</span>
-                <h2>Reject Signup Application</h2>
+                <h2>Decline Faculty Application</h2>
             </div>
             <button class="modal-close" onclick="closeRejectionModal()"><i class="bi bi-x"></i></button>
         </div>
         <div class="p-3">
             <p class="text-muted small mb-3">
-                Please provide the official reason for rejecting this application for <strong id="rejectApplicantName">Applicant</strong> (<code id="rejectApplicantId">ID</code>). This reason will be automatically formatted and emailed to <strong id="rejectApplicantEmail">email</strong>.
+                Please provide the official reason for declining this application for <strong id="rejectApplicantName">Applicant</strong> (<code id="rejectApplicantId">ID</code>). This reason will be recorded in the decline history and dispatched to <strong id="rejectApplicantEmail">email</strong>.
             </p>
 
             <div class="mb-3">
@@ -595,13 +619,13 @@
 
             <div class="mb-3">
                 <label class="form-label fw-semibold">Official Explanation / Feedback</label>
-                <textarea id="rejectionReasonText" class="form-control" rows="3" placeholder="Explain the specific reason for rejecting this application..." required></textarea>
+                <textarea id="rejectionReasonText" class="form-control" rows="3" placeholder="Explain the specific reason for declining this application..." required></textarea>
             </div>
 
             <div class="d-flex justify-content-end gap-2">
                 <button type="button" class="secondary-btn" onclick="closeRejectionModal()">Cancel</button>
                 <button type="button" class="btn btn-danger" onclick="submitRejectionAction()">
-                    <i class="bi bi-x-circle me-1"></i> Confirm & Dispatch Rejection Email
+                    <i class="bi bi-x-circle me-1"></i> Confirm Decline
                 </button>
             </div>
         </div>
@@ -637,29 +661,48 @@
     </div>
 </div>
 
+<!-- 5. VIEW APPLICATION DETAILS MODAL (Simple Inspection for Approvals Queue) -->
+<div id="viewApplicationModal" class="modal-overlay">
+    <div class="student-modal" style="max-width: 540px;">
+        <div class="modal-head">
+            <div>
+                <span>APPLICATION INSPECTION</span>
+                <h2 id="viewAppModalTitle">Application Details</h2>
+            </div>
+            <button class="modal-close" onclick="closeViewApplicationModal()"><i class="bi bi-x"></i></button>
+        </div>
+        <div class="p-3" id="viewAppModalContent">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+</div>
+
+
 
 <!-- Marked.js Markdown Renderer -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <!-- Application Scripts -->
-<script src="js/config.js?v=4"></script>
-<script src="js/api.js?v=4"></script>
-<script src="js/theme.js?v=4"></script>
-<script src="js/chart-theme.js?v=4"></script>
-<script src="js/auth.js?v=4"></script>
-<script src="js/pages/dashboard.js?v=4"></script>
-<script src="js/pages/students.js?v=4"></script>
-<script src="js/pages/student360.js?v=4"></script>
-<script src="js/pages/analytics.js?v=4"></script>
-<script src="js/pages/engagement.js?v=4"></script>
-<script src="js/pages/mentor.js?v=4"></script>
-<script src="js/pages/anomalies.js?v=4"></script>
-<script src="js/pages/aiagent.js?v=4"></script>
-<script src="js/pages/notifications.js?v=4"></script>
-<script src="js/pages/reports.js?v=4"></script>
-<script src="js/pages/settings.js?v=4"></script>
-<script src="js/pages/profile.js?v=4"></script>
-<script src="js/main.js?v=4"></script>
+<script src="js/config.js?v=14"></script>
+<script src="js/api.js?v=14"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/theme.js?v=14"></script>
+<script src="js/chart-theme.js?v=14"></script>
+<script src="js/auth.js?v=14"></script>
+<script src="js/pages/dashboard.js?v=14"></script>
+<script src="js/pages/students.js?v=14"></script>
+<script src="js/pages/student360.js?v=14"></script>
+<script src="js/pages/analytics.js?v=14"></script>
+<script src="js/pages/engagement.js?v=14"></script>
+<script src="js/pages/mentor.js?v=14"></script>
+<script src="js/pages/anomalies.js?v=14"></script>
+<script src="js/pages/aiagent.js?v=14"></script>
+<script src="js/pages/notifications.js?v=14"></script>
+<script src="js/pages/reports.js?v=14"></script>
+<script src="js/pages/settings.js?v=14"></script>
+<script src="js/pages/profile.js?v=14"></script>
+<script src="js/pages/faculty.js?v=14"></script>
+<script src="js/main.js?v=14"></script>
 
 </body>
 </html>

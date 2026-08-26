@@ -20,6 +20,7 @@ async function renderAnalytics() {
 
     if (students.length === 0) {
         await loadLatestStudents();
+        if (typeof currentActivePage !== "undefined" && currentActivePage !== "analytics") return;
     }
 
     if (role === "student") {
@@ -96,21 +97,37 @@ async function renderFacultyAnalytics(content, user) {
                         <h3 class="fw-bold"><i class="bi bi-pie-chart-fill text-danger me-2"></i> Risk Category Distribution</h3>
                         <span class="text-muted small">Live cohort ratio</span>
                     </div>
-                    <div style="position: relative; height: 260px;">
+                    <div style="position: relative; height: 280px;">
                         <canvas id="riskDoughnutCanvas"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. ATTENDANCE RANKING HORIZONTAL BAR -->
+            <!-- 2. SCALABLE ATTENDANCE INTELLIGENCE (Histogram / Focus Ranked) -->
             <div class="col-lg-7">
-                <div class="card-box h-100">
-                    <div class="card-head">
-                        <h3 class="fw-bold"><i class="bi bi-bar-chart-steps text-primary me-2"></i> Student Attendance Ranking</h3>
-                        <span class="badge bg-danger">Cutoff Line: 75%</span>
+                <div class="card-box h-100 d-flex flex-column justify-content-between">
+                    <div class="card-head flex-wrap gap-2">
+                        <div>
+                            <h3 class="fw-bold"><i class="bi bi-bar-chart-steps text-primary me-2"></i> Cohort Attendance Intelligence</h3>
+                            <span class="text-muted small" id="attendanceChartSubhead">Benchmark Cutoff: 75%</span>
+                        </div>
+                        <div class="chart-toggle-group" id="attendanceChartToggles">
+                            <button class="chart-toggle-btn active" id="btnAttdDist" onclick="setAttendanceChartMode('histogram')">
+                                <i class="bi bi-bar-chart-fill"></i> Distribution
+                            </button>
+                            <button class="chart-toggle-btn" id="btnAttdLowest" onclick="setAttendanceChartMode('lowest15')">
+                                <i class="bi bi-arrow-down-circle-fill text-danger"></i> Lowest ${Math.min(15, total || 15)}
+                            </button>
+                            <button class="chart-toggle-btn" id="btnAttdTop" onclick="setAttendanceChartMode('top15')">
+                                <i class="bi bi-arrow-up-circle-fill text-success"></i> Top ${Math.min(15, total || 15)}
+                            </button>
+                        </div>
                     </div>
-                    <div style="position: relative; height: 260px;">
+                    <div style="position: relative; height: 230px; flex-grow: 1;">
                         <canvas id="attendanceRankCanvas"></canvas>
+                    </div>
+                    <div id="attendanceStatsBar" class="distribution-stats-bar">
+                        <!-- Populated by JS -->
                     </div>
                 </div>
             </div>
@@ -148,22 +165,314 @@ async function renderFacultyAnalytics(content, user) {
     initFacultyCharts(highRisk, medRisk, lowRisk, allSubjectMarks);
 }
 
+// Global attendance chart mode: 'histogram' | 'lowest15' | 'top15'
+window._attendanceViewMode = window._attendanceViewMode || (students.length > 25 ? "histogram" : "lowest15");
+
+function setAttendanceChartMode(mode) {
+    window._attendanceViewMode = mode;
+    
+    // Update active button state
+    const btnDist = document.getElementById("btnAttdDist");
+    const btnLowest = document.getElementById("btnAttdLowest");
+    const btnTop = document.getElementById("btnAttdTop");
+    if (btnDist) btnDist.className = `chart-toggle-btn ${mode === 'histogram' ? 'active' : ''}`;
+    if (btnLowest) btnLowest.className = `chart-toggle-btn ${mode === 'lowest15' ? 'active' : ''}`;
+    if (btnTop) btnTop.className = `chart-toggle-btn ${mode === 'top15' ? 'active' : ''}`;
+
+    renderAttendanceRankingChart();
+}
+
+function renderAttendanceRankingChart() {
+    const rankEl = document.getElementById("attendanceRankCanvas");
+    if (!rankEl) return;
+
+    if (attendanceRankChart) {
+        attendanceRankChart.destroy();
+    }
+
+    const mode = window._attendanceViewMode || "histogram";
+    const subhead = document.getElementById("attendanceChartSubhead");
+    const statsBar = document.getElementById("attendanceStatsBar");
+    const totalSt = students.length || 1;
+
+    if (mode === "histogram") {
+        if (subhead) subhead.innerHTML = `Cohort Attendance Tier Breakdown (${totalSt} Monitored)`;
+
+        // Calculate distribution buckets
+        const b1 = students.filter(s => Number(s.attendance || 0) < 65);
+        const b2 = students.filter(s => Number(s.attendance || 0) >= 65 && Number(s.attendance || 0) < 75);
+        const b3 = students.filter(s => Number(s.attendance || 0) >= 75 && Number(s.attendance || 0) < 85);
+        const b4 = students.filter(s => Number(s.attendance || 0) >= 85 && Number(s.attendance || 0) < 95);
+        const b5 = students.filter(s => Number(s.attendance || 0) >= 95);
+
+        const counts = [b1.length, b2.length, b3.length, b4.length, b5.length];
+        const percentages = counts.map(c => Math.round((c / totalSt) * 100));
+
+        const avgGpa = (arr) => arr.length ? (arr.reduce((a, b) => a + Number(b.cgpa || 0), 0) / arr.length).toFixed(2) : "N/A";
+        const gpas = [avgGpa(b1), avgGpa(b2), avgGpa(b3), avgGpa(b4), avgGpa(b5)];
+
+        attendanceRankChart = new Chart(rankEl.getContext("2d"), {
+            type: "bar",
+            data: {
+                labels: [
+                    "< 65% (Critical)",
+                    "65-74% (Warning)",
+                    "75-84% (Good)",
+                    "85-94% (High)",
+                    "95-100% (Exemplary)"
+                ],
+                datasets: [{
+                    label: "Students in Tier",
+                    data: counts,
+                    backgroundColor: [
+                        "rgba(239, 68, 68, 0.85)",   // Red
+                        "rgba(245, 158, 11, 0.85)",  // Amber
+                        "rgba(59, 130, 246, 0.85)",  // Blue
+                        "rgba(99, 102, 241, 0.85)",  // Indigo
+                        "rgba(16, 185, 129, 0.85)"   // Emerald
+                    ],
+                    borderColor: [
+                        "#ef4444",
+                        "#f59e0b",
+                        "#3b82f6",
+                        "#6366f1",
+                        "#10b981"
+                    ],
+                    borderWidth: 1.5,
+                    borderRadius: 8,
+                    maxBarThickness: 54
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            color: "var(--text-soft)"
+                        },
+                        grid: { color: "var(--border-soft)" }
+                    },
+                    x: {
+                        ticks: {
+                            color: "var(--text-soft)",
+                            font: { family: 'Inter', size: 11.5, weight: '600' }
+                        },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: (items) => items[0]?.label || "",
+                            label: (ctx) => {
+                                const idx = ctx.dataIndex;
+                                return [
+                                    ` Students: ${counts[idx]} (${percentages[idx]}% of cohort)`,
+                                    ` Avg CGPA in Tier: ${gpas[idx]}`,
+                                    ` Benchmark: ${idx < 2 ? '⚠️ Below 75% Cutoff' : '✅ Meets Standard'}`
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (statsBar) {
+            const totalBelowCutoff = b1.length + b2.length;
+            const pctBelow = Math.round((totalBelowCutoff / totalSt) * 100);
+            const totalGood = b3.length + b4.length + b5.length;
+            const pctGood = Math.round((totalGood / totalSt) * 100);
+
+            statsBar.innerHTML = `
+                <span class="distribution-badge" style="background: var(--risk-high-soft); color: var(--risk-high);">
+                    <i class="bi bi-exclamation-octagon-fill"></i> Critical (<65%): <strong>${b1.length}</strong>
+                </span>
+                <span class="distribution-badge" style="background: var(--risk-medium-soft); color: var(--risk-medium);">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Warning (65-74%): <strong>${b2.length}</strong>
+                </span>
+                <span class="distribution-badge" style="background: var(--risk-low-soft); color: var(--risk-low);">
+                    <i class="bi bi-check-circle-fill"></i> Standard Passed: <strong>${totalGood} (${pctGood}%)</strong>
+                </span>
+                <span class="distribution-badge text-muted ms-auto small">
+                    <i class="bi bi-info-circle"></i> ${pctBelow}% of cohort below mandatory cutoff
+                </span>
+            `;
+        }
+
+    } else if (mode === "lowest15") {
+        if (subhead) subhead.innerHTML = `Showing 15 Lowest Attendance Students (Immediate Intervention)`;
+
+        const sortedAsc = [...students].sort((a, b) => Number(a.attendance || 0) - Number(b.attendance || 0)).slice(0, 15);
+
+        attendanceRankChart = new Chart(rankEl.getContext("2d"), {
+            type: "bar",
+            data: {
+                labels: sortedAsc.map(s => s.name.length > 18 ? s.name.substring(0, 16) + '...' : s.name),
+                datasets: [{
+                    label: "Attendance %",
+                    data: sortedAsc.map(s => Number(s.attendance || 0)),
+                    backgroundColor: sortedAsc.map(s => Number(s.attendance || 0) < 75 ? "#ef4444" : "#3b82f6"),
+                    borderRadius: 6,
+                    maxBarThickness: 16
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        min: 0,
+                        max: 100,
+                        ticks: { callback: v => v + "%", color: "var(--text-soft)" },
+                        grid: { color: "var(--border-soft)" }
+                    },
+                    y: {
+                        ticks: {
+                            color: "var(--text)",
+                            font: { family: 'Inter', size: 11, weight: '500' }
+                        },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: (items) => {
+                                const idx = items[0]?.dataIndex;
+                                const st = sortedAsc[idx];
+                                return st ? `${st.name} (${st.id})` : "";
+                            },
+                            label: (ctx) => {
+                                const idx = ctx.dataIndex;
+                                const st = sortedAsc[idx];
+                                return [
+                                    ` Attendance: ${st?.attendance || 0}%`,
+                                    ` Academic Risk: ${st?.risk || 0}%`,
+                                    ` CGPA: ${st?.cgpa || 0} | LMS: ${st?.lms_score || st?.attendance || 0}%`
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (statsBar) {
+            statsBar.innerHTML = `
+                <span class="text-muted small">
+                    <i class="bi bi-cursor-fill text-primary me-1"></i> Tip: Use <strong>Student 360°</strong> to view individual diagnostics and schedule interventions.
+                </span>
+            `;
+        }
+
+    } else if (mode === "top15") {
+        if (subhead) subhead.innerHTML = `Showing Top 15 Highest Attendance Performers (Honor Roll)`;
+
+        const sortedDesc = [...students].sort((a, b) => Number(b.attendance || 0) - Number(a.attendance || 0)).slice(0, 15);
+
+        attendanceRankChart = new Chart(rankEl.getContext("2d"), {
+            type: "bar",
+            data: {
+                labels: sortedDesc.map(s => s.name.length > 18 ? s.name.substring(0, 16) + '...' : s.name),
+                datasets: [{
+                    label: "Attendance %",
+                    data: sortedDesc.map(s => Number(s.attendance || 0)),
+                    backgroundColor: "#10b981",
+                    borderRadius: 6,
+                    maxBarThickness: 16
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        min: 0,
+                        max: 100,
+                        ticks: { callback: v => v + "%", color: "var(--text-soft)" },
+                        grid: { color: "var(--border-soft)" }
+                    },
+                    y: {
+                        ticks: {
+                            color: "var(--text)",
+                            font: { family: 'Inter', size: 11, weight: '500' }
+                        },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: (items) => {
+                                const idx = items[0]?.dataIndex;
+                                const st = sortedDesc[idx];
+                                return st ? `${st.name} (${st.id})` : "";
+                            },
+                            label: (ctx) => {
+                                const idx = ctx.dataIndex;
+                                const st = sortedDesc[idx];
+                                return [
+                                    ` Attendance: ${st?.attendance || 0}%`,
+                                    ` CGPA: ${st?.cgpa || 0} (Dean's List Candidate)`,
+                                    ` Academic Risk: ${st?.risk || 0}% (Healthy)`
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (statsBar) {
+            statsBar.innerHTML = `
+                <span class="text-success small fw-semibold">
+                    <i class="bi bi-award-fill me-1"></i> Exemplary cohort attendance leaders qualifying for peer mentor roles.
+                </span>
+            `;
+        }
+    }
+
+    if (typeof registerChart === 'function') registerChart(attendanceRankChart);
+    if (typeof applyChartTheme === 'function') applyChartTheme(attendanceRankChart);
+}
+
 function initFacultyCharts(highRisk, medRisk, lowRisk, allSubjectMarks) {
     // 1. DOUGHNUT CHART (Live Risk Categories)
     const doughnutEl = document.getElementById("riskDoughnutCanvas");
     if (doughnutEl) {
-        if (riskDoughnutChart) riskDoughnutChart.destroy();
+        if (riskDoughnutChart) {
+            try { riskDoughnutChart.destroy(); } catch (e) {}
+        }
+        const totalRiskStudents = highRisk + medRisk + lowRisk;
+        let riskLabels = [
+            `High Risk (>=60%): ${highRisk}`, 
+            `Moderate (30-59%): ${medRisk}`, 
+            `Low Risk (<30%): ${lowRisk}`
+        ];
+        let riskData = [highRisk, medRisk, lowRisk];
+        let riskColors = ["#ef4444", "#f59e0b", "#10b981"];
+        if (totalRiskStudents === 0) {
+            riskLabels = ["100% Safe (0 Risk Triggers)"];
+            riskData = [1];
+            riskColors = ["#10b981"];
+        }
+
         riskDoughnutChart = new Chart(doughnutEl.getContext("2d"), {
             type: "doughnut",
             data: {
-                labels: [
-                    `High Risk (>=60%): ${highRisk}`, 
-                    `Moderate (30-59%): ${medRisk}`, 
-                    `Low Risk (<30%): ${lowRisk}`
-                ],
+                labels: riskLabels,
                 datasets: [{
-                    data: [highRisk, medRisk, lowRisk],
-                    backgroundColor: ["#ef4444", "#f59e0b", "#10b981"],
+                    data: riskData,
+                    backgroundColor: riskColors,
                     borderWidth: 2,
                     borderColor: "var(--bg-elevated)"
                 }]
@@ -176,43 +485,13 @@ function initFacultyCharts(highRisk, medRisk, lowRisk, allSubjectMarks) {
                 }
             }
         });
+        if (typeof registerChart === 'function') registerChart(riskDoughnutChart);
+        if (typeof applyChartTheme === 'function') applyChartTheme(riskDoughnutChart);
     }
 
-    // 2. ATTENDANCE RANKING (Live sorted students with full names)
-    const rankEl = document.getElementById("attendanceRankCanvas");
-    if (rankEl) {
-        if (attendanceRankChart) attendanceRankChart.destroy();
-        const sortedStudents = [...students].sort((a, b) => Number(a.attendance) - Number(b.attendance));
-        attendanceRankChart = new Chart(rankEl.getContext("2d"), {
-            type: "bar",
-            data: {
-                labels: sortedStudents.map(s => s.name),
-                datasets: [{
-                    label: "Attendance %",
-                    data: sortedStudents.map(s => Number(s.attendance || 0)),
-                    backgroundColor: sortedStudents.map(s => Number(s.attendance || 0) < 75 ? "#ef4444" : "#3b82f6"),
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { min: 0, max: 100, ticks: { callback: v => v + "%", color: "var(--text-soft)" }, grid: { color: "var(--border-soft)" } },
-                    y: { ticks: { color: "var(--text-soft)" }, grid: { display: false } }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => ` Attendance: ${ctx.parsed.x}% ${ctx.parsed.x < 75 ? '(Below Cutoff)' : '(Satisfactory)'}`
-                        }
-                    }
-                }
-            }
-        });
-    }
+    // 2. MULTI-MODE SCALABLE ATTENDANCE INTELLIGENCE
+    renderAttendanceRankingChart();
+
 
     // 3. SUBJECT-WISE GROUPED BAR (Live computed from SQLite subject_marks)
     const subjectEl = document.getElementById("subjectMarksBarCanvas");
@@ -306,6 +585,8 @@ function initFacultyCharts(highRisk, medRisk, lowRisk, allSubjectMarks) {
                 }
             }
         });
+        if (typeof registerChart === 'function') registerChart(subjectMarksBarChart);
+        if (typeof applyChartTheme === 'function') applyChartTheme(subjectMarksBarChart);
     }
 
     // 4. RADAR BENCHMARK (Live computed cohort vs at-risk signals)
@@ -379,6 +660,8 @@ function initFacultyCharts(highRisk, medRisk, lowRisk, allSubjectMarks) {
                 }
             }
         });
+        if (typeof registerChart === 'function') registerChart(signalsRadarChart);
+        if (typeof applyChartTheme === 'function') applyChartTheme(signalsRadarChart);
     }
 }
 

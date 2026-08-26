@@ -32,12 +32,13 @@ class LLMProvider:
         # 1. Google Gemini API
         if provider == "gemini" and api_key:
             model_candidates = [
-                settings.get("model_name") or "gemini-3.6-flash",
-                "gemini-3.6-flash",
-                "gemini-3.7-flash",
+                settings.get("model_name"),
                 "gemini-3.5-flash",
                 "gemini-3.5-flash-lite",
+                "gemini-3.6-flash",
+                "gemini-3.7-flash",
             ]
+            model_candidates = [m for m in model_candidates if m]
             # Deduplicate while preserving order
             seen = set()
             unique_models = []
@@ -118,12 +119,15 @@ class LLMProvider:
 
         payload = {
             "contents": contents,
-            "generationConfig": {"temperature": 0.3, "maxOutputTokens": 900}
+            "generationConfig": {
+                "temperature": 0.3,
+                "maxOutputTokens": 8192
+            }
         }
 
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=30) as response:
+        with urllib.request.urlopen(req, timeout=45) as response:
             res_json = json.loads(response.read().decode("utf-8"))
             return res_json["candidates"][0]["content"]["parts"][0]["text"]
 
@@ -141,7 +145,8 @@ class LLMProvider:
         payload = {
             "model": model,
             "messages": messages,
-            "temperature": 0.4
+            "temperature": 0.4,
+            "max_tokens": 4096
         }
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(url, data=data, headers={
@@ -214,7 +219,7 @@ class LLMProvider:
                 "prompt": prompt_with_history,
                 "stream": False,
                 "options": {
-                    "num_predict": 500,
+                    "num_predict": 4096,
                     "temperature": 0.3
                 }
             }

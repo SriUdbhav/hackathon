@@ -33,7 +33,7 @@ def _load_dotenv(path=None):
             key = key.strip()
             value = value.strip().strip('"').strip("'")
             if key and value:
-                os.environ.setdefault(key, value)
+                os.environ[key] = value
 
 _load_dotenv()
 
@@ -88,12 +88,12 @@ def login():
             "message": "Your registration request is currently pending Administrator review. You will receive an email once approved."
         }), 403
 
-    rejected = conn.execute("SELECT * FROM signup_requests WHERE (LOWER(user_id) = LOWER(?) OR LOWER(email) = LOWER(?)) AND status = 'Rejected'", (user_id, user_id)).fetchone()
+    rejected = conn.execute("SELECT * FROM signup_requests WHERE (LOWER(user_id) = LOWER(?) OR LOWER(email) = LOWER(?)) AND status IN ('Rejected', 'Declined')", (user_id, user_id)).fetchone()
     if rejected:
         conn.close()
         return jsonify({
             "success": False,
-            "message": f"Your registration request was not approved. Reason: {rejected['rejection_reason'] or 'Contact administration.'}"
+            "message": f"Your registration request was declined by the administrator. Reason: {rejected['rejection_reason'] or 'Contact department administration.'}"
         }), 403
 
     # Lookup active user by ID or Email
@@ -316,7 +316,10 @@ def get_signup_requests():
     status = request.args.get("status")
     conn = db.get_db_connection()
     if status:
-        rows = conn.execute("SELECT * FROM signup_requests WHERE status = ? ORDER BY id DESC", (status,)).fetchall()
+        if status.lower() in ("declined", "rejected"):
+            rows = conn.execute("SELECT * FROM signup_requests WHERE status IN ('Declined', 'Rejected') ORDER BY id DESC").fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM signup_requests WHERE LOWER(status) = LOWER(?) ORDER BY id DESC", (status,)).fetchall()
     else:
         rows = conn.execute("SELECT * FROM signup_requests ORDER BY id DESC").fetchall()
     conn.close()
@@ -325,7 +328,7 @@ def get_signup_requests():
 
 @app.route("/api/signup-requests/<int:req_id>/approve", methods=["POST"])
 def approve_signup_request(req_id):
-    """Admin only: Approve signup request, activate user, and dispatch welcome email."""
+    """Admin only: Approve signup request, activate faculty record in Faculty & Mentor Management, and dispatch welcome email."""
     conn = db.get_db_connection()
     req = conn.execute("SELECT * FROM signup_requests WHERE id = ?", (req_id,)).fetchone()
 
@@ -338,10 +341,10 @@ def approve_signup_request(req_id):
         return jsonify({"success": False, "message": "This application has already been approved."}), 400
 
     try:
-        # 1. Create User in `users` table
+        # 1. Create or Update User in `users` table with Active status and all submitted application details
         conn.execute("""
-            INSERT OR REPLACE INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone)
-            VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?)
+            INSERT OR REPLACE INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone, status)
+            VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, 'Active')
         """, (
             req["user_id"],
             req["password"],
@@ -396,7 +399,7 @@ def approve_signup_request(req_id):
 
         return jsonify({
             "success": True,
-            "message": f"Application for {req['display_name']} ({req['user_id']}) approved! Welcome email dispatched to {req['email']} with login credentials."
+            "message": f"Application for {req['display_name']} ({req['user_id']}) approved! Faculty record created in Faculty & Mentor Management. Credentials dispatched to {req['email']}."
         })
     except Exception as e:
         conn.close()
@@ -405,7 +408,7 @@ def approve_signup_request(req_id):
 
 @app.route("/api/signup-requests/<int:req_id>/reject", methods=["POST"])
 def reject_signup_request(req_id):
-    """Admin only: Reject signup request with specified reasoning and dispatch rejection notice."""
+    """Admin only: Decline signup request with specified reasoning and dispatch decline notice."""
     data = request.get_json() or {}
     reason = data.get("reason", "").strip() or "Application details could not be verified by the Department Administrator."
 
@@ -417,12 +420,15 @@ def reject_signup_request(req_id):
         return jsonify({"success": False, "message": "Registration request not found."}), 404
 
     try:
-        # Update request status to Rejected
-        conn.execute("UPDATE signup_requests SET status = 'Rejected', rejection_reason = ?, reviewed_at = ? WHERE id = ?", (
+        # Update request status to Declined
+        conn.execute("UPDATE signup_requests SET status = 'Declined', rejection_reason = ?, reviewed_at = ? WHERE id = ?", (
             reason, datetime.datetime.now().isoformat(), req_id
         ))
 
-        # Create structured rejection email
+        # Ensure no active faculty account exists in users table
+        conn.execute("DELETE FROM users WHERE LOWER(id) = LOWER(?) AND role IN ('faculty', 'mentor')", (req["user_id"],))
+
+        # Create structured decline email
         subject = f"EduStudent Sight Application Status — {req['role'].capitalize()} Account"
         body_html = f"""
         <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
@@ -433,7 +439,7 @@ def reject_signup_request(req_id):
             <div style="padding: 28px; background: #ffffff;">
                 <h3 style="color: #0f172a; margin-top: 0;">Application Status Notice</h3>
                 <p style="color: #334155; line-height: 1.6;">Dear {req['display_name']},</p>
-                <p style="color: #334155; line-height: 1.6;">Thank you for your interest in joining EduStudent Sight as a <strong>{req['role'].upper()}</strong>. After reviewing your registration application (ID: <code>{req['user_id']}</code>), the Department Administrator has decided not to approve the request at this time.</p>
+                <p style="color: #334155; line-height: 1.6;">Thank you for your interest in joining EduStudent Sight as a <strong>{req['role'].upper()}</strong>. After reviewing your registration application (ID: <code>{req['user_id']}</code>), the Department Administrator has decided to decline the request at this time.</p>
                 <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 20px 0; border-radius: 0 6px 6px 0;">
                     <strong style="color: #991b1b; display: block; margin-bottom: 6px;">Reason for Decision:</strong>
                     <p style="color: #7f1d1d; margin: 0; font-size: 14px; line-height: 1.5;">{reason}</p>
@@ -445,30 +451,512 @@ def reject_signup_request(req_id):
             </div>
         </div>
         """
-        body_text = f"Dear {req['display_name']}, your application for {req['role']} ({req['user_id']}) was rejected. Reason: {reason}"
+        body_text = f"Dear {req['display_name']}, your application for {req['role']} ({req['user_id']}) was declined. Reason: {reason}"
 
         conn.commit()
         conn.close()
 
         # Log email
-        _log_email(req["email"], subject, body_html, body_text, "Account Rejected")
+        _log_email(req["email"], subject, body_html, body_text, "Account Declined")
 
         return jsonify({
             "success": True,
-            "message": f"Application for {req['display_name']} ({req['user_id']}) marked as Rejected. Rejection email with explanation dispatched to {req['email']}."
+            "message": f"Application for {req['display_name']} ({req['user_id']}) marked as Declined. Reason recorded in history and email notice dispatched."
         })
     except Exception as e:
         conn.close()
-        return jsonify({"success": False, "message": f"Rejection failed: {str(e)}"}), 500
+        return jsonify({"success": False, "message": f"Decline failed: {str(e)}"}), 500
 
 
 @app.route("/api/emails", methods=["GET"])
 def get_email_logs():
-    """Admin only: List dispatched email logs for auditing."""
+    """Admin only: Retrieve audit logs of all outgoing transactional emails."""
     conn = db.get_db_connection()
-    rows = conn.execute("SELECT * FROM email_logs ORDER BY id DESC LIMIT 50").fetchall()
+    logs = conn.execute("SELECT * FROM email_logs ORDER BY id DESC LIMIT 50").fetchall()
     conn.close()
-    return jsonify([dict(r) for r in rows])
+    return jsonify([dict(r) for r in logs])
+
+
+# =====================================================
+# 1D. FACULTY MANAGEMENT (Admin → Faculty Module)
+# Pure Management Area for Approved Faculty & Mentors
+# =====================================================
+
+@app.route("/api/faculty", methods=["GET"])
+def get_faculty_list():
+    """Admin: Returns approved faculty/mentor accounts for Faculty & Mentor Management, plus summary stats."""
+    conn = db.get_db_connection()
+
+    # 1. Get all approved faculty/mentor users
+    users = conn.execute("""
+        SELECT id, display_name, role, subjects, extra_roles, email, phone,
+               COALESCE(status, 'Active') as status
+        FROM users
+        WHERE role IN ('faculty', 'mentor')
+        ORDER BY display_name ASC
+    """).fetchall()
+
+    # 2. Get all signup requests for pending count and declined history
+    requests = conn.execute("""
+        SELECT id as req_id, user_id, display_name, role, subjects, extra_roles,
+               email, phone, status, created_at, reviewed_at, rejection_reason
+        FROM signup_requests
+        ORDER BY id DESC
+    """).fetchall()
+
+    # 3. Get student counts per mentor (from interventions table)
+    mentor_students = conn.execute("""
+        SELECT mentor_id, COUNT(DISTINCT student_id) as student_count
+        FROM interventions
+        WHERE mentor_id IS NOT NULL
+        GROUP BY mentor_id
+    """).fetchall()
+    mentor_student_map = {r["mentor_id"]: r["student_count"] for r in mentor_students}
+
+    # 4. Get high-risk student counts per mentor
+    mentor_risk = conn.execute("""
+        SELECT i.mentor_id, COUNT(DISTINCT s.id) as high_risk_count
+        FROM interventions i
+        JOIN students s ON s.id = i.student_id
+        WHERE i.mentor_id IS NOT NULL AND s.risk >= 60
+        GROUP BY i.mentor_id
+    """).fetchall()
+    mentor_risk_map = {r["mentor_id"]: r["high_risk_count"] for r in mentor_risk}
+
+    # 5. Total students in system
+    total_students = conn.execute("SELECT COUNT(*) as cnt FROM students").fetchone()["cnt"]
+
+    conn.close()
+
+    # Build approved faculty list (ONLY approved accounts)
+    approved_faculty = []
+    for u in users:
+        uid = u["id"]
+        approved_faculty.append({
+            "id": uid,
+            "display_name": u["display_name"],
+            "role": u["role"],
+            "subjects": u["subjects"],
+            "extra_roles": u["extra_roles"],
+            "email": u["email"],
+            "phone": u["phone"],
+            "status": u["status"] or "Active",
+            "source": "approved",
+            "students_assigned": mentor_student_map.get(uid, 0),
+            "high_risk_students": mentor_risk_map.get(uid, 0),
+        })
+
+    # Declined applications stored as history (not active accounts)
+    declined_applications = []
+    for r in requests:
+        if r["status"] in ("Declined", "Rejected"):
+            declined_applications.append({
+                "id": r["user_id"],
+                "req_id": r["req_id"],
+                "display_name": r["display_name"],
+                "role": r["role"],
+                "subjects": r["subjects"],
+                "extra_roles": r["extra_roles"],
+                "email": r["email"],
+                "phone": r["phone"],
+                "status": "Declined",
+                "source": "declined",
+                "created_at": r["created_at"],
+                "reviewed_at": r["reviewed_at"],
+                "rejection_reason": r["rejection_reason"],
+                "students_assigned": 0,
+                "high_risk_students": 0,
+            })
+
+    pending_count = len([r for r in requests if r["status"] == "Pending"])
+
+    # Summary stats
+    summary = {
+        "total_faculty": len(approved_faculty),
+        "active_faculty": len([f for f in approved_faculty if f["status"] == "Active"]),
+        "pending_applications": pending_count,
+        "mentors": len([f for f in approved_faculty if f["role"] == "mentor"]),
+        "total_students_assigned": sum(f["students_assigned"] for f in approved_faculty),
+        "total_students": total_students,
+    }
+
+    return jsonify({
+        "faculty": approved_faculty,
+        "declined_history": declined_applications,
+        "summary": summary
+    })
+
+
+@app.route("/api/faculty/<faculty_id>", methods=["GET"])
+def get_faculty_detail(faculty_id):
+    """Admin: Full faculty detail — profile, application, students, interventions, AI risks."""
+    conn = db.get_db_connection()
+
+    # 1. Get user account (if approved)
+    user = conn.execute("""
+        SELECT id, display_name, role, subjects, extra_roles, email, phone,
+               COALESCE(status, 'Active') as status
+        FROM users WHERE LOWER(id) = LOWER(?)
+    """, (faculty_id,)).fetchone()
+
+    # 2. Get original signup application (if exists)
+    application = conn.execute("""
+        SELECT * FROM signup_requests
+        WHERE LOWER(user_id) = LOWER(?)
+        ORDER BY id DESC LIMIT 1
+    """, (faculty_id,)).fetchone()
+
+    if not user and not application:
+        conn.close()
+        return jsonify({"success": False, "message": "Faculty not found."}), 404
+
+    # Build profile from whichever source exists
+    profile = {}
+    if user:
+        profile = {
+            "id": user["id"],
+            "display_name": user["display_name"],
+            "role": user["role"],
+            "subjects": user["subjects"],
+            "extra_roles": user["extra_roles"],
+            "email": user["email"],
+            "phone": user["phone"],
+            "status": user["status"] or "Active",
+            "source": "approved",
+        }
+    elif application:
+        profile = {
+            "id": application["user_id"],
+            "display_name": application["display_name"],
+            "role": application["role"],
+            "subjects": application["subjects"],
+            "extra_roles": application["extra_roles"],
+            "email": application["email"],
+            "phone": application["phone"],
+            "status": application["status"],
+            "source": "application",
+        }
+
+    # Application details
+    app_details = None
+    if application:
+        app_details = {
+            "req_id": application["id"],
+            "status": application["status"],
+            "submitted_date": application["created_at"],
+            "reviewed_date": application["reviewed_at"],
+            "rejection_reason": application["rejection_reason"],
+        }
+
+    # 3. Assigned students (from interventions)
+    assigned_students_rows = conn.execute("""
+        SELECT DISTINCT s.id, s.name, s.course, s.year, s.attendance, s.cgpa, s.risk
+        FROM interventions i
+        JOIN students s ON s.id = i.student_id
+        WHERE LOWER(i.mentor_id) = LOWER(?)
+        ORDER BY s.risk DESC
+    """, (faculty_id,)).fetchall()
+    assigned_students = [dict(s) for s in assigned_students_rows]
+
+    # 4. Interventions by this faculty
+    interventions = conn.execute("""
+        SELECT id, student_id, date, action, status, notes, urgency
+        FROM interventions
+        WHERE LOWER(mentor_id) = LOWER(?)
+        ORDER BY id DESC LIMIT 10
+    """, (faculty_id,)).fetchall()
+
+    # 5. AI risk summary — high-risk students in their purview
+    high_risk = [s for s in assigned_students if s.get("risk", 0) >= 60]
+    medium_risk = [s for s in assigned_students if 30 <= s.get("risk", 0) < 60]
+
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "profile": profile,
+        "application": app_details,
+        "assigned_students": assigned_students,
+        "interventions": [dict(i) for i in interventions],
+        "ai_summary": {
+            "high_risk_count": len(high_risk),
+            "medium_risk_count": len(medium_risk),
+            "total_assigned": len(assigned_students),
+            "pending_interventions": len([i for i in interventions if dict(i).get("status") == "Pending"]),
+            "completed_interventions": len([i for i in interventions if dict(i).get("status") == "Completed"]),
+        }
+    })
+
+
+@app.route("/api/faculty/<faculty_id>", methods=["PUT"])
+def update_faculty(faculty_id):
+    """Admin: Edit faculty profile information."""
+    data = request.get_json() or {}
+    conn = db.get_db_connection()
+
+    user = conn.execute("SELECT id FROM users WHERE LOWER(id) = LOWER(?)", (faculty_id,)).fetchone()
+    if not user:
+        conn.close()
+        return jsonify({"success": False, "message": "Faculty account not found. Only approved faculty can be edited."}), 404
+
+    # Update allowed fields
+    conn.execute("""
+        UPDATE users SET
+            display_name = COALESCE(?, display_name),
+            subjects = COALESCE(?, subjects),
+            extra_roles = COALESCE(?, extra_roles),
+            email = COALESCE(?, email),
+            phone = COALESCE(?, phone)
+        WHERE LOWER(id) = LOWER(?)
+    """, (
+        data.get("display_name"),
+        data.get("subjects"),
+        data.get("extra_roles"),
+        data.get("email"),
+        data.get("phone"),
+        faculty_id
+    ))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": f"Faculty {faculty_id} profile updated."})
+
+
+@app.route("/api/faculty/<faculty_id>/status", methods=["PUT"])
+def update_faculty_status(faculty_id):
+    """Admin: Change faculty status (Active/Inactive)."""
+    data = request.get_json() or {}
+    new_status = data.get("status", "Active")
+
+    if new_status not in ("Active", "Inactive"):
+        return jsonify({"success": False, "message": "Status must be 'Active' or 'Inactive'."}), 400
+
+    conn = db.get_db_connection()
+    user = conn.execute("SELECT id FROM users WHERE LOWER(id) = LOWER(?)", (faculty_id,)).fetchone()
+    if not user:
+        conn.close()
+        return jsonify({"success": False, "message": "Faculty account not found."}), 404
+
+    conn.execute("UPDATE users SET status = ? WHERE LOWER(id) = LOWER(?)", (new_status, faculty_id))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": f"Faculty {faculty_id} status changed to {new_status}."})
+
+
+@app.route("/api/faculty/bulk-import", methods=["POST"])
+def bulk_import_faculty():
+    """Admin: Bulk import faculty from JSON array. Validates each row before inserting."""
+    data = request.get_json() or {}
+    rows = data.get("rows", [])
+    if not rows:
+        return jsonify({"success": False, "message": "No rows provided."}), 400
+
+    conn = db.get_db_connection()
+
+    # Pre-fetch existing IDs and emails for duplicate checking
+    existing_users = conn.execute("SELECT LOWER(id) as id, LOWER(COALESCE(email,'')) as email FROM users").fetchall()
+    existing_ids = set(r["id"] for r in existing_users)
+    existing_emails = set(r["email"] for r in existing_users if r["email"])
+
+    existing_reqs = conn.execute("SELECT LOWER(user_id) as uid, LOWER(COALESCE(email,'')) as email FROM signup_requests WHERE status = 'Pending'").fetchall()
+    pending_ids = set(r["uid"] for r in existing_reqs)
+    pending_emails = set(r["email"] for r in existing_reqs if r["email"])
+
+    results = []
+    imported = 0
+    failed = 0
+    duplicates = 0
+
+    # Track IDs and emails within the import batch itself
+    batch_ids = set()
+    batch_emails = set()
+
+    for idx, row in enumerate(rows):
+        user_id = str(row.get("id", row.get("user_id", ""))).strip()
+        name = str(row.get("display_name", row.get("name", row.get("full_name", "")))).strip()
+        email = str(row.get("email", "")).strip()
+        phone = str(row.get("phone", "")).strip()
+        role = str(row.get("role", "faculty")).strip().lower()
+        subjects = str(row.get("subjects", row.get("assigned_subjects", ""))).strip()
+        extra_roles = str(row.get("extra_roles", row.get("additional_responsibilities", ""))).strip()
+        password = str(row.get("password", user_id)).strip()
+
+        errors = []
+
+        # Required field validation
+        if not user_id:
+            errors.append("Missing User ID")
+        if not name:
+            errors.append("Missing Full Name")
+        if not email:
+            errors.append("Missing Email")
+
+        # Email format validation
+        if email and ("@" not in email or "." not in email.split("@")[-1]):
+            errors.append("Invalid email format")
+
+        # Role validation
+        if role not in ("faculty", "mentor"):
+            errors.append(f"Invalid role '{role}' — must be 'faculty' or 'mentor'")
+
+        # Duplicate checks — existing database
+        if user_id and user_id.lower() in existing_ids:
+            errors.append("Duplicate — User ID already exists in system")
+            duplicates += 1
+        elif user_id and user_id.lower() in pending_ids:
+            errors.append("Duplicate — User ID has a pending application")
+            duplicates += 1
+
+        if email and email.lower() in existing_emails:
+            errors.append("Duplicate — Email already registered")
+            if "Duplicate" not in errors[0] if errors else "":
+                duplicates += 1
+        elif email and email.lower() in pending_emails:
+            errors.append("Duplicate — Email has a pending application")
+
+        # Batch-internal duplicate checks
+        if user_id and user_id.lower() in batch_ids:
+            errors.append("Duplicate — User ID appears multiple times in this import")
+        if email and email.lower() in batch_emails:
+            errors.append("Duplicate — Email appears multiple times in this import")
+
+        row_result = {
+            "row": idx + 1,
+            "id": user_id,
+            "name": name,
+            "email": email,
+            "role": role,
+            "status": "valid" if not errors else ("duplicate" if any("Duplicate" in e for e in errors) else "invalid"),
+            "errors": errors
+        }
+
+        if not errors:
+            try:
+                conn.execute("""
+                    INSERT INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone, status)
+                    VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, 'Active')
+                """, (user_id, password, role, name, subjects, extra_roles, email, phone))
+                imported += 1
+                row_result["status"] = "imported"
+                # Track in batch sets
+                batch_ids.add(user_id.lower())
+                if email:
+                    batch_emails.add(email.lower())
+                # Also add to existing sets so subsequent rows catch intra-batch dupes
+                existing_ids.add(user_id.lower())
+                if email:
+                    existing_emails.add(email.lower())
+            except Exception as e:
+                row_result["status"] = "error"
+                row_result["errors"].append(str(e))
+                failed += 1
+        else:
+            failed += 1
+
+        results.append(row_result)
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "imported": imported,
+        "failed": failed,
+        "duplicates": duplicates,
+        "total": len(rows),
+        "results": results,
+        "message": f"Import complete: {imported} imported, {failed} failed, {duplicates} duplicates."
+    })
+
+
+@app.route("/api/faculty/bulk-delete", methods=["POST"])
+def bulk_delete_faculty():
+    """Admin: Delete or deactivate multiple faculty. Checks dependencies first."""
+    data = request.get_json() or {}
+    ids = data.get("ids", [])
+    force = data.get("force", False)
+
+    if not ids:
+        return jsonify({"success": False, "message": "No faculty IDs provided."}), 400
+
+    conn = db.get_db_connection()
+
+    deleted = 0
+    deactivated = 0
+    skipped = []
+    details = []
+
+    for fid in ids:
+        # Check if user exists
+        user = conn.execute("SELECT id, display_name, role FROM users WHERE LOWER(id) = LOWER(?)", (fid,)).fetchone()
+        if not user:
+            skipped.append({"id": fid, "reason": "User not found"})
+            continue
+
+        # Check for dependencies: interventions, signup requests
+        intervention_count = conn.execute("SELECT COUNT(*) as cnt FROM interventions WHERE LOWER(mentor_id) = LOWER(?)", (fid,)).fetchone()["cnt"]
+        signup_count = conn.execute("SELECT COUNT(*) as cnt FROM signup_requests WHERE LOWER(user_id) = LOWER(?)", (fid,)).fetchone()["cnt"]
+        has_dependencies = intervention_count > 0 or signup_count > 0
+
+        if has_dependencies and not force:
+            # Deactivate instead of delete
+            conn.execute("UPDATE users SET status = 'Inactive' WHERE LOWER(id) = LOWER(?)", (fid,))
+            deactivated += 1
+            details.append({
+                "id": fid,
+                "name": user["display_name"],
+                "action": "deactivated",
+                "reason": f"Has {intervention_count} interventions, {signup_count} application records"
+            })
+        else:
+            # Safe to delete — remove user record only (preserve signup_requests for history)
+            conn.execute("DELETE FROM users WHERE LOWER(id) = LOWER(?)", (fid,))
+            deleted += 1
+            details.append({
+                "id": fid,
+                "name": user["display_name"],
+                "action": "deleted",
+                "reason": "No dependencies" if not has_dependencies else "Force deleted"
+            })
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "deleted": deleted,
+        "deactivated": deactivated,
+        "skipped": skipped,
+        "details": details,
+        "message": f"Processed {len(ids)} faculty: {deleted} deleted, {deactivated} deactivated, {len(skipped)} skipped."
+    })
+
+
+@app.route("/api/faculty/bulk-status", methods=["POST"])
+def bulk_status_faculty():
+    """Admin: Change status of multiple faculty at once."""
+    data = request.get_json() or {}
+    ids = data.get("ids", [])
+    new_status = data.get("status", "Active")
+
+    if not ids:
+        return jsonify({"success": False, "message": "No faculty IDs provided."}), 400
+    if new_status not in ("Active", "Inactive"):
+        return jsonify({"success": False, "message": "Status must be 'Active' or 'Inactive'."}), 400
+
+    conn = db.get_db_connection()
+    updated = 0
+    for fid in ids:
+        result = conn.execute("UPDATE users SET status = ? WHERE LOWER(id) = LOWER(?) AND role IN ('faculty', 'mentor')", (new_status, fid))
+        if result.rowcount > 0:
+            updated += 1
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "updated": updated,
+        "message": f"{updated} faculty members set to {new_status}."
+    })
 
 
 # =====================================================
@@ -813,11 +1301,13 @@ def update_intervention(intervention_id):
 
 @app.route("/api/agent/run-autonomous-loop", methods=["POST"])
 def run_autonomous_loop():
-    traces = agent.run_autonomous_cycle()
+    result = agent.run_autonomous_cycle()
+    if isinstance(result, dict):
+        return jsonify({"success": True, **result})
     return jsonify({
         "success": True,
-        "actions_count": len(traces),
-        "traces": traces
+        "actions_count": len(result),
+        "traces": result
     })
 
 
@@ -979,12 +1469,27 @@ def get_anomalies():
     conn = db.get_db_connection()
     rows = conn.execute("SELECT * FROM students WHERE attendance < ? OR risk >= 50", (attd_threshold,)).fetchall()
 
+    if not rows:
+        conn.close()
+        return jsonify([])
+
+    # Batch fetch subject marks for all matching students in ONE query to avoid N+1 bottleneck
+    student_ids = [r["id"] for r in rows]
+    placeholders = ",".join(["?"] * len(student_ids))
+    all_marks = conn.execute(f"SELECT * FROM subject_marks WHERE student_id IN ({placeholders})", student_ids).fetchall()
+    conn.close()
+
+    marks_by_student = {}
+    for m in all_marks:
+        sid = m["student_id"]
+        if sid not in marks_by_student:
+            marks_by_student[sid] = []
+        marks_by_student[sid].append(dict(m))
+
     anomalies_list = []
     for r in rows:
         st = dict(r)
-        # Get subject marks for subject-level anomalies
-        marks = conn.execute("SELECT * FROM subject_marks WHERE student_id = ?", (st["id"],)).fetchall()
-        marks_list = [dict(m) for m in marks]
+        marks_list = marks_by_student.get(st["id"], [])
         detected = ai_engine.detect_student_anomalies(st, subject_marks=marks_list)
         if detected:
             anomalies_list.append({
@@ -998,8 +1503,8 @@ def get_anomalies():
                 "risk": st.get("risk", 0),
                 "anomalies": detected
             })
-    conn.close()
     return jsonify(anomalies_list)
+
 
 
 # =====================================================

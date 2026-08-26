@@ -140,11 +140,11 @@ async function renderSettings() {
                 <div class="col-lg-6">
                     <div class="card-box border-start border-4 border-dark">
                         <div class="card-head">
-                            <h3 class="fw-bold"><i class="bi bi-people text-dark me-2"></i> Administrator User Access</h3>
+                            <h3 class="fw-bold"><i class="bi bi-person-check text-dark me-2"></i> Application Approvals</h3>
                         </div>
-                        <p class="text-muted small mb-3">Manage institutional accounts, assign faculty subject permissions, and manage credentials.</p>
+                        <p class="text-muted small mb-3">Review, verify, and approve or decline incoming faculty and mentor registration applications.</p>
                         <button class="primary-btn" onclick="navigateTo('users')">
-                            <i class="bi bi-shield-check"></i> Open User Access Manager
+                            <i class="bi bi-shield-check"></i> Open Approvals Queue
                         </button>
                     </div>
                 </div>

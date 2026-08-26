@@ -680,18 +680,104 @@ mark {
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 14px 14px 14px 4px;
-    padding: 16px 20px;
+    padding: 18px 22px;
     box-shadow: var(--shadow-sm);
-    max-width: 88%;
-    width: fit-content;
+    max-width: 96%;
+    width: 100%;
     word-break: break-word;
-    line-height: 1.6;
+    line-height: 1.65;
 }
 
 .ai-bubble-bot .markdown-body {
     background: transparent !important;
     color: var(--text) !important;
+    font-size: 13.5px;
+    line-height: 1.7;
+}
+
+.ai-bubble-bot .markdown-body h1,
+.ai-bubble-bot .markdown-body h2,
+.ai-bubble-bot .markdown-body h3,
+.ai-bubble-bot .markdown-body h4 {
+    color: var(--text);
+    font-weight: 700;
+    margin-top: 14px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-soft);
+    padding-bottom: 4px;
+}
+
+.ai-bubble-bot .markdown-body h1 { font-size: 1.25rem; }
+.ai-bubble-bot .markdown-body h2 { font-size: 1.15rem; }
+.ai-bubble-bot .markdown-body h3 { font-size: 1.05rem; }
+.ai-bubble-bot .markdown-body h4 { font-size: 0.95rem; }
+
+.ai-bubble-bot .markdown-body ul,
+.ai-bubble-bot .markdown-body ol {
+    padding-left: 20px;
+    margin-bottom: 10px;
+}
+
+.ai-bubble-bot .markdown-body li {
+    margin-bottom: 4px;
+}
+
+.ai-bubble-bot .markdown-body p {
+    margin-bottom: 10px;
+}
+
+.ai-bubble-bot .markdown-body hr {
+    border: 0;
+    height: 1px;
+    background: var(--border-soft);
+    margin: 14px 0;
+}
+
+.ai-bubble-bot .markdown-body blockquote {
+    border-left: 3.5px solid var(--accent);
+    padding: 8px 14px;
+    margin: 10px 0;
+    background: var(--bg-sunken);
+    border-radius: 0 8px 8px 0;
+    color: var(--text-soft);
+}
+
+.ai-bubble-bot .markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
     font-size: 13px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ai-bubble-bot .markdown-body th {
+    background: var(--bg-sunken);
+    color: var(--text);
+    font-weight: 600;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+}
+
+.ai-bubble-bot .markdown-body td {
+    padding: 8px 12px;
+    border: 1px solid var(--border-soft);
+    color: var(--text-soft);
+}
+
+.ai-bubble-bot .markdown-body tr:nth-child(even) {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.copy-ai-btn {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.copy-ai-btn:hover {
+    background: var(--bg-card) !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
 }
 
 .ai-bubble-bot pre {
@@ -750,4 +836,202 @@ mark {
     .main-area { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
     .page-content { padding: 0 !important; }
     .card-box { border: 1px solid #ddd !important; box-shadow: none !important; break-inside: avoid; }
+}
+
+/* =====================================================
+   CHART MODE SWITCHER PILLS (Segmented Controls)
+   ===================================================== */
+.chart-toggle-group {
+    display: inline-flex;
+    align-items: center;
+    background: var(--bg-sunken);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border-soft);
+    gap: 2px;
+}
+
+.chart-toggle-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-soft);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.chart-toggle-btn:hover {
+    color: var(--text);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .chart-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.chart-toggle-btn.active {
+    background: var(--bg-elevated);
+    color: var(--accent);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    font-weight: 700;
+}
+
+/* =====================================================
+   AI ANOMALIES EXECUTIVE TRIAGE STYLES
+   ===================================================== */
+.anomaly-kpi-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.anomaly-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.anomaly-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+}
+
+.anomaly-kpi-card.kpi-total::before { background: var(--accent); }
+.anomaly-kpi-card.kpi-critical::before { background: var(--risk-high); }
+.anomaly-kpi-card.kpi-warning::before { background: var(--risk-medium); }
+.anomaly-kpi-card.kpi-rate::before { background: #8b5cf6; }
+
+.anomaly-insight-banner {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.06) 0%, rgba(139, 92, 246, 0.06) 100%);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 12px;
+    padding: 18px 22px;
+    position: relative;
+}
+
+[data-theme="dark"] .anomaly-insight-banner {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
+    border-color: rgba(37, 99, 235, 0.35);
+}
+
+.anomaly-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+}
+
+.anomaly-filter-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.anomaly-filter-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-contrast);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.anomaly-filter-pill .pill-count {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.anomaly-filter-pill.active .pill-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: var(--accent-contrast);
+}
+
+/* PAGINATION CONTROLS */
+.custom-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+    background: var(--bg-sunken);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.page-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-contrast);
+    font-weight: 700;
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* HISTOGRAM STATS BAR */
+.distribution-stats-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-soft);
+}
+
+.distribution-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }

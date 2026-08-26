@@ -14,6 +14,7 @@ async function renderMentor() {
 
     if (students.length === 0) {
         await loadLatestStudents();
+        if (typeof currentActivePage !== "undefined" && currentActivePage !== "mentor") return;
     }
 
     const priorityList = students.filter(s => s.risk >= 30);
@@ -72,101 +73,40 @@ async function renderMentor() {
         <div class="row g-4 mb-4">
             <!-- LEFT: PRIORITY AT-RISK WATCHLIST -->
             <div class="col-lg-6">
-                <div class="card-box h-100">
-                    <div class="card-head">
-                        <h3 class="fw-bold"><i class="bi bi-exclamation-octagon-fill text-danger me-2"></i> Students Flagged for Intervention</h3>
-                        <span class="badge bg-danger">${priorityList.length} Students</span>
+                <div class="card-box h-100 d-flex flex-column">
+                    <div class="card-head flex-wrap gap-2">
+                        <div>
+                            <h3 class="fw-bold"><i class="bi bi-exclamation-octagon-fill text-danger me-2"></i> Students Flagged for Intervention</h3>
+                            <span class="text-muted small" id="mentorPrioritySubhead">${priorityList.length} At-Risk Students</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <input type="text" id="mentorPrioritySearch" class="form-control form-control-sm" placeholder="Search flagged..." style="width: 140px; font-size: 12px; background: var(--bg-sunken); color: var(--text); border-color: var(--border);" oninput="handleMentorPrioritySearch(this.value)">
+                        </div>
                     </div>
 
-                    ${priorityList.length === 0 ? `
-                        <div class="text-center py-5">
-                            <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-3"></i>
-                            <h5 class="text-dark">All Clear!</h5>
-                            <p class="text-muted small">No students currently need intervention. Great work!</p>
-                        </div>
-                    ` : `
-                        <div class="d-flex flex-column gap-3" style="max-height: 520px; overflow-y: auto;">
-                            ${priorityList.map(s => {
-                                let badgeClass = s.risk >= 60 ? "high" : "medium";
-                                return `
-                                    <div class="p-3 rounded-3 mentor-student-card" style="background: var(--bg-sunken); border: 1px solid var(--border-soft);">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <div>
-                                                <h5 class="fw-bold mb-0" style="color: var(--text);">${s.name}</h5>
-                                                <span class="small" style="color: var(--text-muted);">ID: <code>${s.id}</code> • ${s.course} (${s.year || '2nd Year'})</span>
-                                            </div>
-                                            <span class="risk-badge ${badgeClass}">${s.risk}% Risk</span>
-                                        </div>
-                                        <div class="small mb-3 d-flex gap-3" style="color: var(--text-soft);">
-                                            <span><i class="bi bi-clock me-1"></i> Attendance: <strong>${s.attendance}%</strong></span>
-                                            <span><i class="bi bi-award me-1"></i> CGPA: <strong>${s.cgpa}</strong></span>
-                                            <span><i class="bi bi-cpu me-1"></i> LMS: <strong>${s.lms_score || s.attendance}%</strong></span>
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            <button class="btn btn-sm btn-primary w-50" onclick="quickCreateIntervention('${s.id}', '1-on-1 Academic Mentoring', 'CS201', 'Critical')">
-                                                <i class="bi bi-calendar-plus"></i> Book 1-on-1
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-secondary w-50" onclick="viewStudent360('${s.id}')">
-                                                <i class="bi bi-person-vcard"></i> Full 360° Profile
-                                            </button>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join("")}
-                        </div>
-                    `}
+                    <div id="mentorPriorityListContainer" class="d-flex flex-column gap-3 flex-grow-1" style="max-height: 520px; overflow-y: auto;">
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top flex-wrap gap-2" id="mentorPriorityPagination">
+                    </div>
                 </div>
             </div>
 
             <!-- RIGHT: ACTIVE INTERVENTIONS PIPELINE -->
             <div class="col-lg-6">
-                <div class="card-box h-100">
-                    <div class="card-head">
-                        <h3 class="fw-bold"><i class="bi bi-kanban-fill text-primary me-2"></i> Mentoring Pipeline</h3>
-                        <span class="badge bg-primary">${liveInterventions.length} Total</span>
+                <div class="card-box h-100 d-flex flex-column">
+                    <div class="card-head flex-wrap gap-2">
+                        <div>
+                            <h3 class="fw-bold"><i class="bi bi-kanban-fill text-primary me-2"></i> Mentoring Pipeline</h3>
+                            <span class="text-muted small">${liveInterventions.length} Total Sessions</span>
+                        </div>
                     </div>
 
-                    ${liveInterventions.length === 0 ? `
-                        <div class="text-center py-5">
-                            <i class="bi bi-calendar-plus fs-1 d-block mb-3 text-muted"></i>
-                            <h5 class="text-dark">No Sessions Yet</h5>
-                            <p class="text-muted small mb-3">Click "Book 1-on-1" on a student or "Schedule New Session" to get started.</p>
-                            <button class="primary-btn btn-sm" onclick="openCustomInterventionModal()">
-                                <i class="bi bi-plus-lg"></i> Schedule First Session
-                            </button>
-                        </div>
-                    ` : `
-                        <div class="d-flex flex-column gap-2" style="max-height: 520px; overflow-y: auto;">
-                            ${liveInterventions.map(i => {
-                                const statusClass = i.status === 'Completed' ? 'bg-success text-white' : (i.status === 'In Progress' ? 'bg-primary text-white' : 'bg-warning text-dark');
-                                const studentName = students.find(s => s.id === i.student_id)?.name || i.student_id;
-                                return `
-                                    <div class="p-3 rounded-3 mentor-pipeline-item" style="background: var(--bg-sunken); border: 1px solid var(--border-soft);">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <div>
-                                                <strong class="d-block" style="color: var(--text); font-size: 13.5px;">${i.action}</strong>
-                                                <small style="color: var(--text-soft);">Student: <strong>${studentName}</strong> (<code>${i.student_id}</code>) ${i.subject_code ? `• Subject: ${i.subject_code}` : ''}</small>
-                                            </div>
-                                            <span class="badge ${statusClass}" style="font-size: 11px;">${i.status}</span>
-                                        </div>
-                                        ${i.notes ? `<p class="small mb-2 p-2 rounded" style="background: var(--bg-elevated); border: 1px solid var(--border-soft); color: var(--text); font-size: 12px;"><i class="bi bi-sticky me-1 text-primary"></i> ${i.notes}</p>` : ''}
-                                        <div class="d-flex justify-content-between align-items-center mt-2 small" style="color: var(--text-muted); font-size: 12px;">
-                                            <span><i class="bi bi-calendar3 me-1"></i> Logged: ${i.date} ${i.completed_date ? `| Done: ${i.completed_date}` : ''}</span>
-                                            ${i.status !== 'Completed' ? (
-                                                role === 'admin' ? `
-                                                    <button class="btn btn-sm btn-outline-success py-1 px-3 d-flex align-items-center gap-1" onclick="markInterventionComplete(${i.id})">
-                                                        <i class="bi bi-check2"></i> Mark Complete
-                                                    </button>
-                                                ` : `
-                                                    <span style="color: var(--text-soft);"><i class="bi bi-hourglass-split me-1 text-warning"></i> Awaiting Completion</span>
-                                                `
-                                            ) : '<span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Resolved</span>'}
-                                        </div>
-                                    </div>
-                                `;
-                            }).join("")}
-                        </div>
-                    `}
+                    <div id="mentorPipelineListContainer" class="d-flex flex-column gap-2 flex-grow-1" style="max-height: 520px; overflow-y: auto;">
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top flex-wrap gap-2" id="mentorPipelinePagination">
+                    </div>
                 </div>
             </div>
         </div>
@@ -238,6 +178,10 @@ async function renderMentor() {
         </div>
     `;
 
+    // Render initial paginated lists
+    renderMentorPriorityList();
+    renderMentorPipelineList(liveInterventions);
+
     // Bind form
     const form = document.getElementById("customInterventionForm");
     if (form) {
@@ -272,6 +216,196 @@ async function renderMentor() {
                 showToast("Session scheduled successfully!", "success");
             }
         });
+    }
+}
+
+window._mentorPriorityState = window._mentorPriorityState || { page: 1, pageSize: 6, search: "" };
+window._mentorPipelineState = window._mentorPipelineState || { page: 1, pageSize: 6 };
+
+function handleMentorPrioritySearch(val) {
+    if (!window._mentorPriorityState) window._mentorPriorityState = { page: 1, pageSize: 6, search: "" };
+    window._mentorPriorityState.search = (val || "").trim().toLowerCase();
+    window._mentorPriorityState.page = 1;
+    renderMentorPriorityList();
+}
+window.handleMentorPrioritySearch = handleMentorPrioritySearch;
+
+function handleMentorPriorityPage(newPage) {
+    if (!window._mentorPriorityState) window._mentorPriorityState = { page: 1, pageSize: 6, search: "" };
+    window._mentorPriorityState.page = newPage;
+    renderMentorPriorityList();
+}
+window.handleMentorPriorityPage = handleMentorPriorityPage;
+
+function handleMentorPipelinePage(newPage) {
+    if (!window._mentorPipelineState) window._mentorPipelineState = { page: 1, pageSize: 6 };
+    window._mentorPipelineState.page = newPage;
+    renderMentorPipelineList();
+}
+window.handleMentorPipelinePage = handleMentorPipelinePage;
+
+function renderMentorPriorityList() {
+    const container = document.getElementById("mentorPriorityListContainer");
+    const pagContainer = document.getElementById("mentorPriorityPagination");
+    const subhead = document.getElementById("mentorPrioritySubhead");
+    if (!container) return;
+
+    const priorityList = students.filter(s => s.risk >= 30);
+    const search = window._mentorPriorityState?.search || "";
+    let filtered = priorityList;
+    if (search) {
+        filtered = priorityList.filter(s => 
+            s.name.toLowerCase().includes(search) ||
+            s.id.toLowerCase().includes(search) ||
+            (s.course && s.course.toLowerCase().includes(search))
+        );
+    }
+
+    if (subhead) {
+        subhead.textContent = `${filtered.length} Flagged Students ${filtered.length !== priorityList.length ? `(filtered from ${priorityList.length})` : ''}`;
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-search text-muted fs-2 d-block mb-2"></i>
+                <h6 class="text-muted">No flagged students match search.</h6>
+            </div>
+        `;
+        if (pagContainer) pagContainer.innerHTML = "";
+        return;
+    }
+
+    const { page, pageSize } = window._mentorPriorityState;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const currentPage = Math.min(Math.max(1, page), totalPages);
+    window._mentorPriorityState.page = currentPage;
+
+    const start = (currentPage - 1) * pageSize;
+    const end = Math.min(start + pageSize, filtered.length);
+    const items = filtered.slice(start, end);
+
+    container.innerHTML = items.map(s => {
+        let badgeClass = s.risk >= 60 ? "high" : "medium";
+        return `
+            <div class="p-3 rounded-3 mentor-student-card" style="background: var(--bg-sunken); border: 1px solid var(--border-soft);">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h5 class="fw-bold mb-0" style="color: var(--text);">${s.name}</h5>
+                        <span class="small" style="color: var(--text-muted);">ID: <code>${s.id}</code> • ${s.course} (${s.year || '2nd Year'})</span>
+                    </div>
+                    <span class="risk-badge ${badgeClass}">${s.risk}% Risk</span>
+                </div>
+                <div class="small mb-3 d-flex gap-3" style="color: var(--text-soft);">
+                    <span><i class="bi bi-clock me-1"></i> Attendance: <strong>${s.attendance}%</strong></span>
+                    <span><i class="bi bi-award me-1"></i> CGPA: <strong>${s.cgpa}</strong></span>
+                    <span><i class="bi bi-cpu me-1"></i> LMS: <strong>${s.lms_score || s.attendance}%</strong></span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-primary w-50" onclick="quickCreateIntervention('${s.id}', '1-on-1 Academic Mentoring', 'CS201', 'Critical')">
+                        <i class="bi bi-calendar-plus"></i> Book 1-on-1
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary w-50" onclick="viewStudent360('${s.id}')">
+                        <i class="bi bi-person-vcard"></i> Full 360° Profile
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join("");
+
+    if (pagContainer) {
+        pagContainer.innerHTML = `
+            <span class="small text-muted">Showing ${start + 1}-${end} of ${filtered.length}</span>
+            <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" ${currentPage === 1 ? 'disabled' : ''} onclick="handleMentorPriorityPage(${currentPage - 1})">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <span class="small px-2 my-auto fw-semibold">${currentPage} / ${totalPages}</span>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" ${currentPage === totalPages ? 'disabled' : ''} onclick="handleMentorPriorityPage(${currentPage + 1})">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        `;
+    }
+}
+
+function renderMentorPipelineList(interventionsList) {
+    const container = document.getElementById("mentorPipelineListContainer");
+    const pagContainer = document.getElementById("mentorPipelinePagination");
+    if (!container) return;
+
+    if (interventionsList) window._cachedLiveInterventions = interventionsList;
+    const list = window._cachedLiveInterventions || [];
+
+    if (list.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-plus fs-1 d-block mb-3 text-muted"></i>
+                <h5 class="text-dark">No Sessions Yet</h5>
+                <p class="text-muted small mb-3">Click "Book 1-on-1" on a student or "Schedule New Session" to get started.</p>
+                <button class="primary-btn btn-sm" onclick="openCustomInterventionModal()">
+                    <i class="bi bi-plus-lg"></i> Schedule First Session
+                </button>
+            </div>
+        `;
+        if (pagContainer) pagContainer.innerHTML = "";
+        return;
+    }
+
+    const { page, pageSize } = window._mentorPipelineState || { page: 1, pageSize: 6 };
+    const totalPages = Math.max(1, Math.ceil(list.length / pageSize));
+    const currentPage = Math.min(Math.max(1, page), totalPages);
+    if (window._mentorPipelineState) window._mentorPipelineState.page = currentPage;
+
+    const start = (currentPage - 1) * pageSize;
+    const end = Math.min(start + pageSize, list.length);
+    const items = list.slice(start, end);
+
+    const user = getCurrentUser();
+    const role = (user?.role || "faculty").toLowerCase();
+
+    container.innerHTML = items.map(i => {
+        const statusClass = i.status === 'Completed' ? 'bg-success text-white' : (i.status === 'In Progress' ? 'bg-primary text-white' : 'bg-warning text-dark');
+        const studentName = students.find(s => s.id === i.student_id)?.name || i.student_id;
+        return `
+            <div class="p-3 rounded-3 mentor-pipeline-item" style="background: var(--bg-sunken); border: 1px solid var(--border-soft);">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <strong class="d-block" style="color: var(--text); font-size: 13.5px;">${i.action}</strong>
+                        <small style="color: var(--text-soft);">Student: <strong>${studentName}</strong> (<code>${i.student_id}</code>) ${i.subject_code ? `• Subject: ${i.subject_code}` : ''}</small>
+                    </div>
+                    <span class="badge ${statusClass}" style="font-size: 11px;">${i.status}</span>
+                </div>
+                ${i.notes ? `<p class="small mb-2 p-2 rounded" style="background: var(--bg-elevated); border: 1px solid var(--border-soft); color: var(--text); font-size: 12px;"><i class="bi bi-sticky me-1 text-primary"></i> ${i.notes}</p>` : ''}
+                <div class="d-flex justify-content-between align-items-center mt-2 small" style="color: var(--text-muted); font-size: 12px;">
+                    <span><i class="bi bi-calendar3 me-1"></i> Logged: ${i.date} ${i.completed_date ? `| Done: ${i.completed_date}` : ''}</span>
+                    ${i.status !== 'Completed' ? (
+                        role === 'admin' ? `
+                            <button class="btn btn-sm btn-outline-success py-1 px-3 d-flex align-items-center gap-1" onclick="markInterventionComplete(${i.id})">
+                                <i class="bi bi-check2"></i> Mark Complete
+                            </button>
+                        ` : `
+                            <span style="color: var(--text-soft);"><i class="bi bi-hourglass-split me-1 text-warning"></i> Awaiting Completion</span>
+                        `
+                    ) : '<span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Resolved</span>'}
+                </div>
+            </div>
+        `;
+    }).join("");
+
+    if (pagContainer) {
+        pagContainer.innerHTML = `
+            <span class="small text-muted">Showing ${start + 1}-${end} of ${list.length}</span>
+            <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" ${currentPage === 1 ? 'disabled' : ''} onclick="handleMentorPipelinePage(${currentPage - 1})">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <span class="small px-2 my-auto fw-semibold">${currentPage} / ${totalPages}</span>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" ${currentPage === totalPages ? 'disabled' : ''} onclick="handleMentorPipelinePage(${currentPage + 1})">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        `;
     }
 }
 

@@ -112,7 +112,7 @@ const API = {
                 sent_at: new Date().toISOString(),
                 body_html: `<h3>Welcome, ${req.display_name}!</h3><p>Your ${req.role} account has been activated. <strong>ID:</strong> ${req.user_id}, <strong>Password:</strong> ${req.password}</p>`
             });
-            return { success: true, message: `Application for ${req.display_name} approved! Credentials dispatched to ${req.email}.` };
+            return { success: true, message: `Application for ${req.display_name} approved! Faculty account created in Faculty & Mentor Management. Credentials dispatched to ${req.email}.` };
         }
         return { success: false, message: "Request not found." };
     },
@@ -127,18 +127,18 @@ const API = {
         // Fallback
         const req = this._mockSignupRequests.find(r => r.id === reqId);
         if (req) {
-            req.status = "Rejected";
+            req.status = "Declined";
             req.rejection_reason = reason;
             req.reviewed_at = new Date().toISOString();
             this._mockEmailLogs.unshift({
                 id: Date.now(),
                 recipient: req.email,
                 subject: `EduStudent Sight Application Status — ${req.role.toUpperCase()} Account`,
-                email_type: "Account Rejected",
+                email_type: "Account Declined",
                 sent_at: new Date().toISOString(),
-                body_html: `<h3>Application Notice</h3><p>Dear ${req.display_name}, your request was rejected.</p><p><strong>Reason:</strong> ${reason}</p>`
+                body_html: `<h3>Application Notice</h3><p>Dear ${req.display_name}, your request was declined.</p><p><strong>Reason:</strong> ${reason}</p>`
             });
-            return { success: true, message: `Application for ${req.display_name} marked as Rejected. Rejection email dispatched to ${req.email}.` };
+            return { success: true, message: `Application for ${req.display_name} marked as Declined. Reason recorded in history and notification dispatched to ${req.email}.` };
         }
         return { success: false, message: "Request not found." };
     },
@@ -445,5 +445,145 @@ const API = {
                 ]
             }
         ];
+    },
+
+    // ===================== FACULTY MANAGEMENT (Admin) =====================
+    async getFaculty() {
+        const data = await this._fetch("/faculty");
+        if (data) return data;
+
+        // Fallback mock data built from existing mock stores
+        const users = [
+            { id: "FAC001", display_name: "Dr. Ramesh Kumar", role: "faculty", subjects: "CS201,CS202", extra_roles: "Class Teacher,2nd Year Coordinator", email: "dr.ramesh@vignan.ac.in", phone: "+91 90000 11111", status: "Active", source: "approved", students_assigned: 3, high_risk_students: 1 },
+            { id: "FAC002", display_name: "Dr. Priya Sharma", role: "faculty", subjects: "CS203,CS204", extra_roles: "None", email: "dr.priya@vignan.ac.in", phone: "+91 90000 22222", status: "Active", source: "approved", students_assigned: 2, high_risk_students: 0 },
+            { id: "FAC003", display_name: "Prof. Venkat Rao", role: "faculty", subjects: "MA201", extra_roles: "HOD Mathematics", email: "prof.venkat@vignan.ac.in", phone: "+91 90000 33333", status: "Active", source: "approved", students_assigned: 1, high_risk_students: 0 },
+            { id: "MEN001", display_name: "Prof. Sunitha Devi", role: "mentor", subjects: "CS201,CS203", extra_roles: "None", email: "prof.sunitha@vignan.ac.in", phone: "+91 90000 44444", status: "Active", source: "approved", students_assigned: 3, high_risk_students: 1 },
+            { id: "MEN002", display_name: "Dr. Anil Kumar", role: "mentor", subjects: "CS202,CS204", extra_roles: "None", email: "dr.anil@vignan.ac.in", phone: "+91 90000 55555", status: "Active", source: "approved", students_assigned: 2, high_risk_students: 0 },
+        ];
+
+        // Include any signup requests that have been Approved in the mock store
+        const approvedRequests = this._mockSignupRequests.filter(r => r.status === "Approved");
+        approvedRequests.forEach(r => {
+            if (!users.some(u => u.id.toLowerCase() === r.user_id.toLowerCase())) {
+                users.push({
+                    id: r.user_id, display_name: r.display_name, role: r.role,
+                    subjects: r.subjects, extra_roles: r.extra_roles, email: r.email, phone: r.phone,
+                    status: "Active", source: "approved", students_assigned: 0, high_risk_students: 0
+                });
+            }
+        });
+
+        const pending = this._mockSignupRequests.filter(r => r.status === "Pending");
+        const declined = this._mockSignupRequests.filter(r => r.status === "Declined" || r.status === "Rejected").map(r => ({
+            id: r.user_id, req_id: r.id, display_name: r.display_name, role: r.role,
+            subjects: r.subjects, extra_roles: r.extra_roles, email: r.email, phone: r.phone,
+            status: "Declined", source: "declined", created_at: r.created_at,
+            reviewed_at: r.reviewed_at || r.created_at, rejection_reason: r.rejection_reason || "Declined by administrator",
+            students_assigned: 0, high_risk_students: 0
+        }));
+
+        return {
+            faculty: users,
+            declined_history: declined,
+            summary: {
+                total_faculty: users.length,
+                active_faculty: users.filter(u => u.status === "Active").length,
+                pending_applications: pending.length,
+                mentors: users.filter(u => u.role === "mentor").length,
+                total_students_assigned: users.reduce((sum, u) => sum + (u.students_assigned || 0), 0),
+                total_students: 5
+            }
+        };
+    },
+
+    async getFacultyDetail(facultyId) {
+        const data = await this._fetch(`/faculty/${encodeURIComponent(facultyId)}`);
+        if (data) return data;
+
+        // Fallback mock detail
+        const mockProfiles = {
+            "FAC001": { id: "FAC001", display_name: "Dr. Ramesh Kumar", role: "faculty", subjects: "CS201,CS202", extra_roles: "Class Teacher,2nd Year Coordinator", email: "dr.ramesh@vignan.ac.in", phone: "+91 90000 11111", status: "Active", source: "approved" },
+            "MEN001": { id: "MEN001", display_name: "Prof. Sunitha Devi", role: "mentor", subjects: "CS201,CS203", extra_roles: "None", email: "prof.sunitha@vignan.ac.in", phone: "+91 90000 44444", status: "Active", source: "approved" },
+        };
+
+        const profile = mockProfiles[facultyId] || { id: facultyId, display_name: facultyId, role: "faculty", subjects: "", extra_roles: "", email: "", phone: "", status: "Active", source: "approved" };
+
+        // Check if this is a pending application
+        const pendingApp = this._mockSignupRequests.find(r => r.user_id === facultyId);
+        let application = null;
+        if (pendingApp) {
+            profile.display_name = pendingApp.display_name;
+            profile.role = pendingApp.role;
+            profile.subjects = pendingApp.subjects;
+            profile.extra_roles = pendingApp.extra_roles;
+            profile.email = pendingApp.email;
+            profile.phone = pendingApp.phone;
+            profile.status = pendingApp.status;
+            profile.source = "application";
+            application = {
+                req_id: pendingApp.id,
+                status: pendingApp.status,
+                submitted_date: pendingApp.created_at,
+                reviewed_date: pendingApp.reviewed_at || null,
+                rejection_reason: pendingApp.rejection_reason || null,
+            };
+        }
+
+        return {
+            success: true,
+            profile: profile,
+            application: application,
+            assigned_students: [
+                { id: "25CS005", name: "Arjun Patel", course: "CSE", year: "2nd Year", attendance: 61, cgpa: 6.9, risk: 72 },
+                { id: "25CS002", name: "Y.Hemanth Reddy", course: "CSE", year: "2nd Year", attendance: 68, cgpa: 7.4, risk: 55 },
+                { id: "25CS001", name: "V.Sri Udbhav", course: "CSE", year: "2nd Year", attendance: 82, cgpa: 8.2, risk: 18 },
+            ],
+            interventions: [
+                { id: 1, student_id: "25CS005", date: "2026-08-20", action: "Academic Counseling", status: "Pending", notes: "Scheduled meeting", urgency: "High" },
+                { id: 2, student_id: "25CS002", date: "2026-08-18", action: "Attendance Follow-up", status: "Completed", notes: "Student counseled", urgency: "Moderate" },
+            ],
+            ai_summary: {
+                high_risk_count: 1,
+                medium_risk_count: 1,
+                total_assigned: 3,
+                pending_interventions: 1,
+                completed_interventions: 1,
+            }
+        };
+    },
+
+    updateFaculty(facultyId, data) {
+        return this._fetch(`/faculty/${encodeURIComponent(facultyId)}`, {
+            method: "PUT",
+            body: JSON.stringify(data)
+        });
+    },
+
+    updateFacultyStatus(facultyId, status) {
+        return this._fetch(`/faculty/${encodeURIComponent(facultyId)}/status`, {
+            method: "PUT",
+            body: JSON.stringify({ status })
+        });
+    },
+
+    bulkImportFaculty(rows) {
+        return this._fetch("/faculty/bulk-import", {
+            method: "POST",
+            body: JSON.stringify({ rows })
+        });
+    },
+
+    bulkDeleteFaculty(ids, force = false) {
+        return this._fetch("/faculty/bulk-delete", {
+            method: "POST",
+            body: JSON.stringify({ ids, force })
+        });
+    },
+
+    bulkStatusFaculty(ids, status) {
+        return this._fetch("/faculty/bulk-status", {
+            method: "POST",
+            body: JSON.stringify({ ids, status })
+        });
     }
 };

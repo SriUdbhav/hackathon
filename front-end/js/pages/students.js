@@ -120,9 +120,21 @@ async function renderStudents() {
                         </tr>
                     </thead>
                     <tbody id="studentsTableBody">
-                        ${generateStudentsTableRows(getSortedStudents(students))}
                     </tbody>
                 </table>
+            </div>
+            <!-- STUDENTS PAGINATION CONTROLS -->
+            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2 pt-2 border-top">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small text-muted" id="studentsPageInfo">Page 1 of 1</span>
+                    <select class="form-select form-select-sm" style="width: auto; font-size: 12px; background: var(--bg-elevated); color: var(--text); border-color: var(--border);" onchange="handleStudentsPageSizeChange(this.value)">
+                        <option value="20" selected>20 / page</option>
+                        <option value="50">50 / page</option>
+                        <option value="100">100 / page</option>
+                    </select>
+                </div>
+                <div class="d-flex gap-1" id="studentsPaginationControls">
+                </div>
             </div>
         </div>
 
@@ -198,7 +210,23 @@ async function renderStudents() {
                         </div>
                         <div class="form-group">
                             <label>Phone / Mobile</label>
-                            <input id="editStudentPhone" type="tel" placeholder="+91 98480 00000">
+                            <div class="d-flex gap-2">
+                                <select id="editStudentCountryCode" class="form-select" style="width: 145px; font-size: 12.5px; font-weight: 500; background: var(--bg-elevated); color: var(--text); border-color: var(--border);" onchange="updatePhoneLimit('editStudentCountryCode', 'editStudentPhone')">
+                                    <option value="+91" data-len="10" data-code="+91" selected>🇮🇳 +91 (India)</option>
+                                    <option value="+1" data-len="10" data-code="+1">🇺🇸 +1 (US)</option>
+                                    <option value="+44" data-len="10" data-code="+44">🇬🇧 +44 (UK)</option>
+                                    <option value="+971" data-len="9" data-code="+971">🇦🇪 +971 (UAE)</option>
+                                    <option value="+65" data-len="8" data-code="+65">🇸🇬 +65 (Singapore)</option>
+                                    <option value="+61" data-len="9" data-code="+61">🇦🇺 +61 (Australia)</option>
+                                    <option value="+1-CA" data-len="10" data-code="+1">🇨🇦 +1 (Canada)</option>
+                                    <option value="+49" data-len="11" data-code="+49">🇩🇪 +49 (Germany)</option>
+                                    <option value="+81" data-len="10" data-code="+81">🇯🇵 +81 (Japan)</option>
+                                    <option value="+966" data-len="9" data-code="+966">🇸🇦 +966 (Saudi Arabia)</option>
+                                    <option value="+60" data-len="9" data-code="+60">🇲🇾 +60 (Malaysia)</option>
+                                    <option value="+33" data-len="9" data-code="+33">🇫🇷 +33 (France)</option>
+                                </select>
+                                <input id="editStudentPhone" type="tel" class="form-control flex-grow-1" placeholder="10-digit number" maxlength="10" oninput="formatPhoneDigits(this)" style="background: var(--bg-elevated); color: var(--text); border-color: var(--border);">
+                            </div>
                         </div>
                     </div>
                     <div class="modal-actions">
@@ -261,7 +289,7 @@ async function renderStudents() {
                 place: document.getElementById("editStudentPlace").value.trim(),
                 region: document.getElementById("editStudentRegion").value.trim(),
                 email: document.getElementById("editStudentEmail").value.trim(),
-                phone: document.getElementById("editStudentPhone").value.trim()
+                phone: getFullPhoneNumber("editStudentCountryCode", "editStudentPhone")
             };
 
             const res = await API.updateStudent(id, updatedData);
@@ -275,6 +303,9 @@ async function renderStudents() {
             }
         });
     }
+
+    // Initial render with pagination
+    filterStudentsTable();
 }
 
 function getSortIcon(col) {
@@ -379,6 +410,67 @@ function generateStudentsTableRows(dataList) {
     }).join("");
 }
 
+window._studentsPageState = window._studentsPageState || { page: 1, pageSize: 20 };
+
+function handleStudentsPageChange(newPage) {
+    if (!window._studentsPageState) window._studentsPageState = { page: 1, pageSize: 20 };
+    window._studentsPageState.page = newPage;
+    filterStudentsTable();
+}
+window.handleStudentsPageChange = handleStudentsPageChange;
+
+function handleStudentsPageSizeChange(newSize) {
+    if (!window._studentsPageState) window._studentsPageState = { page: 1, pageSize: 20 };
+    window._studentsPageState.pageSize = parseInt(newSize, 10) || 20;
+    window._studentsPageState.page = 1;
+    filterStudentsTable();
+}
+window.handleStudentsPageSizeChange = handleStudentsPageSizeChange;
+
+function renderStudentsPaginationControls(currentPage, totalPages) {
+    const container = document.getElementById("studentsPaginationControls");
+    if (!container) return;
+
+    if (totalPages <= 1) {
+        container.innerHTML = "";
+        return;
+    }
+
+    let html = `
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2" ${currentPage === 1 ? 'disabled' : ''} onclick="handleStudentsPageChange(1)" title="First Page">
+            <i class="bi bi-chevron-double-left"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2" ${currentPage === 1 ? 'disabled' : ''} onclick="handleStudentsPageChange(${currentPage - 1})" title="Previous Page">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+    `;
+
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+
+    for (let p = startPage; p <= endPage; p++) {
+        html += `
+            <button class="btn btn-sm ${p === currentPage ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2" onclick="handleStudentsPageChange(${p})">
+                ${p}
+            </button>
+        `;
+    }
+
+    html += `
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2" ${currentPage === totalPages ? 'disabled' : ''} onclick="handleStudentsPageChange(${currentPage + 1})" title="Next Page">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2" ${currentPage === totalPages ? 'disabled' : ''} onclick="handleStudentsPageChange(${totalPages})" title="Last Page">
+            <i class="bi bi-chevron-double-right"></i>
+        </button>
+    `;
+
+    container.innerHTML = html;
+}
+
 function filterStudentsTable() {
     const rawQuery = (document.getElementById("studentSearchInput")?.value || "").trim();
     const query = rawQuery.toLowerCase();
@@ -415,13 +507,31 @@ function filterStudentsTable() {
     });
 
     const sorted = getSortedStudents(filtered);
+    const { page, pageSize } = window._studentsPageState || { page: 1, pageSize: 20 };
+    const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+    const currentPage = Math.min(Math.max(1, page), totalPages);
+    if (window._studentsPageState) window._studentsPageState.page = currentPage;
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, sorted.length);
+    const pageItems = sorted.slice(startIndex, endIndex);
+
     const tbody = document.getElementById("studentsTableBody");
-    if (tbody) tbody.innerHTML = generateStudentsTableRows(sorted);
+    if (tbody) tbody.innerHTML = generateStudentsTableRows(pageItems);
 
     const summary = document.getElementById("studentsCountSummary");
     if (summary) {
-        summary.innerHTML = `Showing <strong>${sorted.length}</strong> of <strong>${students.length}</strong> students`;
+        summary.innerHTML = sorted.length > 0
+            ? `Showing <strong>${startIndex + 1}-${endIndex}</strong> of <strong>${sorted.length}</strong> students ${sorted.length !== students.length ? `(filtered from ${students.length})` : ''}`
+            : `No students matching filters`;
     }
+
+    const pageInfo = document.getElementById("studentsPageInfo");
+    if (pageInfo) {
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    }
+
+    renderStudentsPaginationControls(currentPage, totalPages);
 }
 
 function openEditModal(studentId) {
@@ -442,7 +552,7 @@ function openEditModal(studentId) {
     document.getElementById("editStudentPlace").value = s.place || "";
     document.getElementById("editStudentRegion").value = s.region || "";
     document.getElementById("editStudentEmail").value = s.email || "";
-    document.getElementById("editStudentPhone").value = s.phone || "";
+    setPhoneInputFromFull("editStudentCountryCode", "editStudentPhone", s.phone || "");
 
     document.getElementById("editStudentModal").classList.add("active");
 }
@@ -532,12 +642,21 @@ function initStudentModalEvents() {
             const region = (document.getElementById("studentRegion")?.value || "").trim();
             const country = (document.getElementById("studentCountry")?.value || "").trim();
             const email = (document.getElementById("studentEmail")?.value || "").trim();
-            const phone = (document.getElementById("studentPhone")?.value || "").trim();
+            const phone = getFullPhoneNumber("studentCountryCode", "studentPhone");
+            const countryCodeSelect = document.getElementById("studentCountryCode");
+            const opt = countryCodeSelect?.options[countryCodeSelect.selectedIndex];
+            const requiredLen = parseInt(opt?.getAttribute("data-len") || "10", 10);
+            const digits = (document.getElementById("studentPhone")?.value || "").replace(/\D/g, "");
 
             // Strict manual entry validation — refuse to submit if any field is empty
             if (!id || !name || !gender || !course || !year || rawCgpa === "" || rawAttd === "" || rawCredits === "" ||
-                !father || !mother || !motherTongue || !place || !region || !country || !email || !phone) {
+                !father || !mother || !motherTongue || !place || !region || !country || !email || !digits) {
                 alert("All fields are required. Please fill in every field manually.\n\n• If numeric data is not available, enter 0 (e.g. CGPA, Attendance, Credits).\n• If text data is not available, enter 'Unknown'.");
+                return;
+            }
+
+            if (digits.length < requiredLen) {
+                alert(`Please enter a valid ${requiredLen}-digit mobile number for ${opt?.textContent || 'selected country'}.`);
                 return;
             }
 

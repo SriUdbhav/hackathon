@@ -32,47 +32,44 @@ function registerChart(chart) {
 function applyChartTheme(chart) {
     if (!chart || !chart.options) return;
 
-    const tokens = typeof getThemeTokens === 'function' ? getThemeTokens() : {};
-    if (!tokens.text) return;
+    try {
+        const tokens = typeof getThemeTokens === 'function' ? getThemeTokens() : {};
+        if (!tokens.text) return;
 
-    // Scales (axes)
-    if (chart.options.scales) {
-        Object.values(chart.options.scales).forEach(scale => {
-            if (scale.grid) {
-                scale.grid.color = tokens.borderSoft;
-                scale.grid.borderColor = tokens.border;
-            }
-            if (scale.ticks) {
-                scale.ticks.color = tokens.textMuted;
-                if (tokens.fontMono) {
-                    scale.ticks.font = scale.ticks.font || {};
-                    scale.ticks.font.family = tokens.fontMono;
+        // Scales (axes)
+        if (chart.scales) {
+            Object.values(chart.scales).forEach(scale => {
+                if (scale.options) {
+                    if (scale.options.grid) {
+                        scale.options.grid.color = tokens.borderSoft || '#e2e8f0';
+                    }
+                    if (scale.options.border) {
+                        scale.options.border.color = tokens.border || '#cbd5e1';
+                    }
+                    if (scale.options.ticks) {
+                        scale.options.ticks.color = tokens.textMuted || '#64748b';
+                    }
                 }
-            }
-            if (scale.title) {
-                scale.title.color = tokens.textSoft;
-            }
-        });
-    }
+            });
+        }
 
-    // Tooltip
-    if (chart.options.plugins && chart.options.plugins.tooltip) {
-        const tooltip = chart.options.plugins.tooltip;
-        tooltip.backgroundColor = tokens.bgElevated;
-        tooltip.borderColor = tokens.border;
-        tooltip.borderWidth = 1;
-        tooltip.titleColor = tokens.text;
-        tooltip.bodyColor = tokens.textSoft;
-        tooltip.titleFont = tooltip.titleFont || {};
-        tooltip.titleFont.weight = '600';
-    }
+        // Legend
+        if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+            chart.options.plugins.legend.labels.color = tokens.textSoft || '#334155';
+        }
 
-    // Legend
-    if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
-        chart.options.plugins.legend.labels.color = tokens.textSoft;
-    }
+        // Tooltip
+        if (chart.options.plugins && chart.options.plugins.tooltip) {
+            chart.options.plugins.tooltip.backgroundColor = tokens.bgElevated || '#ffffff';
+            chart.options.plugins.tooltip.borderColor = tokens.border || '#cbd5e1';
+            chart.options.plugins.tooltip.titleColor = tokens.text || '#0f172a';
+            chart.options.plugins.tooltip.bodyColor = tokens.textSoft || '#334155';
+        }
 
-    chart.update('none'); // Update without animation to avoid flicker
+        chart.update('none'); // Update without animation to avoid flicker
+    } catch (e) {
+        console.warn('applyChartTheme safely handled:', e);
+    }
 }
 
 /**
