@@ -50,6 +50,9 @@ function renderPage(page) {
         case "mentor":
             renderMentor();
             break;
+        case "enquiries":
+            renderEnquiries();
+            break;
         case "anomalies":
             renderAnomalies();
             break;
@@ -98,7 +101,7 @@ function getInitialPage() {
     let page = hash || storedPage || "dashboard";
 
     const validPages = [
-        "dashboard", "students", "analytics", "engagement", "mentor",
+        "dashboard", "students", "analytics", "engagement", "mentor", "enquiries",
         "anomalies", "student360", "aiagent", "notifications",
         "reports", "settings", "profile", "users", "faculty"
     ];
@@ -149,6 +152,7 @@ function navigateTo(page, updateHash = true) {
     });
     renderPage(page);
     refreshApprovalsBadge();
+    refreshEnquiriesBadge();
 }
 
 // Support browser back/forward and direct URL hash changes
@@ -285,6 +289,42 @@ async function refreshApprovalsBadge() {
         console.error("Error updating approvals badge:", e);
     }
 }
+
+async function refreshEnquiriesBadge(knownCount = null) {
+    const user = (typeof getCurrentUser === "function") ? getCurrentUser() : null;
+    const enquiriesBadge = document.getElementById("enquiriesBadge");
+    if (!enquiriesBadge || !user || (user.role || "").toLowerCase() === "student") {
+        if (enquiriesBadge) enquiriesBadge.classList.add("d-none");
+        return;
+    }
+
+    if (knownCount !== null) {
+        if (knownCount > 0) {
+            enquiriesBadge.textContent = knownCount;
+            enquiriesBadge.classList.remove("d-none");
+        } else {
+            enquiriesBadge.classList.add("d-none");
+        }
+        return;
+    }
+
+    try {
+        const role = (user.role || "faculty").toLowerCase();
+        const enquiries = await API.getInterventionEnquiries(role, user.id, "pending") || [];
+        const pendingCount = enquiries.filter(e => e.status === "Completion Requested").length;
+        if (enquiriesBadge) {
+            if (pendingCount > 0) {
+                enquiriesBadge.textContent = pendingCount;
+                enquiriesBadge.classList.remove("d-none");
+            } else {
+                enquiriesBadge.classList.add("d-none");
+            }
+        }
+    } catch (e) {
+        console.warn("Could not fetch enquiries count:", e);
+    }
+}
+window.refreshEnquiriesBadge = refreshEnquiriesBadge;
 
 async function renderUsers() {
     const content = document.getElementById("pageContent");
@@ -522,17 +562,22 @@ function _formatAppDate(isoString) {
 
 // 1. APPROVE ACTION
 async function handleApproveSignup(reqId, name, email) {
-    if (!confirm(`Approve application for "${name}"?\n\nThis will:\n1. Change application status to "Approved".\n2. Create an Active Faculty record in Faculty & Mentor Management.\n3. Dispatch login credentials to ${email}.`)) {
-        return;
-    }
+    const ok = await showConfirmModal({
+        title: "Approve Registration",
+        message: `Approve application for <strong>${name}</strong>?<br><br>• Status will update to <strong>Approved</strong>.<br>• Active faculty profile will be created.<br>• Access credentials will be dispatched to <code>${email}</code>.`,
+        confirmText: "Approve Application",
+        confirmBtnClass: "primary-btn",
+        icon: "bi-shield-check text-success"
+    });
+    if (!ok) return;
 
     const res = await API.approveSignupRequest(reqId);
     if (res && res.success) {
-        alert(res.message || `Application for ${name} approved! Faculty account created in Faculty & Mentor Management.`);
+        showSuccessToast(res.message || `Application for ${name} approved! Faculty account created.`);
         closeViewApplicationModal();
         renderUsers();
     } else {
-        alert(res?.message || "Failed to approve registration.");
+        showErrorToast(res?.message || "Failed to approve registration.");
     }
 }
 
@@ -743,14 +788,46 @@ async function handleImportUsersSubmit() {
 }
 
 async function handleDeleteUser(userId) {
-    if (confirm(`Are you sure you want to delete user account "${userId}"?`)) {
-        const res = await API.deleteUser(userId);
-        if (res && res.success) {
-            alert(`User ${userId} deleted.`);
-            renderUsers();
-        }
+    const ok = await showConfirmModal({
+        title: "Delete User Account",
+        message: `Are you sure you want to permanently delete user account <code>${userId}</code>?`,
+        confirmText: "Delete Account",
+        confirmBtnClass: "btn btn-danger",
+        icon: "bi-trash3-fill text-danger"
+    });
+    if (!ok) return;
+
+    const res = await API.deleteUser(userId);
+    if (res && res.success) {
+        showSuccessToast(`User ${userId} deleted successfully.`);
+        renderUsers();
+    } else {
+        showErrorToast(res?.message || `Failed to delete user ${userId}.`);
     }
 }
+
+// Window Exports for Approvals Queue & Modals
+window.renderUsers = renderUsers;
+window.switchApprovalTab = switchApprovalTab;
+window._handleApprovalSearch = _handleApprovalSearch;
+window.handleApproveSignup = handleApproveSignup;
+window.openRejectModal = openRejectModal;
+window.closeRejectionModal = closeRejectionModal;
+window.applyRejectPreset = applyRejectPreset;
+window.submitRejectionAction = submitRejectionAction;
+window.openViewApplicationModal = openViewApplicationModal;
+window.closeViewApplicationModal = closeViewApplicationModal;
+window.openEmailPreview = openEmailPreview;
+window.closeEmailPreviewModal = closeEmailPreviewModal;
+window.openAddUserModal = openAddUserModal;
+window.closeAddUserModal = closeAddUserModal;
+window.openImportUsersModal = openImportUsersModal;
+window.closeImportUsersModal = closeImportUsersModal;
+window.handleImportUsersSubmit = handleImportUsersSubmit;
+window.handleDeleteUser = handleDeleteUser;
+window.openStudentRiskBreakdownModal = openStudentRiskBreakdownModal;
+window.closeStudentRiskModal = closeStudentRiskModal;
+window.runRiskSimulation = runRiskSimulation;
 
 // =====================================================
 // MOBILE SIDEBAR & USER MENU CONTROLLERS
@@ -1117,13 +1194,25 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Keyboard shortcut (Ctrl + K or Cmd + K) for quick search focus
+    // Keyboard shortcut (Ctrl + K or Cmd + K) for quick search focus & Escape for modals
     document.addEventListener("keydown", function(e) {
         const user = getCurrentUser();
         const role = (user?.role || "").toLowerCase();
         if (role !== "student" && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
             e.preventDefault();
             document.getElementById("globalSearch")?.focus();
+        } else if (e.key === "Escape") {
+            document.querySelectorAll(".modal-overlay.active").forEach(m => m.classList.remove("active"));
+            document.getElementById("userDropdownMenu")?.classList.add("d-none");
+            document.getElementById("globalSearchResults")?.classList.add("d-none");
+            document.getElementById("student360Dropdown")?.classList.add("d-none");
+        }
+    });
+
+    // Global backdrop click to dismiss active modals
+    document.addEventListener("click", function(e) {
+        if (e.target.classList && e.target.classList.contains("modal-overlay") && e.target.classList.contains("active")) {
+            e.target.classList.remove("active");
         }
     });
 });

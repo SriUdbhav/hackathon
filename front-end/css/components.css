@@ -1504,3 +1504,309 @@ mark {
     line-height: 1.45;
 }
 
+/* =====================================================
+   GLOBAL THEME-AWARE TOAST NOTIFICATIONS & MODALS
+   ===================================================== */
+.global-toast-container {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 9999999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 420px;
+    width: calc(100vw - 56px);
+    pointer-events: none;
+}
+
+.custom-toast-item {
+    pointer-events: auto;
+    background-color: var(--bg-elevated) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-left: 5px solid var(--accent) !important;
+    border-radius: var(--radius, 12px) !important;
+    padding: 14px 18px !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35) !important;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    animation: toastSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: transform 0.28s ease, opacity 0.28s ease;
+    position: relative;
+    backdrop-filter: blur(12px);
+}
+
+.custom-toast-item.toast-success {
+    border-left-color: var(--success) !important;
+}
+
+.custom-toast-item.toast-danger,
+.custom-toast-item.toast-error {
+    border-left-color: var(--danger) !important;
+}
+
+.custom-toast-item.toast-warning {
+    border-left-color: var(--warning) !important;
+}
+
+.custom-toast-item.toast-info {
+    border-left-color: var(--accent) !important;
+}
+
+.custom-toast-item.dismissing {
+    animation: toastSlideDown 0.3s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+.toast-icon-wrap {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.toast-content-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-msg {
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--text) !important;
+    word-break: break-word;
+}
+
+.toast-close-btn {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted) !important;
+    font-size: 22px;
+    line-height: 1;
+    padding: 0 4px;
+    cursor: pointer;
+    transition: color 0.18s ease;
+    flex-shrink: 0;
+}
+
+.toast-close-btn:hover {
+    color: var(--text) !important;
+}
+
+@keyframes toastSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toastSlideDown {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(18px) scale(0.94);
+    }
+}
+
+/* =====================================================
+   THEME-AWARE ALERT BOXES
+   Provides consistent glassmorphic styling across Dark, Sepia, and Soft White
+===================================================== */
+.alert {
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    border: 1px solid var(--border-soft);
+    background: var(--bg-elevated);
+    color: var(--text);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.alert strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.alert p, .alert small, .alert .text-muted {
+    color: var(--text-soft) !important;
+}
+
+/* Alert Warning */
+.alert-warning {
+    background: rgba(245, 158, 11, 0.12) !important;
+    border-color: rgba(245, 158, 11, 0.32) !important;
+    color: var(--text) !important;
+}
+.alert-warning strong {
+    color: var(--warning) !important;
+}
+.alert-warning .bi {
+    color: var(--warning) !important;
+}
+
+/* Alert Danger */
+.alert-danger {
+    background: rgba(239, 68, 68, 0.12) !important;
+    border-color: rgba(239, 68, 68, 0.32) !important;
+    color: var(--text) !important;
+}
+.alert-danger strong {
+    color: var(--danger) !important;
+}
+.alert-danger .bi {
+    color: var(--danger) !important;
+}
+
+/* Alert Primary */
+.alert-primary {
+    background: rgba(59, 130, 246, 0.12) !important;
+    border-color: rgba(59, 130, 246, 0.32) !important;
+    color: var(--text) !important;
+}
+.alert-primary strong {
+    color: var(--accent) !important;
+}
+.alert-primary .bi {
+    color: var(--accent) !important;
+}
+
+/* Alert Info */
+.alert-info {
+    background: rgba(2, 132, 199, 0.12) !important;
+    border-color: rgba(2, 132, 199, 0.32) !important;
+    color: var(--text) !important;
+}
+.alert-info strong {
+    color: var(--info) !important;
+}
+.alert-info .bi {
+    color: var(--info) !important;
+}
+
+/* Alert Success */
+.alert-success {
+    background: rgba(22, 163, 74, 0.12) !important;
+    border-color: rgba(22, 163, 74, 0.32) !important;
+    color: var(--text) !important;
+}
+.alert-success strong {
+    color: var(--success) !important;
+}
+.alert-success .bi {
+    color: var(--success) !important;
+}
+
+/* Theme specifics for Dark Mode */
+[data-theme="dark"] .alert-warning {
+    background: rgba(249, 226, 175, 0.12) !important;
+    border-color: rgba(249, 226, 175, 0.28) !important;
+    color: #cdd6f4 !important;
+}
+[data-theme="dark"] .alert-warning strong {
+    color: #f9e2af !important;
+}
+[data-theme="dark"] .alert-warning .bi {
+    color: #f9e2af !important;
+}
+[data-theme="dark"] .alert-danger {
+    background: rgba(243, 139, 168, 0.12) !important;
+    border-color: rgba(243, 139, 168, 0.28) !important;
+    color: #cdd6f4 !important;
+}
+[data-theme="dark"] .alert-danger strong {
+    color: #f38ba8 !important;
+}
+[data-theme="dark"] .alert-danger .bi {
+    color: #f38ba8 !important;
+}
+[data-theme="dark"] .alert-primary {
+    background: rgba(180, 190, 254, 0.12) !important;
+    border-color: rgba(180, 190, 254, 0.28) !important;
+    color: #cdd6f4 !important;
+}
+[data-theme="dark"] .alert-primary strong {
+    color: #b4befe !important;
+}
+[data-theme="dark"] .alert-primary .bi {
+    color: #b4befe !important;
+}
+[data-theme="dark"] .alert-info {
+    background: rgba(137, 220, 235, 0.12) !important;
+    border-color: rgba(137, 220, 235, 0.28) !important;
+    color: #cdd6f4 !important;
+}
+[data-theme="dark"] .alert-info strong {
+    color: #89dceb !important;
+}
+[data-theme="dark"] .alert-info .bi {
+    color: #89dceb !important;
+}
+[data-theme="dark"] .alert-success {
+    background: rgba(166, 227, 161, 0.12) !important;
+    border-color: rgba(166, 227, 161, 0.28) !important;
+    color: #cdd6f4 !important;
+}
+[data-theme="dark"] .alert-success strong {
+    color: #a6e3a1 !important;
+}
+[data-theme="dark"] .alert-success .bi {
+    color: #a6e3a1 !important;
+}
+
+/* Theme specifics for Sepia Mode */
+[data-theme="sepia"] .alert-warning {
+    background: rgba(181, 118, 20, 0.14) !important;
+    border-color: rgba(181, 118, 20, 0.35) !important;
+}
+[data-theme="sepia"] .alert-danger {
+    background: rgba(157, 0, 6, 0.14) !important;
+    border-color: rgba(157, 0, 6, 0.35) !important;
+}
+[data-theme="sepia"] .alert-primary {
+    background: rgba(175, 58, 3, 0.14) !important;
+    border-color: rgba(175, 58, 3, 0.35) !important;
+}
+[data-theme="sepia"] .alert-info {
+    background: rgba(66, 123, 88, 0.14) !important;
+    border-color: rgba(66, 123, 88, 0.35) !important;
+}
+[data-theme="sepia"] .alert-success {
+    background: rgba(121, 116, 14, 0.14) !important;
+    border-color: rgba(121, 116, 14, 0.35) !important;
+}
+
+/* Buttons inside alerts */
+.alert .btn-warning,
+.alert .btn-danger,
+.alert .btn-primary {
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+[data-theme="dark"] .btn-warning {
+    background: #f9e2af !important;
+    color: #11111b !important;
+    border-color: #f9e2af !important;
+}
+[data-theme="dark"] .btn-danger {
+    background: #f38ba8 !important;
+    color: #11111b !important;
+    border-color: #f38ba8 !important;
+}
+[data-theme="dark"] .btn-primary {
+    background: #b4befe !important;
+    color: #11111b !important;
+    border-color: #b4befe !important;
+}
+
+

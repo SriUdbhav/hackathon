@@ -653,10 +653,10 @@ function initFacultyCharts(highRisk, medRisk, lowRisk, allSubjectMarks) {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    r: { min: 0, max: 100, ticks: { stepSize: 20, color: "var(--text-soft)" }, grid: { color: "var(--border-soft)" }, angleLines: { color: "var(--border-soft)" }, pointLabels: { color: "var(--text)" } }
+                    r: { min: 0, max: 100, ticks: { display: false, stepSize: 20 } }
                 },
                 plugins: {
-                    legend: { position: "bottom", labels: { boxWidth: 12, color: "var(--text)" } }
+                    legend: { position: "bottom", labels: { boxWidth: 12 } }
                 }
             }
         });
@@ -765,3 +765,9 @@ async function renderStudentAnalytics(content, user) {
         }
     }, 100);
 }
+
+// Window Exports for Analytics Page
+window.renderAnalytics = renderAnalytics;
+window.setAttendanceChartMode = setAttendanceChartMode;
+window.renderAttendanceRankingChart = renderAttendanceRankingChart;
+window.initFacultyCharts = initFacultyCharts;

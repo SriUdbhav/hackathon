@@ -151,7 +151,7 @@ def get_all_users():
 
 @app.route("/api/users", methods=["POST"])
 def create_user():
-    """Admin only: Create a new faculty or mentor user directly."""
+    """Admin only: Create a new faculty or mentor user directly with department and assigned cohort."""
     data = request.get_json() or {}
     user_id = data.get("id", "").strip()
     if not user_id:
@@ -159,7 +159,10 @@ def create_user():
 
     conn = db.get_db_connection()
     try:
-        conn.execute("INSERT INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone) VALUES (?,?,?,?,?,?,?,?,?)", (
+        conn.execute("""
+            INSERT INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone, status, department, assigned_year, specialization)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
             user_id,
             data.get("password", user_id),
             data.get("role", "mentor"),
@@ -168,11 +171,15 @@ def create_user():
             data.get("subjects", ""),
             data.get("extra_roles", ""),
             data.get("email", ""),
-            data.get("phone", "")
+            data.get("phone", ""),
+            data.get("status", "Active"),
+            data.get("department", "CSE"),
+            data.get("assigned_year", "2nd Year"),
+            data.get("specialization", "Academic Counseling")
         ))
         conn.commit()
         conn.close()
-        return jsonify({"success": True, "message": f"User {user_id} created."})
+        return jsonify({"success": True, "message": f"User {user_id} created successfully."})
     except Exception as e:
         conn.close()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -343,8 +350,8 @@ def approve_signup_request(req_id):
     try:
         # 1. Create or Update User in `users` table with Active status and all submitted application details
         conn.execute("""
-            INSERT OR REPLACE INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone, status)
-            VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, 'Active')
+            INSERT OR REPLACE INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone, status, department, assigned_year, specialization)
+            VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, 'Active', ?, ?, ?)
         """, (
             req["user_id"],
             req["password"],
@@ -353,7 +360,10 @@ def approve_signup_request(req_id):
             req["subjects"],
             req["extra_roles"],
             req["email"],
-            req["phone"]
+            req["phone"],
+            req["department"] if "department" in req.keys() and req["department"] else "CSE",
+            req["assigned_year"] if "assigned_year" in req.keys() and req["assigned_year"] else "2nd Year",
+            req["specialization"] if "specialization" in req.keys() and req["specialization"] else "Academic Counseling"
         ))
 
         # 2. Update request status to Approved
@@ -490,7 +500,10 @@ def get_faculty_list():
     # 1. Get all approved faculty/mentor users
     users = conn.execute("""
         SELECT id, display_name, role, subjects, extra_roles, email, phone,
-               COALESCE(status, 'Active') as status
+               COALESCE(status, 'Active') as status,
+               COALESCE(department, 'CSE') as department,
+               COALESCE(assigned_year, '2nd Year') as assigned_year,
+               COALESCE(specialization, 'Academic Counseling') as specialization
         FROM users
         WHERE role IN ('faculty', 'mentor')
         ORDER BY display_name ASC
@@ -499,7 +512,10 @@ def get_faculty_list():
     # 2. Get all signup requests for pending count and declined history
     requests = conn.execute("""
         SELECT id as req_id, user_id, display_name, role, subjects, extra_roles,
-               email, phone, status, created_at, reviewed_at, rejection_reason
+               email, phone, status, created_at, reviewed_at, rejection_reason,
+               COALESCE(department, 'CSE') as department,
+               COALESCE(assigned_year, '2nd Year') as assigned_year,
+               COALESCE(specialization, 'Academic Counseling') as specialization
         FROM signup_requests
         ORDER BY id DESC
     """).fetchall()
@@ -541,6 +557,9 @@ def get_faculty_list():
             "email": u["email"],
             "phone": u["phone"],
             "status": u["status"] or "Active",
+            "department": u["department"],
+            "assigned_year": u["assigned_year"],
+            "specialization": u["specialization"],
             "source": "approved",
             "students_assigned": mentor_student_map.get(uid, 0),
             "high_risk_students": mentor_risk_map.get(uid, 0),
@@ -560,6 +579,9 @@ def get_faculty_list():
                 "email": r["email"],
                 "phone": r["phone"],
                 "status": "Declined",
+                "department": r["department"],
+                "assigned_year": r["assigned_year"],
+                "specialization": r["specialization"],
                 "source": "declined",
                 "created_at": r["created_at"],
                 "reviewed_at": r["reviewed_at"],
@@ -587,6 +609,38 @@ def get_faculty_list():
     })
 
 
+@app.route("/api/mentors", methods=["GET"])
+def get_mentors_list():
+    """Returns active mentors with department, assigned year cohort, and current mentees count."""
+    conn = db.get_db_connection()
+    dept = request.args.get("department")
+    year = request.args.get("year")
+
+    query = """
+        SELECT u.id, u.display_name, u.role, u.email, u.phone, u.subjects, u.extra_roles,
+               COALESCE(u.status, 'Active') as status,
+               COALESCE(u.department, 'CSE') as department,
+               COALESCE(u.assigned_year, '2nd Year') as assigned_year,
+               COALESCE(u.specialization, 'Academic Counseling') as specialization,
+               COUNT(DISTINCT i.student_id) as active_mentees
+        FROM users u
+        LEFT JOIN interventions i ON LOWER(u.id) = LOWER(i.mentor_id) AND i.status != 'Completed'
+        WHERE u.role IN ('mentor', 'faculty') AND COALESCE(u.status, 'Active') = 'Active'
+    """
+    params = []
+    if dept and dept != "ALL":
+        query += " AND (LOWER(u.department) = LOWER(?) OR LOWER(u.subjects) LIKE LOWER(?))"
+        params.extend([dept, f"%{dept}%"])
+    if year and year != "ALL":
+        query += " AND (LOWER(u.assigned_year) = LOWER(?) OR u.assigned_year = 'All Years')"
+        params.append(year)
+
+    query += " GROUP BY u.id ORDER BY u.role DESC, u.display_name ASC"
+    rows = conn.execute(query, tuple(params)).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+
 @app.route("/api/faculty/<faculty_id>", methods=["GET"])
 def get_faculty_detail(faculty_id):
     """Admin: Full faculty detail — profile, application, students, interventions, AI risks."""
@@ -595,7 +649,10 @@ def get_faculty_detail(faculty_id):
     # 1. Get user account (if approved)
     user = conn.execute("""
         SELECT id, display_name, role, subjects, extra_roles, email, phone,
-               COALESCE(status, 'Active') as status
+               COALESCE(status, 'Active') as status,
+               COALESCE(department, 'CSE') as department,
+               COALESCE(assigned_year, '2nd Year') as assigned_year,
+               COALESCE(specialization, 'Academic Counseling') as specialization
         FROM users WHERE LOWER(id) = LOWER(?)
     """, (faculty_id,)).fetchone()
 
@@ -622,6 +679,9 @@ def get_faculty_detail(faculty_id):
             "email": user["email"],
             "phone": user["phone"],
             "status": user["status"] or "Active",
+            "department": user["department"],
+            "assigned_year": user["assigned_year"],
+            "specialization": user["specialization"],
             "source": "approved",
         }
     elif application:
@@ -634,6 +694,9 @@ def get_faculty_detail(faculty_id):
             "email": application["email"],
             "phone": application["phone"],
             "status": application["status"],
+            "department": application["department"] if "department" in application.keys() else "CSE",
+            "assigned_year": application["assigned_year"] if "assigned_year" in application.keys() else "2nd Year",
+            "specialization": application["specialization"] if "specialization" in application.keys() else "Academic Counseling",
             "source": "application",
         }
 
@@ -706,7 +769,10 @@ def update_faculty(faculty_id):
             subjects = COALESCE(?, subjects),
             extra_roles = COALESCE(?, extra_roles),
             email = COALESCE(?, email),
-            phone = COALESCE(?, phone)
+            phone = COALESCE(?, phone),
+            department = COALESCE(?, department),
+            assigned_year = COALESCE(?, assigned_year),
+            specialization = COALESCE(?, specialization)
         WHERE LOWER(id) = LOWER(?)
     """, (
         data.get("display_name"),
@@ -714,6 +780,9 @@ def update_faculty(faculty_id):
         data.get("extra_roles"),
         data.get("email"),
         data.get("phone"),
+        data.get("department"),
+        data.get("assigned_year"),
+        data.get("specialization"),
         faculty_id
     ))
     conn.commit()
@@ -968,7 +1037,12 @@ def _get_thresholds():
     settings = db.get_system_settings()
     return {
         "attendance_threshold": float(settings.get("attendance_threshold", 75)),
-        "risk_cgpa_threshold": float(settings.get("risk_cgpa_threshold", 7.5))
+        "risk_cgpa_threshold": float(settings.get("risk_cgpa_threshold", 7.5)),
+        "lms_threshold": float(settings.get("lms_threshold", 60)),
+        "assignment_threshold": float(settings.get("assignment_threshold", 70)),
+        "safe_risk_threshold": float(settings.get("safe_risk_threshold", 30)),
+        "high_risk_threshold": float(settings.get("high_risk_threshold", 65)),
+        "critical_risk_threshold": float(settings.get("critical_risk_threshold", 80))
     }
 
 
@@ -984,7 +1058,13 @@ def get_students():
 def get_student_detail(student_id):
     conn = db.get_db_connection()
     row = conn.execute("SELECT * FROM students WHERE id = ?", (student_id,)).fetchone()
-    interventions = conn.execute("SELECT * FROM interventions WHERE student_id = ? ORDER BY id DESC", (student_id,)).fetchall()
+    interventions = conn.execute("""
+        SELECT i.*, u.display_name as mentor_name, u.email as mentor_email
+        FROM interventions i
+        LEFT JOIN users u ON LOWER(i.mentor_id) = LOWER(u.id)
+        WHERE i.student_id = ?
+        ORDER BY i.id DESC
+    """, (student_id,)).fetchall()
     marks = conn.execute("""
         SELECT sm.*, s.name as subject_name, s.short_name
         FROM subject_marks sm
@@ -1345,8 +1425,44 @@ def get_student_activities(student_id):
 
 @app.route("/api/interventions", methods=["GET"])
 def get_all_interventions():
+    mentor_id = request.args.get("mentor_id")
+    student_id = request.args.get("student_id")
+    caller_role = request.args.get("role", "").lower()
+    caller_id = request.args.get("user_id", "")
     conn = db.get_db_connection()
-    rows = conn.execute("SELECT * FROM interventions ORDER BY id DESC").fetchall()
+    
+    query = """
+        SELECT i.*, 
+               s.name as student_name, s.course as student_course, s.year as student_year, s.risk as student_risk,
+               s.attendance as student_attendance, s.cgpa as student_cgpa,
+               u.display_name as mentor_name, u.email as mentor_email, 
+               COALESCE(u.department, 'CSE') as mentor_dept, 
+               COALESCE(u.assigned_year, '2nd Year') as mentor_year,
+               creator.display_name as creator_name
+        FROM interventions i
+        LEFT JOIN students s ON i.student_id = s.id
+        LEFT JOIN users u ON LOWER(i.mentor_id) = LOWER(u.id)
+        LEFT JOIN users creator ON LOWER(i.created_by) = LOWER(creator.id)
+    """
+    params = []
+    conditions = []
+    
+    if mentor_id and mentor_id != "ALL":
+        conditions.append("(LOWER(i.mentor_id) = LOWER(?) OR LOWER(i.created_by) = LOWER(?))")
+        params.extend([mentor_id, mentor_id])
+    elif caller_role == "mentor" and caller_id:
+        conditions.append("(LOWER(i.mentor_id) = LOWER(?) OR LOWER(i.created_by) = LOWER(?))")
+        params.extend([caller_id, caller_id])
+
+    if student_id:
+        conditions.append("i.student_id = ?")
+        params.append(student_id)
+        
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    query += " ORDER BY i.id DESC"
+    
+    rows = conn.execute(query, tuple(params)).fetchall()
     conn.close()
     return jsonify([dict(r) for r in rows])
 
@@ -1354,7 +1470,21 @@ def get_all_interventions():
 @app.route("/api/interventions/<student_id>", methods=["GET"])
 def get_student_interventions(student_id):
     conn = db.get_db_connection()
-    rows = conn.execute("SELECT * FROM interventions WHERE student_id = ? ORDER BY id DESC", (student_id,)).fetchall()
+    rows = conn.execute("""
+        SELECT i.*, 
+               s.name as student_name, s.course as student_course, s.year as student_year, s.risk as student_risk,
+               s.attendance as student_attendance, s.cgpa as student_cgpa,
+               u.display_name as mentor_name, u.email as mentor_email,
+               COALESCE(u.department, 'CSE') as mentor_dept, 
+               COALESCE(u.assigned_year, '2nd Year') as mentor_year,
+               creator.display_name as creator_name
+        FROM interventions i
+        LEFT JOIN students s ON i.student_id = s.id
+        LEFT JOIN users u ON LOWER(i.mentor_id) = LOWER(u.id)
+        LEFT JOIN users creator ON LOWER(i.created_by) = LOWER(creator.id)
+        WHERE i.student_id = ?
+        ORDER BY i.id DESC
+    """, (student_id,)).fetchall()
     conn.close()
     return jsonify([dict(r) for r in rows])
 
@@ -1362,48 +1492,341 @@ def get_student_interventions(student_id):
 @app.route("/api/interventions", methods=["POST"])
 def create_intervention():
     data = request.get_json() or {}
+    student_id = data.get("student_id")
+    mentor_id = data.get("mentor_id")
+    created_by = data.get("created_by")
+    action = data.get("action", "1-on-1 Academic Counseling")
+    urgency = data.get("urgency", "Moderate")
+    session_date = data.get("date") or datetime.date.today().isoformat()
+    session_time = data.get("session_time", "10:00 AM")
+    location = data.get("location", "Mentorship Cabin 204")
+    notes = data.get("notes", "")
+    subject_code = data.get("subject_code", "General")
+
     conn = db.get_db_connection()
-    conn.execute("""
-        INSERT INTO interventions (student_id, date, action, status, notes, urgency, subject_code, mentor_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+
+    # Look up student details
+    student = conn.execute("SELECT * FROM students WHERE id = ?", (student_id,)).fetchone()
+
+    # Auto-resolve mentor if needed
+    if not mentor_id or mentor_id == "auto":
+        st_course = student["course"] if student else "CSE"
+        st_year = student["year"] if student else "2nd Year"
+        matched_mentor = conn.execute("""
+            SELECT id FROM users
+            WHERE role = 'mentor' AND (LOWER(department) = LOWER(?) OR department = 'ALL')
+              AND (LOWER(assigned_year) = LOWER(?) OR assigned_year = 'All Years')
+            LIMIT 1
+        """, (st_course, st_year)).fetchone()
+        
+        if matched_mentor:
+            mentor_id = matched_mentor["id"]
+        else:
+            fallback = conn.execute("SELECT id FROM users WHERE role = 'mentor' LIMIT 1").fetchone()
+            mentor_id = fallback["id"] if fallback else (created_by or "MEN001")
+
+    # Insert intervention record
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO interventions (student_id, date, action, status, notes, urgency, subject_code, mentor_id, created_by, session_time, location)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        data.get("student_id"),
-        datetime.date.today().isoformat(),
-        data.get("action", "Mentoring Session"),
-        data.get("status", "Pending"),
-        data.get("notes", ""),
-        data.get("urgency", "Moderate"),
-        data.get("subject_code"),
-        data.get("mentor_id")
+        student_id,
+        session_date,
+        action,
+        "In Progress" if data.get("status") in ("In Progress", "Pending", "Scheduled") else (data.get("status") or "In Progress"),
+        notes,
+        urgency,
+        subject_code,
+        mentor_id,
+        created_by,
+        session_time,
+        location
     ))
+    int_id = c.lastrowid
+
+    # Get mentor name for notifications
+    mentor_user = conn.execute("SELECT display_name FROM users WHERE LOWER(id) = LOWER(?)", (mentor_id,)).fetchone()
+    mentor_name = mentor_user["display_name"] if mentor_user else mentor_id
+    st_name = student["name"] if student else student_id
+
+    # Dispatch notification to student
+    now_str = datetime.datetime.now().strftime("%b %d, %Y %I:%M %p")
+    notif_type = "danger" if urgency == "Critical" else "info"
+    c.execute("""
+        INSERT INTO notifications (title, message, type, date, student_id, read)
+        VALUES (?, ?, ?, ?, ?, 0)
+    """, (
+        f"📅 New Session: {action}",
+        f"1-on-1 session scheduled with {mentor_name} on {session_date} at {session_time} ({location}). Notes: {notes or 'Routine academic review'}",
+        notif_type,
+        now_str,
+        student_id
+    ))
+
     conn.commit()
     conn.close()
-    return jsonify({"success": True, "message": "Intervention created."})
+    return jsonify({
+        "success": True,
+        "message": f"Session scheduled successfully for {st_name} with {mentor_name}.",
+        "intervention_id": int_id,
+        "assigned_mentor": mentor_id
+    })
 
 
-@app.route("/api/interventions/update/<int:intervention_id>", methods=["PUT"])
+@app.route("/api/interventions/update/<int:intervention_id>", methods=["PUT", "POST"])
 def update_intervention(intervention_id):
-    """Update intervention status. Only admin can mark as Completed."""
+    """Direct status update. Admin & Faculty can mark completed; Mentor can mark completed if they are the initiator."""
     data = request.get_json() or {}
     new_status = data.get("status", "In Progress")
-    caller_role = data.get("caller_role", "")
+    caller_role = (data.get("caller_role") or "").lower()
+    caller_id = (data.get("user_id") or "").lower()
 
-    # UAC: Only admin can mark interventions as Completed
-    if new_status == "Completed" and caller_role != "admin":
-        return jsonify({"success": False, "message": "Only administrators can mark interventions as completed."}), 403
+    conn = db.get_db_connection()
+    intervention = conn.execute("SELECT * FROM interventions WHERE id = ?", (intervention_id,)).fetchone()
+    if not intervention:
+        conn.close()
+        return jsonify({"success": False, "message": "Intervention not found."}), 404
+
+    # UAC Check for direct Completion:
+    if new_status == "Completed":
+        is_admin_or_faculty = caller_role in ("admin", "faculty")
+        created_by = (intervention["created_by"] or "").lower()
+        is_initiator = not created_by or created_by == caller_id
+
+        if not is_admin_or_faculty and not is_initiator:
+            conn.close()
+            return jsonify({
+                "success": False, 
+                "message": "This session was scheduled by another staff member. Please use 'Request Completion Review' so the initiator can verify and approve."
+            }), 403
 
     completed_date = None
     if new_status == "Completed":
         completed_date = datetime.date.today().isoformat()
 
-    conn = db.get_db_connection()
     conn.execute("""
-        UPDATE interventions SET status = ?, notes = COALESCE(?, notes), completed_date = ?
+        UPDATE interventions SET 
+            status = ?, 
+            notes = COALESCE(?, notes), 
+            completed_date = ?,
+            reviewed_by = COALESCE(?, reviewed_by),
+            reviewed_at = CASE WHEN ? = 'Completed' THEN ? ELSE reviewed_at END
         WHERE id = ?
-    """, (new_status, data.get("notes"), completed_date, intervention_id))
+    """, (new_status, data.get("notes"), completed_date, data.get("user_id"), new_status, datetime.datetime.now().isoformat(), intervention_id))
     conn.commit()
     conn.close()
     return jsonify({"success": True, "message": f"Intervention #{intervention_id} updated to {new_status}."})
+
+
+@app.route("/api/interventions/<int:intervention_id>/request-completion", methods=["POST"])
+def request_intervention_completion(intervention_id):
+    """Mentor requests completion review for an intervention assigned by admin or faculty."""
+    data = request.get_json() or {}
+    mentor_id = data.get("mentor_id") or data.get("user_id") or ""
+    notes = data.get("notes", "").strip() or "Session conducted successfully."
+
+    conn = db.get_db_connection()
+    intervention = conn.execute("SELECT * FROM interventions WHERE id = ?", (intervention_id,)).fetchone()
+    if not intervention:
+        conn.close()
+        return jsonify({"success": False, "message": "Intervention not found."}), 404
+
+    now_iso = datetime.datetime.now().isoformat()
+    now_str = datetime.datetime.now().strftime("%b %d, %Y %I:%M %p")
+
+    # Update intervention status
+    conn.execute("""
+        UPDATE interventions SET
+            status = 'Completion Requested',
+            completion_requested_by = ?,
+            completion_request_notes = ?,
+            completion_requested_at = ?
+        WHERE id = ?
+    """, (mentor_id, notes, now_iso, intervention_id))
+
+    # Fetch mentor and student info
+    mentor_user = conn.execute("SELECT display_name FROM users WHERE LOWER(id) = LOWER(?)", (mentor_id,)).fetchone()
+    mentor_name = mentor_user["display_name"] if mentor_user else mentor_id
+    student = conn.execute("SELECT name FROM students WHERE id = ?", (intervention["student_id"],)).fetchone()
+    student_name = student["name"] if student else intervention["student_id"]
+
+    # Dispatch notification to initiator
+    initiator_id = intervention["created_by"] or "admin"
+    conn.execute("""
+        INSERT INTO notifications (title, message, type, date, student_id, read)
+        VALUES (?, ?, 'info', ?, NULL, 0)
+    """, (
+        f"📝 Completion Review Requested: {intervention['action']}",
+        f"{mentor_name} has requested completion approval for {student_name}'s session ({intervention['action']}). Notes: {notes}",
+        now_str
+    ))
+
+    conn.commit()
+    conn.close()
+    return jsonify({
+        "success": True, 
+        "message": f"Completion review request dispatched to session initiator ({initiator_id}) for verification."
+    })
+
+
+@app.route("/api/interventions/<int:intervention_id>/approve-completion", methods=["POST"])
+def approve_intervention_completion(intervention_id):
+    """Admin or Faculty approves mentor's completion request."""
+    data = request.get_json() or {}
+    reviewer_id = data.get("reviewer_id") or data.get("user_id") or "admin"
+
+    conn = db.get_db_connection()
+    intervention = conn.execute("SELECT * FROM interventions WHERE id = ?", (intervention_id,)).fetchone()
+    if not intervention:
+        conn.close()
+        return jsonify({"success": False, "message": "Intervention not found."}), 404
+
+    today_iso = datetime.date.today().isoformat()
+    now_iso = datetime.datetime.now().isoformat()
+    now_str = datetime.datetime.now().strftime("%b %d, %Y %I:%M %p")
+
+    conn.execute("""
+        UPDATE interventions SET
+            status = 'Completed',
+            completed_date = ?,
+            reviewed_by = ?,
+            reviewed_at = ?,
+            rejection_reason = NULL
+        WHERE id = ?
+    """, (today_iso, reviewer_id, now_iso, intervention_id))
+
+    # Notify mentor that their completion request was approved
+    student = conn.execute("SELECT name FROM students WHERE id = ?", (intervention["student_id"],)).fetchone()
+    student_name = student["name"] if student else intervention["student_id"]
+
+    conn.execute("""
+        INSERT INTO notifications (title, message, type, date, student_id, read)
+        VALUES (?, ?, 'success', ?, NULL, 0)
+    """, (
+        f"✅ Session Completion Approved: {intervention['action']}",
+        f"Completion verified for {student_name} ({intervention['action']}) by {reviewer_id}. Session is marked as Completed.",
+        now_str
+    ))
+
+    conn.commit()
+    conn.close()
+    return jsonify({
+        "success": True,
+        "message": f"Intervention #{intervention_id} approved and marked as Completed."
+    })
+
+
+@app.route("/api/interventions/<int:intervention_id>/reject-completion", methods=["POST"])
+def reject_intervention_completion(intervention_id):
+    """Admin or Faculty rejects completion request with a mandatory reason."""
+    data = request.get_json() or {}
+    reason = (data.get("reason") or "").strip()
+    reviewer_id = data.get("reviewer_id") or data.get("user_id") or "admin"
+
+    if not reason:
+        return jsonify({"success": False, "message": "A detailed explanation/reason is required when rejecting a completion request."}), 400
+
+    conn = db.get_db_connection()
+    intervention = conn.execute("SELECT * FROM interventions WHERE id = ?", (intervention_id,)).fetchone()
+    if not intervention:
+        conn.close()
+        return jsonify({"success": False, "message": "Intervention not found."}), 404
+
+    now_iso = datetime.datetime.now().isoformat()
+    now_str = datetime.datetime.now().strftime("%b %d, %Y %I:%M %p")
+
+    conn.execute("""
+        UPDATE interventions SET
+            status = 'Revision Needed',
+            rejection_reason = ?,
+            reviewed_by = ?,
+            reviewed_at = ?
+        WHERE id = ?
+    """, (reason, reviewer_id, now_iso, intervention_id))
+
+    student = conn.execute("SELECT name FROM students WHERE id = ?", (intervention["student_id"],)).fetchone()
+    student_name = student["name"] if student else intervention["student_id"]
+
+    conn.execute("""
+        INSERT INTO notifications (title, message, type, date, student_id, read)
+        VALUES (?, ?, 'danger', ?, NULL, 0)
+    """, (
+        f"⚠️ Session Revision Requested: {intervention['action']}",
+        f"Completion review for {student_name} was returned with feedback: '{reason}'. Please review and schedule follow-up.",
+        now_str
+    ))
+
+    conn.commit()
+    conn.close()
+    return jsonify({
+        "success": True,
+        "message": f"Completion request returned for revision. Feedback dispatched to mentor."
+    })
+
+
+@app.route("/api/interventions/enquiries", methods=["GET"])
+def get_intervention_enquiries():
+    """Returns completion enquiries & review requests for Admin, Faculty, and Mentors."""
+    conn = db.get_db_connection()
+    user_id = (request.args.get("user_id") or "").lower()
+    role = (request.args.get("role") or "").lower()
+    status_filter = (request.args.get("status") or "all").lower()
+    params = []
+
+    query = """
+        SELECT i.*, 
+               s.name as student_name, s.course as student_course, s.year as student_year, s.risk as student_risk,
+               s.attendance as student_attendance, s.cgpa as student_cgpa,
+               u.display_name as mentor_name, u.email as mentor_email,
+               creator.display_name as creator_name,
+               reviewer.display_name as reviewer_name
+        FROM interventions i
+        LEFT JOIN students s ON i.student_id = s.id
+        LEFT JOIN users u ON LOWER(i.mentor_id) = LOWER(u.id)
+        LEFT JOIN users creator ON LOWER(i.created_by) = LOWER(creator.id)
+        LEFT JOIN users reviewer ON LOWER(i.reviewed_by) = LOWER(reviewer.id)
+        WHERE (i.completion_requested_by IS NOT NULL OR i.status IN ('Completion Requested', 'Revision Needed', 'Completed'))
+    """
+    if role == "student" and user_id:
+        query = """
+            SELECT i.*, 
+                   s.name as student_name, s.course as student_course, s.year as student_year, s.risk as student_risk,
+                   s.attendance as student_attendance, s.cgpa as student_cgpa,
+                   u.display_name as mentor_name, u.email as mentor_email,
+                   creator.display_name as creator_name,
+                   reviewer.display_name as reviewer_name
+            FROM interventions i
+            LEFT JOIN students s ON i.student_id = s.id
+            LEFT JOIN users u ON LOWER(i.mentor_id) = LOWER(u.id)
+            LEFT JOIN users creator ON LOWER(i.created_by) = LOWER(creator.id)
+            LEFT JOIN users reviewer ON LOWER(i.reviewed_by) = LOWER(reviewer.id)
+            WHERE LOWER(i.student_id) = LOWER(?)
+        """
+        params = [user_id]
+        if status_filter == "pending":
+            query += " AND i.status IN ('In Progress', 'Pending', 'Completion Requested')"
+        elif status_filter == "completed":
+            query += " AND i.status = 'Completed'"
+    else:
+        if status_filter == "pending":
+            query += " AND i.status = 'Completion Requested'"
+        elif status_filter == "revision":
+            query += " AND i.status = 'Revision Needed'"
+        elif status_filter == "completed":
+            query += " AND i.status = 'Completed' AND i.completion_requested_by IS NOT NULL"
+
+        if role == "mentor" and user_id:
+            query += " AND (LOWER(i.mentor_id) = LOWER(?) OR LOWER(i.completion_requested_by) = LOWER(?))"
+            params.extend([user_id, user_id])
+        elif role == "faculty" and user_id:
+            query += " AND (LOWER(i.created_by) = LOWER(?) OR LOWER(i.mentor_id) = LOWER(?))"
+            params.extend([user_id, user_id])
+
+    query += " ORDER BY COALESCE(i.completion_requested_at, i.date) DESC, i.id DESC"
+    rows = conn.execute(query, tuple(params)).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
 
 
 # =====================================================
@@ -1448,6 +1871,50 @@ def get_agent_logs():
 # 7. SETTINGS
 # =====================================================
 
+def _sync_key_to_env(provider, key):
+    """Write submitted API key to .env file and active os.environ."""
+    if not key or "•" in key:
+        return
+    env_map = {
+        "gemini": "GEMINI_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "groq": "GROQ_API_KEY",
+        "openrouter": "OPENROUTER_API_KEY",
+        "deepseek": "DEEPSEEK_API_KEY"
+    }
+    var_name = env_map.get((provider or "").lower())
+    if not var_name:
+        return
+
+    os.environ[var_name] = key.strip()
+
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    try:
+        lines = []
+        found = False
+        if os.path.exists(env_path):
+            with open(env_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+
+        new_lines = []
+        for line in lines:
+            if line.strip().startswith(f"{var_name}="):
+                new_lines.append(f"{var_name}={key.strip()}\n")
+                found = True
+            else:
+                new_lines.append(line)
+
+        if not found:
+            if new_lines and not new_lines[-1].endswith("\n"):
+                new_lines[-1] += "\n"
+            new_lines.append(f"{var_name}={key.strip()}\n")
+
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+    except Exception as e:
+        print(f"[Warning]: Could not write to .env file: {e}")
+
+
 @app.route("/api/settings", methods=["GET"])
 def get_settings():
     """Return settings with API key masked for security."""
@@ -1457,7 +1924,13 @@ def get_settings():
     raw_key = settings.get("api_key", "")
     provider = (settings.get("ai_provider") or "local").lower()
     if not raw_key:
-        env_map = {"gemini": "GEMINI_API_KEY", "openai": "OPENAI_API_KEY", "groq": "GROQ_API_KEY"}
+        env_map = {
+            "gemini": "GEMINI_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "groq": "GROQ_API_KEY",
+            "openrouter": "OPENROUTER_API_KEY",
+            "deepseek": "DEEPSEEK_API_KEY"
+        }
         raw_key = os.environ.get(env_map.get(provider, ""), "")
 
     # Mask the key: show only last 4 characters
@@ -1476,24 +1949,34 @@ def _resolve_api_key(provider):
     settings = db.get_system_settings()
     raw_key = (settings.get("api_key") or "").strip()
     if not raw_key:
-        env_map = {"gemini": "GEMINI_API_KEY", "openai": "OPENAI_API_KEY", "groq": "GROQ_API_KEY"}
+        env_map = {
+            "gemini": "GEMINI_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "groq": "GROQ_API_KEY",
+            "openrouter": "OPENROUTER_API_KEY",
+            "deepseek": "DEEPSEEK_API_KEY"
+        }
         raw_key = os.environ.get(env_map.get(provider, ""), "")
     return raw_key
 
 
 @app.route("/api/settings", methods=["POST"])
 def update_settings():
-    """Save settings. If api_key contains mask characters (•), skip overwriting it."""
+    """Save settings to DB and synchronize API keys with .env and os.environ."""
     data = request.get_json() or {}
 
-    # Protect masked key from overwrite
+    provider = (data.get("ai_provider") or "local").lower()
+
+    # If an unmasked API key is submitted, sync it to .env and os.environ
     if "api_key" in data:
-        submitted_key = data["api_key"]
+        submitted_key = data["api_key"].strip()
         if "•" in submitted_key or not submitted_key:
-            del data["api_key"]  # Don't overwrite with masked or empty value
+            del data["api_key"]  # Don't overwrite DB with masked or empty value
+        else:
+            _sync_key_to_env(provider, submitted_key)
 
     db.save_system_settings(data)
-    return jsonify({"success": True, "message": "Settings updated."})
+    return jsonify({"success": True, "message": "Settings updated and synchronized with environment."})
 
 
 # =====================================================
@@ -1712,8 +2195,10 @@ def import_students_csv():
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (student_id, name, gender, course, year, cgpa, credits, attendance, lms_score, risk_score, father, mother, mother_tongue, place, region, country))
                 # Create student user account
-                conn.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?,?,?,?)", (
-                    student_id, student_id, "student", name, student_id, None, None
+                email = row.get('email', '').strip() or f"{student_id.lower()}@vignan.ac.in"
+                phone = row.get('phone', '').strip()
+                conn.execute("INSERT OR IGNORE INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone) VALUES (?,?,?,?,?,?,?,?,?)", (
+                    student_id, student_id, "student", name, student_id, None, None, email, phone
                 ))
                 imported += 1
             except Exception as e:
@@ -1792,10 +2277,12 @@ def import_users_csv():
             password = row.get('password', user_id) or user_id
             subjects = row.get('subjects', row.get('assigned_subjects', '')) or ''
             extra_roles = row.get('extra_roles', row.get('responsibilities', '')) or ''
+            email = row.get('email', '').strip()
+            phone = row.get('phone', '').strip()
 
             try:
-                conn.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?,?,?,?)", (
-                    user_id, password, role, display_name, None, subjects, extra_roles
+                conn.execute("INSERT OR IGNORE INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone) VALUES (?,?,?,?,?,?,?,?,?)", (
+                    user_id, password, role, display_name, None, subjects, extra_roles, email, phone
                 ))
                 imported += 1
             except Exception as e:

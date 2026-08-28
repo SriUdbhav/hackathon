@@ -779,13 +779,22 @@ async function handleImportStudentsSubmit() {
 }
 
 async function handleDeleteStudent(studentId, studentName) {
-    if (confirm(`Are you sure you want to delete student "${studentName}" (${studentId})? This will also remove associated marks and activities.`)) {
-        const res = await API.deleteStudent(studentId);
-        if (res && res.success) {
-            alert(`Student ${studentName} deleted.`);
-            await loadLatestStudents();
-            renderStudents();
-        }
+    const ok = await showConfirmModal({
+        title: "Delete Student Record",
+        message: `Are you sure you want to delete student <strong>${studentName}</strong> (<code>${studentId}</code>)?<br><br>This will also permanently remove all associated academic marks, LMS logs, and interventions.`,
+        confirmText: "Delete Student",
+        confirmBtnClass: "btn btn-danger",
+        icon: "bi-person-x-fill text-danger"
+    });
+    if (!ok) return;
+
+    const res = await API.deleteStudent(studentId);
+    if (res && res.success) {
+        showSuccessToast(`Student ${studentName} deleted successfully.`);
+        await loadLatestStudents();
+        renderStudents();
+    } else {
+        showErrorToast(res?.message || `Failed to delete student ${studentName}.`);
     }
 }
 
@@ -795,9 +804,12 @@ function openAddStudentModal() {
     if (form) form.reset();
     if (modal) modal.classList.add("active");
 }
+window.openAddStudentModal = openAddStudentModal;
+
 function closeAddStudentModal() {
     document.getElementById("studentModal")?.classList.remove("active");
 }
+window.closeAddStudentModal = closeAddStudentModal;
 
 function initStudentModalEvents() {
     const closeModalBtn = document.getElementById("closeModal");
@@ -1244,6 +1256,32 @@ async function executeBulkDeleteStudents() {
         }
     }
 }
+
+// Window Exports for Students Management Page
+window.renderStudents = renderStudents;
+window.sortStudentsBy = sortStudentsBy;
+window.toggleStudentsRegex = toggleStudentsRegex;
+window.handleStudentsPageChange = handleStudentsPageChange;
+window.handleStudentsPageSizeChange = handleStudentsPageSizeChange;
+window.filterStudentsTable = filterStudentsTable;
+window.filterStudentsByYear = filterStudentsByYear;
+window.handleAdvanceAttendanceDay = handleAdvanceAttendanceDay;
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;
+window.openImportStudentsModal = openImportStudentsModal;
+window.closeImportStudentsModal = closeImportStudentsModal;
+window.handleImportStudentsSubmit = handleImportStudentsSubmit;
+window.handleDeleteStudent = handleDeleteStudent;
+window.toggleSelectDropdown = toggleSelectDropdown;
+window.handleStudentCheckboxChange = handleStudentCheckboxChange;
+window.toggleSelectAllStudents = toggleSelectAllStudents;
+window.selectAllOnCurrentPage = selectAllOnCurrentPage;
+window.selectAllAcrossAllPages = selectAllAcrossAllPages;
+window.selectAllByRiskTier = selectAllByRiskTier;
+window.clearStudentSelection = clearStudentSelection;
+window.exportSelectedStudentsCSV = exportSelectedStudentsCSV;
+window.handleBulkDeleteStudents = handleBulkDeleteStudents;
+window.closeStudentBulkDeleteModal = closeStudentBulkDeleteModal;
 window.executeBulkDeleteStudents = executeBulkDeleteStudents;
 
 

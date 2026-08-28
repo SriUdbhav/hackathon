@@ -206,6 +206,24 @@ def init_db():
     add_column_if_missing("users", "email TEXT")
     add_column_if_missing("users", "phone TEXT")
     add_column_if_missing("users", "status TEXT DEFAULT 'Active'")
+    add_column_if_missing("users", "department TEXT DEFAULT 'CSE'")
+    add_column_if_missing("users", "assigned_year TEXT DEFAULT '2nd Year'")
+    add_column_if_missing("users", "specialization TEXT DEFAULT 'Academic Counseling'")
+    
+    add_column_if_missing("signup_requests", "department TEXT DEFAULT 'CSE'")
+    add_column_if_missing("signup_requests", "assigned_year TEXT DEFAULT '2nd Year'")
+    add_column_if_missing("signup_requests", "specialization TEXT DEFAULT 'Academic Counseling'")
+
+    add_column_if_missing("interventions", "created_by TEXT")
+    add_column_if_missing("interventions", "session_time TEXT DEFAULT '10:00 AM'")
+    add_column_if_missing("interventions", "location TEXT DEFAULT 'Mentorship Cabin 204'")
+    add_column_if_missing("interventions", "completion_requested_by TEXT")
+    add_column_if_missing("interventions", "completion_request_notes TEXT")
+    add_column_if_missing("interventions", "completion_requested_at TEXT")
+    add_column_if_missing("interventions", "rejection_reason TEXT")
+    add_column_if_missing("interventions", "reviewed_by TEXT")
+    add_column_if_missing("interventions", "reviewed_at TEXT")
+
     add_column_if_missing("students", "email TEXT")
     add_column_if_missing("students", "phone TEXT")
 
@@ -221,11 +239,11 @@ def init_db():
     c.execute("UPDATE users SET email = 'admin@vignan.ac.in' WHERE id = 'admin' AND (email IS NULL OR email = '')")
     c.execute("UPDATE users SET email = LOWER(id) || '@vignan.ac.in' WHERE (email IS NULL OR email = '')")
     c.execute("UPDATE users SET phone = '+91 90000 00001' WHERE id = 'admin'")
-    c.execute("UPDATE users SET phone = '+91 90000 11111' WHERE LOWER(id) = 'fac001'")
-    c.execute("UPDATE users SET phone = '+91 90000 22222' WHERE LOWER(id) = 'fac002'")
-    c.execute("UPDATE users SET phone = '+91 90000 33333' WHERE LOWER(id) = 'fac003'")
-    c.execute("UPDATE users SET phone = '+91 90000 44444' WHERE LOWER(id) = 'men001'")
-    c.execute("UPDATE users SET phone = '+91 90000 55555' WHERE LOWER(id) = 'men002'")
+    c.execute("UPDATE users SET phone = '+91 90000 11111', department = 'CSE', assigned_year = '2nd Year', specialization = 'Database Systems & Mentorship' WHERE LOWER(id) = 'fac001'")
+    c.execute("UPDATE users SET phone = '+91 90000 22222', department = 'CSE', assigned_year = '3rd Year', specialization = 'Software Engineering & Internships' WHERE LOWER(id) = 'fac002'")
+    c.execute("UPDATE users SET phone = '+91 90000 33333', department = 'Mathematics', assigned_year = '1st Year', specialization = 'Discrete Math & Quantitative Analysis' WHERE LOWER(id) = 'fac003'")
+    c.execute("UPDATE users SET phone = '+91 90000 44444', department = 'CSE', assigned_year = '2nd Year', specialization = 'Academic Mentorship & Core Programming' WHERE LOWER(id) = 'men001'")
+    c.execute("UPDATE users SET phone = '+91 90000 55555', department = 'CSE', assigned_year = '1st Year', specialization = 'Foundation & Attendance Mentorship' WHERE LOWER(id) = 'men002'")
     c.execute("UPDATE users SET phone = '+91 98480 12345' WHERE LOWER(id) = '25cs001'")
     c.execute("UPDATE users SET phone = '+91 98480 23456' WHERE LOWER(id) = '25cs002'")
     c.execute("UPDATE users SET phone = '+91 98480 34567' WHERE LOWER(id) = '25cs003'")
@@ -269,7 +287,7 @@ def init_db():
             ("25CS004", "25CS004",   "student", "Sneha Rao",            "25CS004", None,              None,                                  "sneha.25cs@vignan.ac.in",    "+91 98480 45678"),
             ("25CS005", "25CS005",   "student", "Arjun Patel",          "25CS005", None,              None,                                  "arjun.25cs@vignan.ac.in",    "+91 98480 56789"),
         ]
-        c.executemany("INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?)", users_data)
+        c.executemany("INSERT INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone) VALUES (?,?,?,?,?,?,?,?,?)", users_data)
 
     # -- Seed Sample Pending Signup Request --
     c.execute("SELECT COUNT(*) FROM signup_requests")

@@ -206,16 +206,16 @@ function generateReportHtml(today, interventions) {
                             ${filteredStudents.map(s => {
                                 const isHigh = s.risk >= 60;
                                 return `
-                                    <tr class="${isHigh ? 'table-danger' : ''}">
-                                        <td><strong>${s.id}</strong></td>
-                                        <td>${s.name}</td>
-                                        <td>${s.course} (${s.year || '2nd Year'})</td>
-                                        <td>${s.attendance}%</td>
-                                        <td>${s.cgpa}</td>
-                                        ${reportConfig.includeAiEngagement ? `<td>${s.lms_score || s.attendance}%</td>` : ''}
-                                        <td><strong>${s.risk}%</strong></td>
-                                        ${reportConfig.includeDemographics ? `<td>${s.father || 'N/A'} • ${s.place || 'Hyderabad'}</td>` : ''}
-                                        <td>${s.risk >= 60 ? '<span style="color:var(--risk-high)"><i class="bi bi-exclamation-triangle me-1"></i>Critical Action</span>' : (s.risk >= 30 ? '<span style="color:var(--risk-medium)"><i class="bi bi-exclamation-circle me-1"></i>Moderate</span>' : '<span style="color:var(--risk-low)"><i class="bi bi-check-circle me-1"></i>Healthy</span>')}</td>
+                                    <tr style="${isHigh ? 'background-color: var(--risk-high-soft);' : ''}">
+                                        <td><strong style="color: ${isHigh ? 'var(--risk-high)' : 'var(--text)'};">${s.id}</strong></td>
+                                        <td style="color: var(--text);">${s.name}</td>
+                                        <td style="color: var(--text-soft);">${s.course} (${s.year || '2nd Year'})</td>
+                                        <td style="color: var(--text);">${s.attendance}%</td>
+                                        <td style="color: var(--text);">${s.cgpa}</td>
+                                        ${reportConfig.includeAiEngagement ? `<td style="color: var(--text);">${s.lms_score || s.attendance}%</td>` : ''}
+                                        <td><strong style="color: ${isHigh ? 'var(--risk-high)' : (s.risk >= 30 ? 'var(--risk-medium)' : 'var(--risk-low)')};">${s.risk}%</strong></td>
+                                        ${reportConfig.includeDemographics ? `<td style="color: var(--text-soft);">${s.father || 'N/A'} • ${s.place || 'Hyderabad'}</td>` : ''}
+                                        <td>${s.risk >= 60 ? '<span style="color:var(--risk-high); font-weight: 700;"><i class="bi bi-exclamation-triangle me-1"></i>Critical Action</span>' : (s.risk >= 30 ? '<span style="color:var(--risk-medium); font-weight: 600;"><i class="bi bi-exclamation-circle me-1"></i>Moderate</span>' : '<span style="color:var(--risk-low); font-weight: 600;"><i class="bi bi-check-circle me-1"></i>Healthy</span>')}</td>
                                     </tr>
                                 `;
                             }).join("")}
@@ -446,3 +446,11 @@ function exportReportLog() {
     link.click();
     document.body.removeChild(link);
 }
+
+// Window Exports for Reports Page
+window.renderReports = renderReports;
+window.exportReportPDF = exportReportPDF;
+window.exportReportCSV = exportReportCSV;
+window.exportReportMarkdown = exportReportMarkdown;
+window.exportReportLog = exportReportLog;
+window.updateReportConfig = updateReportConfig;

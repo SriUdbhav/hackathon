@@ -72,16 +72,29 @@ body {
     width: 76px;
 }
 
-.sidebar.collapsed .sidebar-brand div:last-child,
+.sidebar.collapsed .sidebar-brand > div:not(.sidebar-logo),
+.sidebar.collapsed .sidebar-brand .sidebar-mobile-close,
 .sidebar.collapsed .nav-item span,
 .sidebar.collapsed .nav-label,
-.sidebar.collapsed .sidebar-bottom {
-    display: none;
+.sidebar.collapsed .sidebar-bottom,
+.sidebar.collapsed .nav-badge {
+    display: none !important;
 }
 
-.sidebar.collapsed .sidebar-brand,
+.sidebar.collapsed .sidebar-brand {
+    justify-content: center !important;
+    padding: 0 !important;
+    gap: 0 !important;
+}
+
+.sidebar.collapsed .sidebar-logo {
+    margin: 0 auto;
+}
+
 .sidebar.collapsed .nav-item {
-    justify-content: center;
+    justify-content: center !important;
+    padding: 11px 0 !important;
+    gap: 0 !important;
 }
 
 .sidebar-brand {
@@ -979,5 +992,351 @@ body {
     .page-content {
         padding: 10px 8px;
     }
+}
+
+/* =====================================================
+   THEME CONSISTENCY OVERRIDES (DARK & SEPIA THEMES)
+   Ensures text, cards, tables, inputs, modals, and lists
+   adapt seamlessly to dark/sepia modes without hardcoded
+   black-on-dark contrast collisions.
+   ===================================================== */
+
+/* 1. DARK THEME TEXT & BACKGROUND OVERRIDES */
+[data-theme="dark"] .text-dark,
+[data-theme="dark"] h1.text-dark,
+[data-theme="dark"] h2.text-dark,
+[data-theme="dark"] h3.text-dark,
+[data-theme="dark"] h4.text-dark,
+[data-theme="dark"] h5.text-dark,
+[data-theme="dark"] h6.text-dark,
+[data-theme="dark"] p.text-dark,
+[data-theme="dark"] span.text-dark,
+[data-theme="dark"] strong.text-dark,
+[data-theme="dark"] div.text-dark {
+    color: var(--text) !important;
+}
+
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] small.text-muted {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .bg-light,
+[data-theme="dark"] .bg-white {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text) !important;
+}
+
+[data-theme="dark"] .border,
+[data-theme="dark"] .border-top,
+[data-theme="dark"] .border-bottom,
+[data-theme="dark"] .border-start,
+[data-theme="dark"] .border-end {
+    border-color: var(--border-soft) !important;
+}
+
+[data-theme="dark"] .list-group-item {
+    background-color: transparent !important;
+    color: var(--text) !important;
+    border-color: var(--border-soft) !important;
+}
+
+[data-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text);
+    --bs-table-striped-bg: var(--bg-sunken);
+    --bs-table-striped-color: var(--text);
+    --bs-table-hover-bg: var(--bg-sunken);
+    --bs-table-hover-color: var(--text);
+    --bs-table-border-color: var(--border-soft);
+    color: var(--text) !important;
+    border-color: var(--border-soft) !important;
+}
+
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td {
+    border-color: var(--border-soft) !important;
+    color: var(--text) !important;
+}
+
+[data-theme="dark"] thead.table-light th,
+[data-theme="dark"] .table thead th {
+    background-color: var(--bg-sunken) !important;
+    color: var(--text-soft) !important;
+    border-color: var(--border-soft) !important;
+}
+
+[data-theme="dark"] .card {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .student-modal {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+    box-shadow: var(--shadow) !important;
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text) !important;
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+    background-color: var(--bg-sunken) !important;
+    color: var(--accent) !important;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--bg-sunken) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-soft) !important;
+}
+
+[data-theme="dark"] .input-group-text {
+    background-color: var(--bg-sunken) !important;
+    color: var(--text-soft) !important;
+    border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .badge.bg-light {
+    background-color: var(--bg-sunken) !important;
+    color: var(--text-soft) !important;
+    border: 1px solid var(--border-soft) !important;
+}
+
+[data-theme="dark"] .badge.bg-warning,
+[data-theme="dark"] .badge.bg-warning.text-dark,
+[data-theme="dark"] .badge-warning {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    color: #fbbf24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.45) !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="dark"] .badge.bg-success,
+[data-theme="dark"] .badge-success {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.45) !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="dark"] .badge.bg-danger,
+[data-theme="dark"] .badge-danger {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(239, 68, 68, 0.45) !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="dark"] .badge.bg-primary,
+[data-theme="dark"] .badge-primary {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    color: #60a5fa !important;
+    border: 1px solid rgba(59, 130, 246, 0.45) !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="dark"] .badge.bg-info,
+[data-theme="dark"] .badge-info {
+    background-color: rgba(6, 182, 212, 0.2) !important;
+    color: #22d3ee !important;
+    border: 1px solid rgba(6, 182, 212, 0.45) !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="dark"] .badge.bg-secondary,
+[data-theme="dark"] .badge-secondary {
+    background-color: rgba(148, 163, 184, 0.15) !important;
+    color: #94a3b8 !important;
+    border: 1px solid rgba(148, 163, 184, 0.3) !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="dark"] .btn-outline-primary {
+    color: #89b4fa !important;
+    border-color: rgba(137, 180, 250, 0.45) !important;
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] .btn-outline-primary:hover,
+[data-theme="dark"] .btn-outline-primary:focus {
+    background-color: rgba(137, 180, 250, 0.2) !important;
+    color: #cdd6f4 !important;
+    border-color: #89b4fa !important;
+}
+
+[data-theme="dark"] .progress {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: var(--border-soft) !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    color: var(--text-soft) !important;
+    border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    background-color: var(--bg-sunken) !important;
+    color: var(--text) !important;
+    border-color: var(--accent) !important;
+}
+
+[data-theme="dark"] .btn-light {
+    background-color: var(--bg-sunken) !important;
+    color: var(--text) !important;
+    border-color: var(--border-soft) !important;
+}
+
+[data-theme="dark"] .btn-light:hover {
+    background-color: var(--bg-elevated) !important;
+    color: var(--accent) !important;
+}
+
+[data-theme="dark"] code {
+    background-color: var(--code-bg);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* 2. SEPIA THEME TEXT & BACKGROUND OVERRIDES */
+[data-theme="sepia"] .text-dark,
+[data-theme="sepia"] h1.text-dark,
+[data-theme="sepia"] h2.text-dark,
+[data-theme="sepia"] h3.text-dark,
+[data-theme="sepia"] h4.text-dark,
+[data-theme="sepia"] h5.text-dark,
+[data-theme="sepia"] h6.text-dark,
+[data-theme="sepia"] p.text-dark,
+[data-theme="sepia"] span.text-dark,
+[data-theme="sepia"] strong.text-dark,
+[data-theme="sepia"] div.text-dark {
+    color: var(--text) !important;
+}
+
+[data-theme="sepia"] .text-muted,
+[data-theme="sepia"] small.text-muted {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="sepia"] .bg-light,
+[data-theme="sepia"] .bg-white {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text) !important;
+}
+
+[data-theme="sepia"] .badge.bg-warning,
+[data-theme="sepia"] .badge.bg-warning.text-dark,
+[data-theme="sepia"] .badge-warning {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="sepia"] .badge.bg-success,
+[data-theme="sepia"] .badge-success {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+    border: 1px solid #a7f3d0 !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="sepia"] .badge.bg-danger,
+[data-theme="sepia"] .badge-danger {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fecaca !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="sepia"] .badge.bg-primary,
+[data-theme="sepia"] .badge-primary {
+    background-color: #dbeafe !important;
+    color: #1e40af !important;
+    border: 1px solid #bfdbfe !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="sepia"] .border,
+[data-theme="sepia"] .border-top,
+[data-theme="sepia"] .border-bottom,
+[data-theme="sepia"] .border-start,
+[data-theme="sepia"] .border-end {
+    border-color: var(--border-soft) !important;
+}
+
+[data-theme="sepia"] .form-control,
+[data-theme="sepia"] .form-select {
+    background-color: var(--bg-sunken) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+[data-theme="sepia"] .modal-content,
+[data-theme="sepia"] .student-modal {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+[data-theme="sepia"] .dropdown-menu {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+[data-theme="sepia"] code {
+    background-color: var(--code-bg);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* 3. SOFT-WHITE THEME BADGE NORMALIZATIONS */
+[data-theme="soft-white"] .badge.bg-warning,
+[data-theme="soft-white"] .badge.bg-warning.text-dark {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="soft-white"] .badge.bg-success {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+    border: 1px solid #a7f3d0 !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="soft-white"] .badge.bg-danger {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fecaca !important;
+    font-weight: 700 !important;
 }
 

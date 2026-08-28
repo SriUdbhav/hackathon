@@ -441,33 +441,32 @@ body {
 
 
 .sidebar.collapsed {
-
     width: 76px;
-
 }
 
-
-.sidebar.collapsed .sidebar-brand div:last-child,
+.sidebar.collapsed .sidebar-brand > div:not(.sidebar-logo),
+.sidebar.collapsed .sidebar-brand .sidebar-mobile-close,
 .sidebar.collapsed .nav-item span,
 .sidebar.collapsed .nav-label,
-.sidebar.collapsed .sidebar-bottom {
-
-    display: none;
-
+.sidebar.collapsed .sidebar-bottom,
+.sidebar.collapsed .nav-badge {
+    display: none !important;
 }
-
 
 .sidebar.collapsed .sidebar-brand {
-
-    justify-content: center;
-
+    justify-content: center !important;
+    padding: 0 !important;
+    gap: 0 !important;
 }
 
+.sidebar.collapsed .sidebar-logo {
+    margin: 0 auto;
+}
 
 .sidebar.collapsed .nav-item {
-
-    justify-content: center;
-
+    justify-content: center !important;
+    padding: 11px 0 !important;
+    gap: 0 !important;
 }
 
 

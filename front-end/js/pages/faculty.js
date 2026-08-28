@@ -271,6 +271,28 @@ async function renderFaculty() {
                             </select>
                         </div>
                     </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Department <span class="text-danger">*</span></label>
+                            <select id="addFacDept" class="form-select">
+                                <option value="CSE" selected>Computer Science & Eng (CSE)</option>
+                                <option value="ECE">Electronics & Comm (ECE)</option>
+                                <option value="AI & DS">Artificial Intelligence & DS</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="IT">Information Technology (IT)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Assigned Mentorship Year</label>
+                            <select id="addFacYear" class="form-select">
+                                <option value="1st Year">1st Year Cohort</option>
+                                <option value="2nd Year" selected>2nd Year Cohort</option>
+                                <option value="3rd Year">3rd Year Cohort</option>
+                                <option value="4th Year">4th Year Cohort</option>
+                                <option value="All Years">All Years</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Phone / Mobile</label>
                         <div class="d-flex gap-2">
@@ -285,10 +307,15 @@ async function renderFaculty() {
                             <input type="tel" id="addFacPhone" class="form-control flex-grow-1" placeholder="10-digit mobile number" maxlength="10" oninput="formatPhoneDigits(this)">
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">Assigned Subjects</label>
-                        <input type="text" id="addFacSubjects" class="form-control" placeholder="e.g. CS201, CS202, CS205">
-                        <div class="form-text small">Comma-separated course codes</div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Assigned Subjects</label>
+                            <input type="text" id="addFacSubjects" class="form-control" placeholder="e.g. CS201, CS202">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Mentorship Specialization</label>
+                            <input type="text" id="addFacSpecialization" class="form-control" placeholder="e.g. Core Programming & Counseling">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Additional Responsibilities</label>
@@ -343,9 +370,37 @@ async function renderFaculty() {
                             </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">Assigned Subjects</label>
-                        <input type="text" id="editFacSubjects" class="form-control" placeholder="e.g. CS201, CS202">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Department</label>
+                            <select id="editFacDept" class="form-select">
+                                <option value="CSE">Computer Science & Eng (CSE)</option>
+                                <option value="ECE">Electronics & Comm (ECE)</option>
+                                <option value="AI & DS">Artificial Intelligence & DS</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="IT">Information Technology (IT)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Assigned Mentorship Year</label>
+                            <select id="editFacYear" class="form-select">
+                                <option value="1st Year">1st Year Cohort</option>
+                                <option value="2nd Year">2nd Year Cohort</option>
+                                <option value="3rd Year">3rd Year Cohort</option>
+                                <option value="4th Year">4th Year Cohort</option>
+                                <option value="All Years">All Years</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Assigned Subjects</label>
+                            <input type="text" id="editFacSubjects" class="form-control" placeholder="e.g. CS201, CS202">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Specialization / Focus Area</label>
+                            <input type="text" id="editFacSpecialization" class="form-control" placeholder="e.g. Database Systems & Mentorship">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Additional Responsibilities</label>
@@ -584,11 +639,11 @@ function _facultyStatusBadge(status) {
 
 function filterFacultyTable() {
     const query = (document.getElementById("facultySearchInput")?.value || "").toLowerCase().trim();
-    const statusFilter = document.getElementById("facultyFilterStatus")?.value || "ALL";
-    const roleFilter = document.getElementById("facultyFilterRole")?.value || "ALL";
-    const deptFilter = (document.getElementById("facultyFilterDept")?.value || "ALL").toLowerCase();
+    const statusFilter = (document.getElementById("facultyFilterStatus")?.value || "all").toLowerCase().trim();
+    const roleFilter = (document.getElementById("facultyFilterRole")?.value || "all").toLowerCase().trim();
+    const deptFilter = (document.getElementById("facultyFilterDept")?.value || "all").toLowerCase().trim();
 
-    const baseList = statusFilter === "Declined"
+    const baseList = statusFilter === "declined"
         ? (_facultyData?.declined_history || [])
         : (_facultyData?.faculty || []);
 
@@ -597,13 +652,54 @@ function filterFacultyTable() {
         const email = (f.email || "").toLowerCase();
         const subjects = (f.subjects || "").toLowerCase();
         const id = (f.id || "").toLowerCase();
-        const status = f.status || "Active";
-        const role = (f.role || "").toLowerCase();
+        const rawStatus = (f.status || "Active").toLowerCase();
+        const rawRole = (f.role || "").toLowerCase();
+        const extraRoles = (f.extra_roles || "").toLowerCase();
 
-        const matchesSearch = !query || name.includes(query) || email.includes(query) || subjects.includes(query) || id.includes(query);
-        const matchesStatus = statusFilter === "ALL" || statusFilter === "Declined" || status === statusFilter;
-        const matchesRole = roleFilter === "ALL" || role === roleFilter.toLowerCase();
-        const matchesDept = deptFilter === "ALL" || subjects.includes(deptFilter) || (f.extra_roles || "").toLowerCase().includes(deptFilter);
+        // 1. Search Query Match
+        const matchesSearch = !query || name.includes(query) || email.includes(query) || subjects.includes(query) || id.includes(query) || extraRoles.includes(query);
+
+        // 2. Status Match
+        let matchesStatus = false;
+        if (statusFilter === "all") {
+            matchesStatus = true;
+        } else if (statusFilter === "active") {
+            matchesStatus = rawStatus === "active" || rawStatus === "approved";
+        } else if (statusFilter === "inactive") {
+            matchesStatus = rawStatus === "inactive" || rawStatus === "disabled";
+        } else if (statusFilter === "declined") {
+            matchesStatus = rawStatus === "declined" || rawStatus === "rejected";
+        } else {
+            matchesStatus = rawStatus === statusFilter;
+        }
+
+        // 3. Role Match
+        let matchesRole = false;
+        if (roleFilter === "all") {
+            matchesRole = true;
+        } else if (roleFilter === "faculty") {
+            matchesRole = rawRole === "faculty" || extraRoles.includes("faculty");
+        } else if (roleFilter === "mentor") {
+            matchesRole = rawRole === "mentor" || extraRoles.includes("mentor");
+        } else {
+            matchesRole = rawRole === roleFilter || extraRoles.includes(roleFilter);
+        }
+
+        // 4. Department Match
+        let matchesDept = false;
+        if (deptFilter === "all") {
+            matchesDept = true;
+        } else if (deptFilter === "cs") {
+            matchesDept = subjects.includes("cs") || subjects.includes("cse") || subjects.includes("it") || extraRoles.includes("cse");
+        } else if (deptFilter === "ec") {
+            matchesDept = subjects.includes("ec") || subjects.includes("ece") || extraRoles.includes("ece");
+        } else if (deptFilter === "ai") {
+            matchesDept = subjects.includes("ai") || subjects.includes("ds") || extraRoles.includes("ai");
+        } else if (deptFilter === "ma") {
+            matchesDept = subjects.includes("ma") || subjects.includes("math") || extraRoles.includes("math");
+        } else {
+            matchesDept = subjects.includes(deptFilter) || extraRoles.includes(deptFilter);
+        }
 
         return matchesSearch && matchesStatus && matchesRole && matchesDept;
     });
@@ -945,8 +1041,11 @@ async function handleCreateFaculty(e) {
         email: document.getElementById("addFacEmail").value.trim(),
         role: document.getElementById("addFacRole").value,
         phone: getFullPhoneNumber("addFacCountryCode", "addFacPhone"),
-        subjects: document.getElementById("addFacSubjects").value.trim(),
-        extra_roles: document.getElementById("addFacExtraRoles").value.trim(),
+        subjects: document.getElementById("addFacSubjects")?.value.trim() || "",
+        extra_roles: document.getElementById("addFacExtraRoles")?.value.trim() || "",
+        department: document.getElementById("addFacDept")?.value || "CSE",
+        assigned_year: document.getElementById("addFacYear")?.value || "2nd Year",
+        specialization: document.getElementById("addFacSpecialization")?.value.trim() || "Academic Counseling",
     }];
 
     const res = await API.bulkImportFaculty(payload);
@@ -956,11 +1055,11 @@ async function handleCreateFaculty(e) {
     }
 
     if (res && res.success && res.imported > 0) {
-        alert("Faculty member added successfully!");
+        showSuccessToast("Faculty / Mentor account added successfully!");
         closeAddFacultyModal();
         renderFaculty();
     } else {
-        alert(res?.message || "Failed to add faculty member. Check for duplicate ID/email.");
+        showErrorToast(res?.message || "Failed to add faculty member. Check for duplicate ID/email.");
     }
 }
 
@@ -971,7 +1070,7 @@ async function openFacultyEditModal(facultyId) {
 
     const data = await API.getFacultyDetail(facultyId);
     if (!data || !data.profile) {
-        alert("Could not load faculty record for editing.");
+        showErrorToast("Could not load faculty record for editing.");
         return;
     }
 
@@ -982,6 +1081,9 @@ async function openFacultyEditModal(facultyId) {
     setPhoneInputFromFull("editFacCountryCode", "editFacPhone", p.phone || "");
     document.getElementById("editFacSubjects").value = p.subjects || "";
     document.getElementById("editFacExtraRoles").value = p.extra_roles || "";
+    if (document.getElementById("editFacDept")) document.getElementById("editFacDept").value = p.department || "CSE";
+    if (document.getElementById("editFacYear")) document.getElementById("editFacYear").value = p.assigned_year || "2nd Year";
+    if (document.getElementById("editFacSpecialization")) document.getElementById("editFacSpecialization").value = p.specialization || "";
     document.getElementById("facultyEditTitle").textContent = `Edit ${p.display_name}`;
 
     document.getElementById("facultyEditModal")?.classList.add("active");
@@ -993,17 +1095,20 @@ async function openFacultyEditModal(facultyId) {
             display_name: document.getElementById("editFacDisplayName").value.trim(),
             email: document.getElementById("editFacEmail").value.trim(),
             phone: getFullPhoneNumber("editFacCountryCode", "editFacPhone"),
-            subjects: document.getElementById("editFacSubjects").value.trim(),
-            extra_roles: document.getElementById("editFacExtraRoles").value.trim(),
+            subjects: document.getElementById("editFacSubjects")?.value.trim() || "",
+            extra_roles: document.getElementById("editFacExtraRoles")?.value.trim() || "",
+            department: document.getElementById("editFacDept")?.value || "CSE",
+            assigned_year: document.getElementById("editFacYear")?.value || "2nd Year",
+            specialization: document.getElementById("editFacSpecialization")?.value.trim() || "Academic Counseling",
         };
         const res = await API.updateFaculty(_editingFacultyId, payload);
         if (res && res.success) {
-            alert(res.message || "Faculty profile updated successfully!");
+            showSuccessToast(res.message || "Faculty profile updated successfully!");
             closeFacultyEditModal();
             closeFacultyDrawer();
             renderFaculty();
         } else {
-            alert(res?.message || "Failed to update faculty profile.");
+            showErrorToast(res?.message || "Failed to update faculty profile.");
         }
     };
 }
@@ -1020,15 +1125,22 @@ function closeFacultyEditModal() {
 
 async function changeFacultyStatusPrompt(facultyId, currentStatus) {
     const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
-    if (!confirm(`Change ${facultyId} status from "${currentStatus}" to "${newStatus}"?`)) return;
+    const ok = await showConfirmModal({
+        title: "Change Faculty Status",
+        message: `Change status for faculty <code>${facultyId}</code> from <strong>${currentStatus}</strong> to <strong>${newStatus}</strong>?`,
+        confirmText: `Set to ${newStatus}`,
+        confirmBtnClass: newStatus === "Active" ? "primary-btn" : "btn btn-warning",
+        icon: "bi-arrow-left-right text-primary"
+    });
+    if (!ok) return;
 
     const res = await API.updateFacultyStatus(facultyId, newStatus);
     if (res && res.success) {
-        alert(res.message || `Status changed to ${newStatus}.`);
+        showSuccessToast(res.message || `Status changed to ${newStatus}.`);
         closeFacultyDrawer();
         renderFaculty();
     } else {
-        alert(res?.message || "Failed to change status.");
+        showErrorToast(res?.message || "Failed to change status.");
     }
 }
 
@@ -1123,34 +1235,50 @@ function _getSelectedApprovedFacultyIds() {
 
 
 // =====================================================
-// 8. BULK OPERATIONS (Activate / Deactivate)
+// 8. BULK STATUS ACTIONS (ACTIVATE / DEACTIVATE)
 // =====================================================
 
 async function bulkActivateFaculty() {
     const ids = _getSelectedApprovedFacultyIds();
-    if (ids.length === 0) { alert("No approved faculty selected for activation."); return; }
-    if (!confirm(`Activate ${ids.length} selected faculty member(s)?`)) return;
+    if (ids.length === 0) { showWarningToast("No approved faculty selected for activation."); return; }
+    
+    const ok = await showConfirmModal({
+        title: "Bulk Activate Faculty",
+        message: `Activate <strong>${ids.length}</strong> selected faculty member(s)?`,
+        confirmText: "Activate Selected",
+        confirmBtnClass: "primary-btn",
+        icon: "bi-check2-circle text-success"
+    });
+    if (!ok) return;
 
     const res = await API.bulkStatusFaculty(ids, "Active");
     if (res && res.success) {
-        alert(res.message);
+        showSuccessToast(res.message);
         renderFaculty();
     } else {
-        alert(res?.message || "Failed to activate faculty.");
+        showErrorToast(res?.message || "Failed to activate faculty.");
     }
 }
 
 async function bulkDeactivateFaculty() {
     const ids = _getSelectedApprovedFacultyIds();
-    if (ids.length === 0) { alert("No approved faculty selected for deactivation."); return; }
-    if (!confirm(`Deactivate ${ids.length} selected faculty member(s)?`)) return;
+    if (ids.length === 0) { showWarningToast("No approved faculty selected for deactivation."); return; }
+    
+    const ok = await showConfirmModal({
+        title: "Bulk Deactivate Faculty",
+        message: `Deactivate <strong>${ids.length}</strong> selected faculty member(s)?`,
+        confirmText: "Deactivate Selected",
+        confirmBtnClass: "btn btn-warning",
+        icon: "bi-slash-circle text-warning"
+    });
+    if (!ok) return;
 
     const res = await API.bulkStatusFaculty(ids, "Inactive");
     if (res && res.success) {
-        alert(res.message);
+        showSuccessToast(res.message);
         renderFaculty();
     } else {
-        alert(res?.message || "Failed to deactivate faculty.");
+        showErrorToast(res?.message || "Failed to deactivate faculty.");
     }
 }
 
@@ -1626,3 +1754,38 @@ function _downloadFile(content, filename, mimeType) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+// Window Exports for Faculty Management Page
+window.renderFaculty = renderFaculty;
+window.filterFacultyTable = filterFacultyTable;
+window.openFacultyDrawer = openFacultyDrawer;
+window.closeFacultyDrawer = closeFacultyDrawer;
+window.openAddFacultyModal = openAddFacultyModal;
+window.closeAddFacultyModal = closeAddFacultyModal;
+window.handleCreateFaculty = handleCreateFaculty;
+window.openFacultyEditModal = openFacultyEditModal;
+window.closeFacultyEditModal = closeFacultyEditModal;
+window.changeFacultyStatusPrompt = changeFacultyStatusPrompt;
+window.toggleFacultyMenu = toggleFacultyMenu;
+window.toggleFacultyExportMenu = toggleFacultyExportMenu;
+window.viewStudent360FromFaculty = viewStudent360FromFaculty;
+window.toggleFacultySelectAll = toggleFacultySelectAll;
+window.updateFacultySelectionCount = updateFacultySelectionCount;
+window.bulkActivateFaculty = bulkActivateFaculty;
+window.bulkDeactivateFaculty = bulkDeactivateFaculty;
+window.promptSingleFacultyDelete = promptSingleFacultyDelete;
+window.bulkDeleteFacultyPrompt = bulkDeleteFacultyPrompt;
+window.closeFacultyBulkDeleteModal = closeFacultyBulkDeleteModal;
+window.executeBulkDelete = executeBulkDelete;
+window.executeBulkDeactivate = executeBulkDeactivate;
+window.openFacultyImportModal = openFacultyImportModal;
+window.closeFacultyImportModal = closeFacultyImportModal;
+window.resetFacultyImport = resetFacultyImport;
+window.downloadFacultyTemplate = downloadFacultyTemplate;
+window.handleFacultyFileSelected = handleFacultyFileSelected;
+window.confirmFacultyImport = confirmFacultyImport;
+window.downloadImportErrorReport = downloadImportErrorReport;
+window.exportFacultyCSV = exportFacultyCSV;
+window.exportSingleFacultyCSV = exportSingleFacultyCSV;
+window.exportFacultyExcel = exportFacultyExcel;
+window.exportSelectedFacultyCSV = exportSelectedFacultyCSV;

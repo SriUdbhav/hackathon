@@ -97,6 +97,13 @@ async function renderAdminDashboard(content, user) {
     }
     const pendingApps = signupRequests.filter(r => r.status === 'Pending');
 
+    let pendingEnquiries = [];
+    try {
+        pendingEnquiries = (await API.getInterventionEnquiries('admin', user?.id, 'pending')) || [];
+    } catch (e) {
+        pendingEnquiries = [];
+    }
+
     const deptStats = {};
     students.forEach(s => {
         const dept = s.course || s.department || "CSE";
@@ -138,7 +145,7 @@ async function renderAdminDashboard(content, user) {
 
         <!-- PENDING APPROVALS ALERT -->
         ${pendingApps.length > 0 ? `
-            <div class="alert alert-warning d-flex justify-content-between align-items-center mb-4 py-2 px-3 shadow-sm" style="border-radius: 10px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3);">
+            <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3 py-2 px-3 shadow-sm">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-hourglass-split fs-5 text-warning"></i>
                     <div>
@@ -148,6 +155,22 @@ async function renderAdminDashboard(content, user) {
                 </div>
                 <button class="btn btn-sm btn-warning text-dark fw-semibold" onclick="navigateTo('users')">
                     <i class="bi bi-person-check me-1"></i> Review Applications
+                </button>
+            </div>
+        ` : ''}
+
+        <!-- PENDING ENQUIRIES / REVIEWS ALERT -->
+        ${pendingEnquiries.length > 0 ? `
+            <div class="alert alert-primary d-flex justify-content-between align-items-center mb-4 py-2 px-3 shadow-sm">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-patch-check-fill fs-5 text-primary"></i>
+                    <div>
+                        <strong style="color: var(--text);">Pending Mentorship Enquiries & Completion Reviews:</strong>
+                        <span class="small ms-1" style="color: var(--text-soft);">${pendingEnquiries.length} session completion report(s) submitted by mentors awaiting verification and closure.</span>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-primary text-white fw-semibold" onclick="navigateTo('enquiries')">
+                    <i class="bi bi-patch-check me-1"></i> Open Enquiries & Reviews (${pendingEnquiries.length})
                 </button>
             </div>
         ` : ''}
@@ -559,7 +582,7 @@ function initAdminDashboardCharts(avgAtt, avgLms, low, med, high, crit) {
             data: {
                 labels: ["Low Risk (<30%)", "Medium Risk (30-59%)", "High Risk (60-79%)", "Critical (>=80%)"],
                 datasets: [{
-                    data: [low || 363, med || 310, high || 212, crit || 120],
+                    data: [low, med, high, crit],
                     backgroundColor: ["#10b981", "#f59e0b", "#f97316", "#ef4444"],
                     borderWidth: 2,
                     borderColor: "#ffffff"
@@ -606,6 +629,13 @@ async function renderFacultyDashboard(content, user) {
         { code: "CS204", name: "Object Oriented Java Lab", section: "Sec A", room: "Lab 2", time: "Tomorrow 10:00 AM", status: "Scheduled", att: 88, marks: 80, submitted: "96%" }
     ];
 
+    let facEnquiries = [];
+    try {
+        facEnquiries = (await API.getInterventionEnquiries('faculty', user?.id, 'pending')) || [];
+    } catch (e) {
+        facEnquiries = [];
+    }
+
     content.innerHTML = `
         <!-- FACULTY DASHBOARD HEADER -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
@@ -622,6 +652,22 @@ async function renderFacultyDashboard(content, user) {
             </div>
         </div>
 
+        <!-- PENDING ENQUIRIES / REVIEWS ALERT -->
+        ${facEnquiries.length > 0 ? `
+            <div class="alert alert-primary d-flex justify-content-between align-items-center mb-4 py-2 px-3 shadow-sm">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-patch-check-fill fs-5 text-primary"></i>
+                    <div>
+                        <strong style="color: var(--text);">Pending Mentorship Enquiries & Reviews:</strong>
+                        <span class="small ms-1" style="color: var(--text-soft);">${facEnquiries.length} session completion report(s) awaiting your verification and closure.</span>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-primary text-white fw-semibold" onclick="navigateTo('enquiries')">
+                    <i class="bi bi-patch-check me-1"></i> Review Enquiries (${facEnquiries.length})
+                </button>
+            </div>
+        ` : ''}
+
         <!-- 1. FACULTY KPI CARDS -->
         <div class="row g-3 mb-4">
             <div class="col-xl-3 col-md-6">
@@ -629,7 +675,7 @@ async function renderFacultyDashboard(content, user) {
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">My Students</span>
-                            <h2 class="fw-bold mb-0 text-dark">${facTotal || 1005} <span class="fs-6 text-muted fw-normal">Assigned</span></h2>
+                            <h2 class="fw-bold mb-0 text-dark">${facTotal} <span class="fs-6 text-muted fw-normal">Assigned</span></h2>
                             <small class="text-primary mt-2 d-inline-flex align-items-center">
                                 <i class="bi bi-grid-fill me-1"></i> 4 Active Classes / Sections
                             </small>
@@ -648,7 +694,7 @@ async function renderFacultyDashboard(content, user) {
                             <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Attendance Rate</span>
                             <h2 class="fw-bold mb-0 text-dark">${facAvgAtt}% <span class="fs-6 text-muted fw-normal">Avg</span></h2>
                             <small class="text-danger mt-2 d-inline-flex align-items-center">
-                                <i class="bi bi-exclamation-triangle-fill me-1"></i> ${facBelow75.length || 277} Below 75% Cutoff
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> ${facBelow75.length} Below 75% Cutoff
                             </small>
                         </div>
                         <div class="stat-icon-box">
@@ -812,7 +858,7 @@ async function renderFacultyDashboard(content, user) {
                             <h3 class="fw-bold mb-1"><i class="bi bi-person-exclamation text-danger me-2"></i> Students Needing Attention</h3>
                             <span class="text-muted small">Low attendance or declining academic signals</span>
                         </div>
-                        <span class="badge bg-danger">${facBelow75.length || 277} Flagged</span>
+                        <span class="badge bg-danger">${facBelow75.length} Flagged</span>
                     </div>
                     <div class="list-group list-group-flush flex-grow-1" style="max-height: 250px; overflow-y: auto;">
                         ${facBelow75.slice(0, 5).map(s => `
@@ -956,9 +1002,11 @@ async function renderMentorDashboard(content, user) {
     const highPriorityMentees = menteeList.filter(s => Number(s.risk || 0) >= 60).sort((a, b) => Number(b.risk || 0) - Number(a.risk || 0));
     const medPriorityMentees = menteeList.filter(s => Number(s.risk || 0) >= 30 && Number(s.risk || 0) < 60);
 
+    // Filter interventions to only show this mentor's sessions
+    const mentorId = user?.id || null;
     let interventions = [];
     try {
-        interventions = (await API.getInterventions()) || [];
+        interventions = (await API.getInterventions(mentorId)) || [];
     } catch (e) {
         interventions = [];
     }
@@ -966,6 +1014,15 @@ async function renderMentorDashboard(content, user) {
     const activeInterventions = interventions.filter(i => ['In Progress', 'Active', 'Pending'].includes(i.status));
     const completedInterventions = interventions.filter(i => i.status === 'Completed');
     const escalatedInterventions = interventions.filter(i => i.status === 'Escalated');
+
+    let mentorEnquiries = [];
+    try {
+        mentorEnquiries = (await API.getInterventionEnquiries('mentor', user?.id)) || [];
+    } catch (e) {
+        mentorEnquiries = [];
+    }
+    const revisionReqs = mentorEnquiries.filter(e => e.status === 'Revision Needed');
+    const pendingReviews = mentorEnquiries.filter(e => e.status === 'Completion Requested');
 
     content.innerHTML = `
         <!-- MENTOR DASHBOARD HEADER -->
@@ -977,11 +1034,46 @@ async function renderMentorDashboard(content, user) {
                 </p>
             </div>
             <div class="d-flex gap-2">
+                <button class="secondary-btn d-flex align-items-center gap-2" onclick="navigateTo('enquiries')">
+                    <i class="bi bi-patch-check text-primary"></i> Enquiries & Reviews ${pendingReviews.length ? `(${pendingReviews.length})` : ''}
+                </button>
                 <button class="primary-btn d-flex align-items-center gap-2" onclick="navigateTo('mentor')">
                     <i class="bi bi-radar"></i> Open Mentor Priority Radar
                 </button>
             </div>
         </div>
+
+        <!-- REVISION FEEDBACK ALERT (IF REJECTED) -->
+        ${revisionReqs.length > 0 ? `
+            <div class="alert alert-danger d-flex justify-content-between align-items-center mb-3 py-2 px-3 shadow-sm">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-octagon-fill fs-5 text-danger"></i>
+                    <div>
+                        <strong style="color: var(--text);">Revision Required on Completion Reports:</strong>
+                        <span class="small ms-1" style="color: var(--text-soft);">${revisionReqs.length} session completion report(s) returned with feedback for student follow-up.</span>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-danger fw-semibold" onclick="navigateTo('enquiries')">
+                    <i class="bi bi-arrow-repeat me-1"></i> View Feedback & Re-Submit
+                </button>
+            </div>
+        ` : ''}
+
+        <!-- PENDING REVIEWS STATUS BANNER -->
+        ${pendingReviews.length > 0 ? `
+            <div class="alert alert-warning d-flex justify-content-between align-items-center mb-4 py-2 px-3 shadow-sm">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-hourglass-split fs-5 text-warning"></i>
+                    <div>
+                        <strong style="color: var(--text);">Submitted Completion Reviews:</strong>
+                        <span class="small ms-1" style="color: var(--text-soft);">${pendingReviews.length} session completion request(s) under verification by session initiators.</span>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-warning text-dark fw-semibold" onclick="navigateTo('enquiries')">
+                    <i class="bi bi-patch-check me-1"></i> View Enquiry Queue
+                </button>
+            </div>
+        ` : ''}
 
         <!-- 1. MENTOR KPI CARDS -->
         <div class="row g-3 mb-4">
@@ -990,7 +1082,7 @@ async function renderMentorDashboard(content, user) {
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">My Mentees</span>
-                            <h2 class="fw-bold mb-0 text-dark">${menteeCount || 1005} <span class="fs-6 text-muted fw-normal">Assigned</span></h2>
+                            <h2 class="fw-bold mb-0 text-dark">${menteeCount} <span class="fs-6 text-muted fw-normal">Assigned</span></h2>
                             <small class="text-primary mt-2 d-inline-flex align-items-center">
                                 <i class="bi bi-people-fill me-1"></i> Active Mentee Cohort
                             </small>
@@ -1007,9 +1099,9 @@ async function renderMentorDashboard(content, user) {
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Students Needing Attention</span>
-                            <h2 class="fw-bold mb-0 text-danger">${highPriorityMentees.length || 1} <span class="fs-6 text-muted fw-normal">High Priority</span></h2>
+                            <h2 class="fw-bold mb-0 text-danger">${highPriorityMentees.length} <span class="fs-6 text-muted fw-normal">High Priority</span></h2>
                             <small class="text-danger mt-2 d-inline-flex align-items-center">
-                                <i class="bi bi-exclamation-triangle-fill me-1"></i> ${medPriorityMentees.length || 235} Moderate Priority
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> ${medPriorityMentees.length} Moderate Priority
                             </small>
                         </div>
                         <div class="stat-icon-box">
@@ -1024,9 +1116,9 @@ async function renderMentorDashboard(content, user) {
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Active Interventions</span>
-                            <h2 class="fw-bold mb-0 text-warning">${activeInterventions.length || 9824} <span class="fs-6 text-muted fw-normal">Active</span></h2>
+                            <h2 class="fw-bold mb-0 text-warning">${activeInterventions.length} <span class="fs-6 text-muted fw-normal">Active</span></h2>
                             <small class="text-warning mt-2 d-inline-flex align-items-center">
-                                <i class="bi bi-clock-history me-1"></i> 6 Scheduled This Week
+                                <i class="bi bi-clock-history me-1"></i> ${interventions.length} Total Sessions
                             </small>
                         </div>
                         <div class="stat-icon-box">
@@ -1041,9 +1133,9 @@ async function renderMentorDashboard(content, user) {
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <span class="text-muted small d-block mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Intervention Outcomes</span>
-                            <h2 class="fw-bold mb-0 text-success">76% <span class="fs-6 text-muted fw-normal">Recovery</span></h2>
+                            <h2 class="fw-bold mb-0 text-success">${interventions.length > 0 ? Math.round(completedInterventions.length / interventions.length * 100) : 0}% <span class="fs-6 text-muted fw-normal">Recovery</span></h2>
                             <small class="text-success mt-2 d-inline-flex align-items-center">
-                                <i class="bi bi-check2-circle me-1"></i> ${completedInterventions.length || 14} Resolved • ${escalatedInterventions.length || 0} Escalated
+                                <i class="bi bi-check2-circle me-1"></i> ${completedInterventions.length} Resolved • ${escalatedInterventions.length} Escalated
                             </small>
                         </div>
                         <div class="stat-icon-box">
@@ -1067,7 +1159,7 @@ async function renderMentorDashboard(content, user) {
                             <span class="badge bg-warning text-dark small">Priority Action Radar</span>
                         </div>
                         <p class="mb-0 text-dark small" style="line-height: 1.5;">
-                            «<strong>3 priority mentees require attention today</strong>. 2 students (Arjun Patel &amp; Varun Banerjee) experienced a sharp attendance drop below 65%, and 1 intervention for Sai Tripathi is due for a 14-day outcome review.»
+                            «<strong>${highPriorityMentees.length} priority mentees require attention</strong>. ${highPriorityMentees.length > 0 ? highPriorityMentees.slice(0, 2).map(s => s.name).join(' &amp; ') + (highPriorityMentees.length > 2 ? ` and ${highPriorityMentees.length - 2} more` : '') + ' flagged with risk scores above 60%.' : 'No high-risk mentees detected at this time.'} ${activeInterventions.length > 0 ? `${activeInterventions.length} active intervention(s) in progress.` : 'No active interventions scheduled.'}»
                         </p>
                     </div>
                 </div>
@@ -1086,7 +1178,7 @@ async function renderMentorDashboard(content, user) {
                             <h3 class="fw-bold mb-1"><i class="bi bi-shield-shaded text-danger me-2"></i> AI Priority Mentees</h3>
                             <span class="text-muted small">Mentees ranked by composite academic &amp; attendance risk score</span>
                         </div>
-                        <span class="badge bg-danger">${highPriorityMentees.length || 1} Urgent Cases</span>
+                        <span class="badge bg-danger">${highPriorityMentees.length} Urgent Cases</span>
                     </div>
 
                     <div class="list-group list-group-flush flex-grow-1" style="max-height: 290px; overflow-y: auto; padding-right: 4px;">
@@ -1156,28 +1248,28 @@ async function renderMentorDashboard(content, user) {
                         <div class="col-6">
                             <div class="p-3 rounded-3 text-center" style="background: var(--bg-sunken); border: 1px solid var(--border);">
                                 <span class="text-muted small d-block">New Intake</span>
-                                <h3 class="fw-bold mb-0 text-info">4</h3>
+                                <h3 class="fw-bold mb-0 text-info">${interventions.filter(i => i.status === 'Pending').length}</h3>
                                 <small class="text-muted">Awaiting Intake</small>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="p-3 rounded-3 text-center" style="background: var(--bg-sunken); border: 1px solid var(--border);">
                                 <span class="text-muted small d-block">In Progress</span>
-                                <h3 class="fw-bold mb-0 text-primary">${activeInterventions.length || 9824}</h3>
+                                <h3 class="fw-bold mb-0 text-primary">${activeInterventions.length}</h3>
                                 <small class="text-muted">Active Sessions</small>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="p-3 rounded-3 text-center" style="background: var(--bg-sunken); border: 1px solid var(--border);">
                                 <span class="text-muted small d-block">Follow-up Required</span>
-                                <h3 class="fw-bold mb-0 text-warning">6</h3>
+                                <h3 class="fw-bold mb-0 text-warning">${interventions.filter(i => i.status === 'In Progress').length}</h3>
                                 <small class="text-muted">Touchpoints Due</small>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="p-3 rounded-3 text-center" style="background: var(--bg-sunken); border: 1px solid var(--border);">
                                 <span class="text-muted small d-block">Completed</span>
-                                <h3 class="fw-bold mb-0 text-success">${completedInterventions.length || 14}</h3>
+                                <h3 class="fw-bold mb-0 text-success">${completedInterventions.length}</h3>
                                 <small class="text-muted">Stabilized</small>
                             </div>
                         </div>
@@ -1190,31 +1282,25 @@ async function renderMentorDashboard(content, user) {
                     <div class="card-head mb-3">
                         <div>
                             <h3 class="fw-bold mb-1"><i class="bi bi-clock-history text-warning me-2"></i> Follow-Up Required</h3>
-                            <span class="text-muted small">Pending and overdue mentee touchpoints</span>
+                            <span class="text-muted small">Pending and in-progress mentee touchpoints</span>
                         </div>
                     </div>
                     <div class="list-group list-group-flush">
-                        <div class="list-group-item px-0 py-2 border-bottom d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong class="text-danger small d-block"><i class="bi bi-exclamation-circle-fill me-1"></i> Varun Banerjee <code>24EC0896</code></strong>
-                                <small class="text-muted">Overdue by 2 days • Attendance &amp; LMS check-in</small>
-                            </div>
-                            <button class="btn btn-sm btn-outline-danger" onclick="viewStudent360('24EC0896')">Schedule</button>
-                        </div>
-                        <div class="list-group-item px-0 py-2 border-bottom d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong class="text-warning text-dark small d-block"><i class="bi bi-calendar-event me-1 text-primary"></i> Arjun Patel <code>25CS005</code></strong>
-                                <small class="text-muted">Today at 03:00 PM • 14-day academic progress check</small>
-                            </div>
-                            <button class="btn btn-sm btn-outline-primary" onclick="viewStudent360('25CS005')">Log Notes</button>
-                        </div>
-                        <div class="list-group-item px-0 py-2 border-bottom d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong class="text-dark small d-block"><i class="bi bi-check-circle me-1 text-success"></i> Sai Tripathi <code>23CS0708</code></strong>
-                                <small class="text-muted">Tomorrow 11:30 AM • Assignment submission review</small>
-                            </div>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="viewStudent360('23CS0708')">View Details</button>
-                        </div>
+                        ${activeInterventions.length === 0 ? '<p class="text-muted small text-center py-4">No pending follow-ups at this time.</p>' :
+                            activeInterventions.slice(0, 4).map(inter => {
+                                const studentName = students.find(s => s.id === inter.student_id)?.name || inter.student_id;
+                                const statusIcon = inter.status === 'Pending' ? 'bi-exclamation-circle-fill me-1 text-danger' : 'bi-calendar-event me-1 text-primary';
+                                const statusColor = inter.status === 'Pending' ? 'text-danger' : 'text-dark';
+                                return `
+                                <div class="list-group-item px-0 py-2 border-bottom d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong class="${statusColor} small d-block"><i class="bi ${statusIcon}"></i> ${studentName} <code>${inter.student_id}</code></strong>
+                                        <small class="text-muted">${inter.date} \u2022 ${inter.action} ${inter.subject_code ? '(' + inter.subject_code + ')' : ''}</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewStudent360('${inter.student_id}')">View</button>
+                                </div>`;
+                            }).join('')
+                        }
                     </div>
                 </div>
             </div>
@@ -1355,6 +1441,14 @@ async function renderStudentDashboard(content, user) {
         return;
     }
 
+    let studentEnquiries = [];
+    try {
+        studentEnquiries = await API.getInterventionEnquiries('student', studentId) || [];
+    } catch (e) {
+        studentEnquiries = [];
+    }
+    const activeSessions = studentEnquiries.filter(e => ['In Progress', 'Pending', 'Active'].includes(e.status));
+
     const s = studentDetail;
     const marks = s.subject_marks || [];
     const activities = s.activities || [];
@@ -1385,13 +1479,28 @@ async function renderStudentDashboard(content, user) {
             </div>
         </div>
 
+        ${activeSessions.length > 0 ? `
+            <div class="alert alert-primary d-flex justify-content-between align-items-center mb-4 p-3 rounded-3 shadow-sm">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-patch-check-fill fs-3 text-primary"></i>
+                    <div>
+                        <strong>Active Mentoring Guidance Scheduled:</strong>
+                        <p class="small mb-0 mt-1" style="color: var(--text-soft);">You have <strong>${activeSessions.length}</strong> active 1-on-1 counseling session(s) scheduled with your assigned academic mentor.</p>
+                    </div>
+                </div>
+                <button class="primary-btn btn-sm" onclick="navigateTo('enquiries')">
+                    <i class="bi bi-calendar-check me-1"></i> View Mentorship Details
+                </button>
+            </div>
+        ` : ''}
+
         ${s.risk >= 30 ? `
-            <div class="alert ${s.risk >= 60 ? 'alert-danger' : 'alert-warning'} d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm border">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi ${s.risk >= 60 ? 'bi-exclamation-octagon-fill fs-4 text-danger' : 'bi-exclamation-triangle-fill fs-4 text-warning'}"></i>
+            <div class="alert ${s.risk >= 60 ? 'alert-danger' : 'alert-warning'} d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 p-3 rounded-3 shadow-sm">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi ${s.risk >= 60 ? 'bi-exclamation-octagon-fill fs-3' : 'bi-exclamation-triangle-fill fs-3'}"></i>
                     <div>
                         <strong>Academic Risk Indicator: ${s.risk}% (${riskStatus})</strong>
-                        <p class="small mb-0 text-muted">${s.risk >= 60 ? 'Multi-signal analysis detected metric deficits. Check formula breakdown for remediation steps.' : 'Your academic signals require monitoring to ensure optimal exam eligibility.'}</p>
+                        <p class="small mb-0 mt-1" style="color: var(--text-soft);">${s.risk >= 60 ? 'Multi-signal analysis detected metric deficits. Check formula breakdown for remediation steps.' : 'Your academic signals require monitoring to ensure optimal exam eligibility.'}</p>
                     </div>
                 </div>
                 <button class="btn btn-sm ${s.risk >= 60 ? 'btn-danger' : 'btn-warning'} fw-semibold d-flex align-items-center gap-1" onclick="openStudentRiskBreakdownModal('${s.id}')">
@@ -1493,6 +1602,44 @@ async function renderStudentDashboard(content, user) {
                             ${a.notes ? `<small class="d-block text-muted mt-1">${a.notes}</small>` : ''}
                         </div>
                     `).join("")}
+                </div>
+            `}
+        </div>
+
+        <!-- MY MENTORSHIP & ACADEMIC SUPPORT SESSIONS -->
+        <div class="card-box p-4 mb-4">
+            <div class="card-head">
+                <div>
+                    <h3 class="fw-bold"><i class="bi bi-chat-heart text-primary me-2"></i> My 1-on-1 Mentoring &amp; Support Sessions</h3>
+                    <span class="text-muted small">Academic counseling, remedial classes, and touchpoints with faculty mentors</span>
+                </div>
+                <span class="badge bg-primary">${(s.interventions || []).length} Sessions</span>
+            </div>
+            ${(s.interventions || []).length === 0 ? `
+                <div class="p-4 rounded text-center" style="background: var(--bg-sunken); border: 1px solid var(--border-soft);">
+                    <i class="bi bi-shield-check text-success fs-3 d-block mb-1"></i>
+                    <strong class="text-dark small d-block">No Active Mentoring Interventions</strong>
+                    <span class="text-muted small">You are in good academic standing. Scheduled 1-on-1 counseling sessions with your mentor will appear here.</span>
+                </div>
+            ` : `
+                <div class="row g-3">
+                    ${(s.interventions || []).map(i => {
+                        const statusClass = i.status === 'Completed' ? 'badge bg-success text-white' : (i.status === 'In Progress' ? 'badge bg-primary text-white' : 'badge bg-warning text-dark');
+                        return `
+                        <div class="col-md-6">
+                            <div class="p-3 rounded h-100" style="background: var(--bg-sunken); border: 1px solid var(--border-soft);">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <strong class="text-dark small d-block">${i.action}</strong>
+                                        <small class="text-muted"><i class="bi bi-calendar3 me-1"></i> Date: ${i.date} ${i.subject_code ? `• Subject: ${i.subject_code}` : ''}</small>
+                                    </div>
+                                    <span class="${statusClass}">${i.status}</span>
+                                </div>
+                                ${i.mentor_name ? `<p class="small mb-2 text-primary" style="font-size: 12px;"><i class="bi bi-person-badge me-1"></i> Mentor: <strong>${i.mentor_name}</strong></p>` : ''}
+                                ${i.notes ? `<p class="small mb-0 text-muted p-2 rounded" style="background: var(--bg-elevated); font-size: 11.5px;"><i class="bi bi-sticky me-1 text-secondary"></i> ${i.notes}</p>` : ''}
+                            </div>
+                        </div>`;
+                    }).join('')}
                 </div>
             `}
         </div>

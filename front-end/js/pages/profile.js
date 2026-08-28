@@ -41,12 +41,12 @@ async function renderProfile() {
     const displayName = profile.display_name || profile.id || "User";
     const avatarLetter = displayName.charAt(0).toUpperCase();
 
-    // Role config
+    // Role config with semantic theme variables
     const roleConfig = {
-        admin:   { label: "System Administrator", icon: "bi-shield-check",    gradient: "linear-gradient(135deg, #f38ba8 0%, #eba0ac 100%)", accentColor: "#f38ba8" },
-        faculty: { label: "Faculty Member",       icon: "bi-journal-bookmark", gradient: "linear-gradient(135deg, #b4befe 0%, #89b4fa 100%)", accentColor: "#b4befe" },
-        mentor:  { label: "Academic Mentor",      icon: "bi-person-check",    gradient: "linear-gradient(135deg, #89dceb 0%, #94e2d5 100%)", accentColor: "#89dceb" },
-        student: { label: "Student",              icon: "bi-mortarboard",     gradient: "linear-gradient(135deg, #a6e3a1 0%, #94e2d5 100%)", accentColor: "#a6e3a1" },
+        admin:   { label: "System Administrator", icon: "bi-shield-check",    accentColor: "#ef4444", roleSoft: "var(--risk-high-soft)", badgeBg: "rgba(239, 68, 68, 0.15)", badgeColor: "#ef4444" },
+        faculty: { label: "Faculty Member",       icon: "bi-journal-bookmark", accentColor: "#3b82f6", roleSoft: "var(--accent-soft)", badgeBg: "rgba(59, 130, 246, 0.15)", badgeColor: "#3b82f6" },
+        mentor:  { label: "Academic Mentor",      icon: "bi-person-check",    accentColor: "#06b6d4", roleSoft: "var(--accent-soft)", badgeBg: "rgba(6, 182, 212, 0.15)", badgeColor: "#06b6d4" },
+        student: { label: "Student",              icon: "bi-mortarboard",     accentColor: "#10b981", roleSoft: "var(--risk-low-soft)", badgeBg: "rgba(16, 185, 129, 0.15)", badgeColor: "#10b981" },
     };
     const rc = roleConfig[role] || roleConfig.faculty;
 
@@ -55,46 +55,52 @@ async function renderProfile() {
     const extraRoles = (profile.extra_roles || "").split(",").map(s => s.trim()).filter(Boolean);
 
     content.innerHTML = `
-        <!-- PROFILE HERO BANNER -->
-        <div class="profile-hero" style="
-            background: ${rc.gradient};
+        <!-- PROFILE HERO BANNER (THEME-ADAPTIVE) -->
+        <div class="profile-hero mb-4" style="
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-left: 6px solid ${rc.accentColor};
             border-radius: var(--radius-lg, 16px);
-            padding: 40px 36px 32px;
-            margin-bottom: 24px;
+            padding: 32px 30px;
+            box-shadow: var(--shadow);
             position: relative;
             overflow: hidden;
         ">
-            <div style="position: absolute; top: -60px; right: -40px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.08);"></div>
-            <div style="position: absolute; bottom: -30px; left: 50%; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,0.06);"></div>
+            <div style="position: absolute; top: -50px; right: -50px; width: 180px; height: 180px; border-radius: 50%; background: ${rc.accentColor}; opacity: 0.05; pointer-events: none;"></div>
             <div class="d-flex align-items-center gap-4 flex-wrap" style="position: relative; z-index: 1;">
                 <!-- Avatar Circle -->
                 <div style="
-                    width: 96px; height: 96px; border-radius: 50%;
-                    background: rgba(30, 30, 46, 0.65);
-                    backdrop-filter: blur(8px);
+                    width: 88px; height: 88px; border-radius: 50%;
+                    background: ${rc.accentColor};
                     display: flex; align-items: center; justify-content: center;
-                    font-size: 40px; font-weight: 800; color: #fff;
-                    border: 3px solid rgba(255,255,255,0.3);
+                    font-size: 36px; font-weight: 800; color: #ffffff;
+                    box-shadow: 0 6px 16px ${rc.accentColor}40;
                     flex-shrink: 0;
                     text-transform: uppercase;
                     letter-spacing: 1px;
                 ">${avatarLetter}</div>
-                <div style="flex: 1; min-width: 200px;">
-                    <h2 style="color: #1e1e2e; font-weight: 800; font-size: 26px; margin-bottom: 4px;">${displayName}</h2>
-                    <div style="color: rgba(30,30,46,0.7); font-size: 14px; font-weight: 500; margin-bottom: 10px;">
-                        <i class="bi ${rc.icon} me-1"></i> ${rc.label} &middot; <code style="color: rgba(30,30,46,0.6); font-size: 12px;">${profile.id}</code>
+                <div style="flex: 1; min-width: 220px;">
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <h2 style="color: var(--text); font-weight: 800; font-size: 26px; margin-bottom: 0;">${displayName}</h2>
+                        <span class="badge" style="background: ${rc.badgeBg}; color: ${rc.badgeColor}; font-size: 12px; font-weight: 700; border: 1px solid ${rc.badgeColor}40;">
+                            <i class="bi ${rc.icon} me-1"></i> ${rc.label}
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mb-3" style="color: var(--text-muted); font-size: 13.5px; font-weight: 500;">
+                        <span>Account ID:</span>
+                        <code style="background: var(--bg-sunken); color: var(--accent); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border-soft); font-size: 12.5px; font-weight: 600;">${profile.id}</code>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
-                        ${subjects.map(s => `<span style="background: rgba(30,30,46,0.15); color: #1e1e2e; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${s}</span>`).join("")}
-                        ${extraRoles.map(r => `<span style="background: rgba(255,255,255,0.3); color: #1e1e2e; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${r}</span>`).join("")}
+                        ${subjects.map(s => `<span style="background: var(--bg-sunken); color: var(--text-soft); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--border-soft);"><i class="bi bi-book text-primary me-1"></i>${s}</span>`).join("")}
+                        ${extraRoles.map(r => `<span style="background: var(--bg-sunken); color: var(--text-soft); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--border-soft);"><i class="bi bi-award text-warning me-1"></i>${r}</span>`).join("")}
                     </div>
                 </div>
-                <div class="d-flex flex-column gap-2" style="min-width: 160px;">
-                    <button class="btn btn-sm" onclick="openChangePasswordModal(event)" style="background: rgba(30,30,46,0.2); color: #1e1e2e; border: 1px solid rgba(30,30,46,0.15); font-weight: 600; padding: 8px 16px; border-radius: 10px;">
-                        <i class="bi bi-key-fill me-1"></i> Change Password
+                <div class="d-flex flex-column gap-2" style="min-width: 170px;">
+                    <button class="secondary-btn btn-sm d-flex align-items-center justify-content-center gap-2" onclick="openChangePasswordModal(event)" style="font-weight: 600; padding: 9px 16px;">
+                        <i class="bi bi-key-fill text-primary"></i> Change Password
                     </button>
-                    <button class="btn btn-sm" onclick="navigateTo('settings')" style="background: rgba(30,30,46,0.1); color: #1e1e2e; border: 1px solid rgba(30,30,46,0.1); font-weight: 600; padding: 8px 16px; border-radius: 10px;">
-                        <i class="bi bi-gear me-1"></i> Settings
+                    <button class="primary-btn btn-sm d-flex align-items-center justify-content-center gap-2" onclick="navigateTo('settings')" style="font-weight: 600; padding: 9px 16px;">
+                        <i class="bi bi-gear-fill"></i> System Settings
                     </button>
                 </div>
             </div>
@@ -336,3 +342,6 @@ function _profileAdminDetailCard(profile, rc) {
         </div>
     `;
 }
+
+// Window Exports for Profile Page
+window.renderProfile = renderProfile;

@@ -4,10 +4,17 @@
 # Supports dynamic thresholds from Settings DB
 # =====================================================
 
-def calculate_risk_score(attendance, cgpa, lms_score, attendance_threshold=75, risk_cgpa_threshold=7.5):
+def calculate_risk_score(attendance, cgpa, lms_score,
+                         attendance_threshold=75,
+                         risk_cgpa_threshold=7.5,
+                         lms_threshold=60,
+                         assignment_threshold=70,
+                         safe_risk_threshold=30,
+                         high_risk_threshold=65,
+                         critical_risk_threshold=80):
     """
     Computes an explainable academic risk score based on multi-signal indicators.
-    Thresholds are now dynamic (read from Settings DB).
+    Thresholds are fully dynamic and configurable in Settings.
 
     Formula:
       Engagement = (Attendance * 0.40) + (CGPA_scaled * 0.35) + (LMS_Score * 0.25)
@@ -18,6 +25,11 @@ def calculate_risk_score(attendance, cgpa, lms_score, attendance_threshold=75, r
     lms_score = float(lms_score or 0)
     attendance_threshold = float(attendance_threshold)
     risk_cgpa_threshold = float(risk_cgpa_threshold)
+    lms_threshold = float(lms_threshold)
+    assignment_threshold = float(assignment_threshold)
+    safe_risk_threshold = float(safe_risk_threshold)
+    high_risk_threshold = float(high_risk_threshold)
+    critical_risk_threshold = float(critical_risk_threshold)
 
     # Scale CGPA from 0-10 to 0-100
     cgpa_scaled = cgpa * 10.0
@@ -28,22 +40,24 @@ def calculate_risk_score(attendance, cgpa, lms_score, attendance_threshold=75, r
     # Risk = inverse of engagement
     risk_score = round(max(0, min(100, 100.0 - engagement_index)))
 
-    # Risk category
-    if risk_score >= 60:
+    # Risk category based on configurable cutoffs
+    if risk_score >= critical_risk_threshold:
+        risk_level = "Critical Risk"
+    elif risk_score >= high_risk_threshold:
         risk_level = "High Risk"
-    elif risk_score >= 30:
+    elif risk_score > safe_risk_threshold:
         risk_level = "Moderate Warning"
     else:
-        risk_level = "Low Risk"
+        risk_level = "Low Risk (Safe)"
 
     # Explainable reasons (using dynamic thresholds)
     reasons = []
     if attendance < attendance_threshold:
         reasons.append(f"Attendance ({attendance}%) is below mandatory {attendance_threshold}% cutoff.")
     if cgpa < risk_cgpa_threshold:
-        reasons.append(f"Academic performance (CGPA: {cgpa}) is below {risk_cgpa_threshold} threshold.")
-    if lms_score < 60:
-        reasons.append(f"Low online LMS engagement score ({lms_score}%).")
+        reasons.append(f"Academic performance (CGPA: {cgpa}) is below {risk_cgpa_threshold} benchmark.")
+    if lms_score < lms_threshold:
+        reasons.append(f"Online LMS engagement ({lms_score}%) is below {lms_threshold}% threshold.")
     if not reasons:
         reasons.append("Academic signals are healthy with good engagement.")
 

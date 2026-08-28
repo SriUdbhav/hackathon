@@ -230,6 +230,11 @@ function applyRolePermissions(user) {
         if (navUsers) navUsers.classList.add("d-none"); // Users tab admin only
         if (navFaculty) navFaculty.classList.add("d-none"); // Faculty management admin only
         if (navStudent360Label) navStudent360Label.textContent = "Student 360°";
+        if (navEnquiries) {
+            navEnquiries.classList.remove("d-none");
+            const span = navEnquiries.querySelector("span");
+            if (span) span.textContent = "Enquiries & Reviews";
+        }
     }
     else if (role === "mentor") {
         if (topbarUserRole) topbarUserRole.textContent = "Mentor";
@@ -243,6 +248,11 @@ function applyRolePermissions(user) {
         if (navUsers) navUsers.classList.add("d-none");
         if (navFaculty) navFaculty.classList.add("d-none");
         if (navStudent360Label) navStudent360Label.textContent = "Student 360°";
+        if (navEnquiries) {
+            navEnquiries.classList.remove("d-none");
+            const span = navEnquiries.querySelector("span");
+            if (span) span.textContent = "Enquiries & Reviews";
+        }
     }
     else if (role === "student") {
         if (topbarUserRole) topbarUserRole.textContent = `Student (${user.linked_student_id || user.id})`;
@@ -264,8 +274,13 @@ function applyRolePermissions(user) {
         if (navLabelIntelligence) navLabelIntelligence.classList.add("d-none");
         if (navLabelManagement) navLabelManagement.classList.add("d-none");
 
-        // Keep Analytics, 360 & AI Assistant visible (personalized)
+        // Keep Analytics, 360, AI Assistant & Enquiries / Reviews visible
         if (navAnalytics) navAnalytics.classList.remove("d-none");
+        if (navEnquiries) {
+            navEnquiries.classList.remove("d-none");
+            const span = navEnquiries.querySelector("span");
+            if (span) span.textContent = "My Mentoring & Reviews";
+        }
         if (navAiAgent) {
             navAiAgent.classList.remove("d-none");
             const span = navAiAgent.querySelector("span");
@@ -381,16 +396,19 @@ function switchAuthTab(tab) {
 
 // Change Password Modal Handlers
 function openChangePasswordModal(e) {
-    if (e) e.preventDefault();
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
     document.getElementById("userDropdownMenu")?.classList.add("d-none");
     document.getElementById("changePasswordModal")?.classList.add("active");
-    document.getElementById("passwordChangeError").textContent = "";
+    const errEl = document.getElementById("passwordChangeError");
+    if (errEl) errEl.textContent = "";
     document.getElementById("changePasswordForm")?.reset();
 }
+window.openChangePasswordModal = openChangePasswordModal;
 
 function closeChangePasswordModal() {
     document.getElementById("changePasswordModal")?.classList.remove("active");
 }
+window.closeChangePasswordModal = closeChangePasswordModal;
 
 function initAuth() {
     const loginForm = document.getElementById("loginForm");
@@ -503,6 +521,8 @@ function initAuth() {
                 email: document.getElementById("signupEmail").value.trim(),
                 phone: phoneVal,
                 role: document.getElementById("signupRole").value,
+                department: document.getElementById("signupDept")?.value || "CSE",
+                assigned_year: document.getElementById("signupYear")?.value || "2nd Year",
                 subjects: document.getElementById("signupSubjects").value.trim(),
                 extra_roles: document.getElementById("signupExtraRoles").value.trim(),
                 password: pw

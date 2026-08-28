@@ -26,24 +26,34 @@ class LLMProvider:
 
         # Fallback: resolve API key from .env if not set in DB
         if not api_key:
-            env_map = {"gemini": "GEMINI_API_KEY", "openai": "OPENAI_API_KEY", "groq": "GROQ_API_KEY"}
+            env_map = {
+                "gemini": "GEMINI_API_KEY",
+                "openai": "OPENAI_API_KEY",
+                "groq": "GROQ_API_KEY",
+                "openrouter": "OPENROUTER_API_KEY",
+                "deepseek": "DEEPSEEK_API_KEY"
+            }
             api_key = os.environ.get(env_map.get(provider, ""), "")
 
-        # 1. Google Gemini API
+        # 1. Google Gemini API (Supports Gemini 3.5 Flash, Flash Lite, Gemma 4)
         if provider == "gemini" and api_key:
+            configured_model = settings.get("model_name") or "gemini-3.5-flash"
             model_candidates = [
-                settings.get("model_name"),
+                configured_model,
                 "gemini-3.5-flash",
                 "gemini-3.5-flash-lite",
+                "gemma-4-31b-it",
+                "gemma-4-26b-a4b-it",
+                "gemini-flash-latest",
                 "gemini-3.6-flash",
                 "gemini-3.7-flash",
+                "gemini-pro-latest",
             ]
-            model_candidates = [m for m in model_candidates if m]
             # Deduplicate while preserving order
             seen = set()
             unique_models = []
             for m in model_candidates:
-                if m not in seen:
+                if m and m not in seen:
                     seen.add(m)
                     unique_models.append(m)
             model_candidates = unique_models
@@ -76,26 +86,89 @@ class LLMProvider:
                         "Your Gemini API key has hit its rate limit. This typically resets after a minute. "
                         "You can:\n"
                         "- Wait a minute and try again\n"
-                        "- Check your quota at [Google AI Studio](https://aistudio.google.com/apikey)\n"
-                        "- Switch to a different AI provider (Ollama, Groq) in Settings")
+                        "- Check your quota at [Google AI Studio](https://aistudio.google.com/app/apikey)\n"
+                        "- Switch to a different AI provider (Groq, OpenRouter, Ollama) in Settings")
             print("[Gemini]: All Gemini candidate models failed. Falling back to Local Agent.")
 
-        # 2. OpenAI / Groq / Compatible API
-        elif provider in ["openai", "groq"] and api_key:
+        # 2. Groq Cloud (Free Ultra-Fast Inference)
+        elif provider == "groq" and api_key:
+            base_url = settings.get("api_base_url") or "https://api.groq.com/openai/v1"
+            configured_model = settings.get("model_name") or "groq/compound"
+            groq_candidates = [
+                configured_model,
+                "groq/compound",
+                "openai/gpt-oss-120b",
+                "openai/gpt-oss-20b",
+                "qwen/qwen3.8-27b",
+                "groq/compound-mini"
+            ]
+            # Deduplicate
+            seen = set()
+            unique_groq = []
+            for m in groq_candidates:
+                if m and m not in seen:
+                    seen.add(m)
+                    unique_groq.append(m)
+
+            for model in unique_groq:
+                try:
+                    return LLMProvider._call_openai_multiturn(prompt, system_prompt, api_key, base_url, model, history)
+                except Exception as e:
+                    print(f"[GROQ Error on {model}]: {e}, trying next candidate...")
+                    continue
+            print("[GROQ]: All Groq candidate models failed. Falling back to Local Agent.")
+
+        # 3. OpenRouter (Free Multi-Model Hub)
+        elif provider == "openrouter" and api_key:
+            base_url = settings.get("api_base_url") or "https://openrouter.ai/api/v1"
+            configured_model = settings.get("model_name") or "openrouter/free"
+            router_candidates = [
+                configured_model,
+                "openrouter/free",
+                "liquid/lfm-2.5-2.6b:free",
+                "google/gemma-4-31b-it:free",
+                "google/gemma-4-26b-a4b-it:free",
+                "z-ai/glm-5.2:free",
+                "minimax/minimax-m3:free"
+            ]
+            seen = set()
+            unique_router = []
+            for m in router_candidates:
+                if m and m not in seen:
+                    seen.add(m)
+                    unique_router.append(m)
+
+            for model in unique_router:
+                try:
+                    return LLMProvider._call_openai_multiturn(prompt, system_prompt, api_key, base_url, model, history)
+                except Exception as e:
+                    print(f"[OpenRouter Error on {model}]: {e}, trying next candidate...")
+                    continue
+            print("[OpenRouter]: All OpenRouter candidate models failed. Falling back to Local Agent.")
+
+        # 4. DeepSeek Official API
+        elif provider == "deepseek" and api_key:
             try:
-                base_url = settings.get("api_base_url")
-                if not base_url:
-                    base_url = "https://api.groq.com/openai/v1" if provider == "groq" else "https://api.openai.com/v1"
-                model = settings.get("model_name", "llama-3.1-8b-instant" if provider == "groq" else "gpt-3.5-turbo")
+                base_url = settings.get("api_base_url") or "https://api.deepseek.com/v1"
+                model = settings.get("model_name") or "deepseek-chat"
                 return LLMProvider._call_openai_multiturn(prompt, system_prompt, api_key, base_url, model, history)
             except Exception as e:
-                print(f"[{provider.upper()} Error]: {e}, falling back to Local Agent.")
+                print(f"[DeepSeek Error]: {e}, falling back to Local Agent.")
 
-        # 3. Local Ollama (e.g. http://127.0.0.1:11434 or http://localhost:11434)
+        # 5. OpenAI API
+        elif provider == "openai" and api_key:
+            try:
+                base_url = settings.get("api_base_url") or "https://api.openai.com/v1"
+                model = settings.get("model_name") or "gpt-4o-mini"
+                return LLMProvider._call_openai_multiturn(prompt, system_prompt, api_key, base_url, model, history)
+            except Exception as e:
+                print(f"[OpenAI Error]: {e}, falling back to Local Agent.")
+
+        # 6. Local or Tunneled Ollama (e.g. http://127.0.0.1:11434 or ngrok/Cloudflare tunnel)
         elif provider == "ollama":
             return LLMProvider._call_ollama_resilient(prompt, system_prompt, settings, history)
 
-        # 4. Offline Local Heuristic Agent (Default Fallback)
+        # 7. Offline Local Heuristic Agent (Default Fallback)
         return LLMProvider._local_agent_response(prompt, system_prompt, history)
 
     @staticmethod
@@ -126,7 +199,14 @@ class LLMProvider:
         }
 
         data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "EduStudentSight/1.0 (Educational Academic AI Agent)"
+            }
+        )
         with urllib.request.urlopen(req, timeout=45) as response:
             res_json = json.loads(response.read().decode("utf-8"))
             return res_json["candidates"][0]["content"]["parts"][0]["text"]
@@ -149,11 +229,18 @@ class LLMProvider:
             "max_tokens": 4096
         }
         data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(url, data=data, headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
-        })
-        with urllib.request.urlopen(req, timeout=12) as response:
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+                "User-Agent": "EduStudentSight/1.0 (Educational Academic AI Agent)",
+                "HTTP-Referer": "https://edustudentsight.local",
+                "X-Title": "EduStudent Sight"
+            }
+        )
+        with urllib.request.urlopen(req, timeout=25) as response:
             res_json = json.loads(response.read().decode("utf-8"))
             return res_json["choices"][0]["message"]["content"]
 

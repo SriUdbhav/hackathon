@@ -608,3 +608,13 @@ function renderEngagementMatrixTable() {
         }
     }
 }
+
+// Window Exports for Engagement Page
+window.renderEngagement = renderEngagement;
+window.computeEngagementScore = computeEngagementScore;
+window.setEngagementChartMode = setEngagementChartMode;
+window.handleEngTableSearch = handleEngTableSearch;
+window.handleEngTableTierFilter = handleEngTableTierFilter;
+window.handleEngPageSizeChange = handleEngPageSizeChange;
+window.handleEngPageChange = handleEngPageChange;
+window.renderEngagementMatrixTable = renderEngagementMatrixTable;

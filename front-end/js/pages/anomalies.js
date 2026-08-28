@@ -537,6 +537,12 @@ function setAnomalyFilterTab(tab, btnEl) {
 
 function setAnomalyViewMode(mode) {
     window._anomalyState.viewMode = mode;
+    document.querySelectorAll(".chart-toggle-btn").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.getAttribute("onclick") && btn.getAttribute("onclick").includes(`'${mode}'`)) {
+            btn.classList.add("active");
+        }
+    });
     renderFilteredAnomalyItems();
 }
 
@@ -870,4 +876,16 @@ function exportAnomaliesCSV() {
     a.click();
     URL.revokeObjectURL(url);
 }
+
+// Window Exports for Anomalies Page
+window.renderAnomalies = renderAnomalies;
+window.initAnomalyCharts = initAnomalyCharts;
+window.handleAnomalySearch = handleAnomalySearch;
+window.handleAnomalySort = handleAnomalySort;
+window.setAnomalyFilterTab = setAnomalyFilterTab;
+window.setAnomalyViewMode = setAnomalyViewMode;
+window.handleAnomalyPageSize = handleAnomalyPageSize;
+window.handleAnomalyPageChange = handleAnomalyPageChange;
+window.renderFilteredAnomalyItems = renderFilteredAnomalyItems;
+window.exportAnomaliesCSV = exportAnomaliesCSV;
 

@@ -320,11 +320,13 @@ function renderAIAgent() {
                             ${showModelSwitcher ? `
                                 <!-- IN-CHAT MODEL SELECTOR (Admin Only) -->
                                 <select id="chatModelSelector" class="form-select form-select-sm" style="background: var(--bg-sunken); color: var(--text); border-color: var(--border); width: auto;" onchange="switchChatModel(this.value)">
-                                    <option value="gemini">Google Gemini</option>
-                                    <option value="ollama">Local Ollama (Offline LLM)</option>
-                                    <option value="groq">Groq (Llama 3.1)</option>
+                                    <option value="gemini">Google Gemini & Gemma</option>
+                                    <option value="groq">Groq Cloud (Compound / GPT-OSS)</option>
+                                    <option value="openrouter">OpenRouter Free Hub</option>
+                                    <option value="ollama">Ollama (Local / Tunnel)</option>
+                                    <option value="deepseek">DeepSeek Official API</option>
                                     <option value="openai">OpenAI (GPT-4o)</option>
-                                    <option value="local">Local Agent (Rule-Based)</option>
+                                    <option value="local">Local Heuristic Engine</option>
                                 </select>
                             ` : ''}
                         </div>
@@ -462,13 +464,21 @@ function deleteAiSession(sessionId, event) {
 }
 window.deleteAiSession = deleteAiSession;
 
-function clearAllAiSessions() {
-    if (confirm("Are you sure you want to delete all saved AI conversation sessions?")) {
-        saveAllAiSessions([]);
-        startNewAiChatSession();
-        toggleAiHistoryDrawer(false);
-        updateHistoryCountBadge();
-    }
+async function clearAllAiSessions() {
+    const ok = await showConfirmModal({
+        title: "Clear AI Conversation History",
+        message: "Are you sure you want to permanently delete all saved AI conversation sessions?",
+        confirmText: "Clear All History",
+        confirmBtnClass: "btn btn-danger",
+        icon: "bi-trash3-fill text-danger"
+    });
+    if (!ok) return;
+
+    saveAllAiSessions([]);
+    startNewAiChatSession();
+    toggleAiHistoryDrawer(false);
+    updateHistoryCountBadge();
+    showSuccessToast("AI chat history cleared.");
 }
 window.clearAllAiSessions = clearAllAiSessions;
 
@@ -978,4 +988,20 @@ async function sendAiQuery() {
     historyEl.appendChild(botWrapper);
     historyEl.scrollTop = historyEl.scrollHeight;
 }
+
+// Window Exports for AI Agent Studio
+window.renderAIAgent = renderAIAgent;
 window.sendAiQuery = sendAiQuery;
+window.toggleAiHistoryDrawer = toggleAiHistoryDrawer;
+window.loadAiSession = loadAiSession;
+window.deleteAiSession = deleteAiSession;
+window.clearAllAiSessions = clearAllAiSessions;
+window.startNewAiChatSession = startNewAiChatSession;
+window.clearCurrentChat = clearCurrentChat;
+window.clearAutonomousAgentResults = clearAutonomousAgentResults;
+window.setQuickAiPrompt = setQuickAiPrompt;
+window.copyAiBubbleText = copyAiBubbleText;
+window.toggleChatExpand = toggleChatExpand;
+window.switchChatModel = switchChatModel;
+window.triggerAutonomousAgentLoop = triggerAutonomousAgentLoop;
+window.renderNextTraceBatch = renderNextTraceBatch;

@@ -129,6 +129,8 @@ function renderNotifCards(list) {
         }
 
         const dateStr = formatNotifDate(n.date);
+        const isEnquiryNotif = (n.title && (n.title.includes("Completion Review") || n.title.includes("Revision") || n.title.includes("Completion Approved") || n.title.includes("New Session")));
+        const isPendingReviewNotif = (n.title && n.title.includes("Completion Review Requested"));
 
         return `
             <div class="notif-card p-3 rounded-3 shadow-sm position-relative ${isUnread ? 'notif-unread' : 'notif-read'}" 
@@ -146,10 +148,26 @@ function renderNotifCards(list) {
                                 ${isUnread ? '<span class="badge bg-primary text-white" style="font-size: 9px;"><i class="bi bi-circle-fill" style="font-size: 6px;"></i> NEW</span>' : ''}
                             </div>
                             <p class="mb-2 text-dark small" style="line-height: 1.5;">${n.message}</p>
-                            <div class="d-flex align-items-center gap-3 text-muted" style="font-size: 11px;">
+                            <div class="d-flex align-items-center gap-3 text-muted flex-wrap" style="font-size: 11px;">
                                 <span><i class="bi bi-clock me-1"></i>${dateStr}</span>
                                 ${n.student_id ? `<span><i class="bi bi-person me-1"></i>Student: <strong>${n.student_id}</strong></span>` : ''}
                             </div>
+
+                            ${isEnquiryNotif ? `
+                                <div class="mt-2 pt-2 border-top d-flex align-items-center justify-content-between flex-wrap gap-2" style="border-color: var(--border-soft) !important;">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <button class="primary-btn btn-sm py-1 px-2" style="font-size: 11px;" onclick="navigateTo('enquiries')">
+                                            <i class="bi bi-patch-check me-1"></i> Open Enquiries & Reviews
+                                        </button>
+                                        <button class="secondary-btn btn-sm py-1 px-2" style="font-size: 11px;" onclick="navigateTo('mentor')">
+                                            <i class="bi bi-compass me-1"></i> Mentorship Pipeline
+                                        </button>
+                                    </div>
+                                    <span class="small text-muted" style="font-size: 11px;">
+                                        <i class="bi bi-shield-check text-success me-1"></i> Tracked in persistent Enquiries Center
+                                    </span>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
 
@@ -160,7 +178,7 @@ function renderNotifCards(list) {
                                 <i class="bi bi-check-lg"></i>
                             </button>
                         ` : ''}
-                        <button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="handleDeleteSingleNotif(${n.id})" title="Delete alert">
+                        <button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="handleDeleteSingleNotif(${n.id})" title="Dismiss alert (Enquiry remains preserved in Enquiries Center)">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -249,10 +267,18 @@ async function handleDeleteAllNotifs() {
     const role = (user?.role || "faculty").toLowerCase();
     const studentId = role === 'student' ? (user.linked_student_id || user.id) : null;
 
-    if (!confirm("Permanently delete ALL notifications? This cannot be undone.")) return;
+    const ok = await showConfirmModal({
+        title: "Delete All Notifications",
+        message: "Are you sure you want to permanently clear all notifications from your inbox?",
+        confirmText: "Clear All Notifications",
+        confirmBtnClass: "btn btn-danger",
+        icon: "bi-trash3-fill text-danger"
+    });
+    if (!ok) return;
 
     const res = await API.deleteAllNotifications(studentId);
     if (res && res.success) {
+        showSuccessToast("All notifications deleted.");
         renderNotifications();
     }
 }
@@ -279,3 +305,12 @@ function updateNotifBadges() {
         }
     }
 }
+
+// Window Exports for Notifications Page
+window.renderNotifications = renderNotifications;
+window.applyNotifFilters = applyNotifFilters;
+window.handleMarkSingleRead = handleMarkSingleRead;
+window.handleMarkAllRead = handleMarkAllRead;
+window.handleDeleteSingleNotif = handleDeleteSingleNotif;
+window.handleDeleteAllNotifs = handleDeleteAllNotifs;
+window.updateNotifBadges = updateNotifBadges;

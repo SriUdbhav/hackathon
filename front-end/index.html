@@ -176,7 +176,36 @@
                             <i class="bi bi-shield-shaded"></i>
                             <select id="signupRole" class="form-select border-0 bg-transparent p-0" style="box-shadow:none;">
                                 <option value="faculty">Faculty (Teaching & Assessment)</option>
-                                <option value="mentor">Mentor (Student Counseling & Guidance)</option>
+                                <option value="mentor" selected>Mentor (Student Counseling & Guidance)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-2">
+                    <div class="col-md-6">
+                        <label>Department</label>
+                        <div class="input-box">
+                            <i class="bi bi-diagram-3"></i>
+                            <select id="signupDept" class="form-select border-0 bg-transparent p-0" style="box-shadow:none;">
+                                <option value="CSE" selected>CSE (Computer Science & Eng)</option>
+                                <option value="ECE">ECE (Electronics & Comm)</option>
+                                <option value="AI & DS">AI & DS (Artificial Intelligence)</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="IT">IT (Information Technology)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Assigned Year / Cohort</label>
+                        <div class="input-box">
+                            <i class="bi bi-mortarboard"></i>
+                            <select id="signupYear" class="form-select border-0 bg-transparent p-0" style="box-shadow:none;">
+                                <option value="1st Year">1st Year Cohort</option>
+                                <option value="2nd Year" selected>2nd Year Cohort</option>
+                                <option value="3rd Year">3rd Year Cohort</option>
+                                <option value="4th Year">4th Year Cohort</option>
+                                <option value="All Years">All Years</option>
                             </select>
                         </div>
                     </div>
@@ -294,6 +323,12 @@
             <button class="nav-item" data-page="mentor" id="navMentor">
                 <i class="bi bi-person-check"></i>
                 <span>Mentor Priority</span>
+            </button>
+
+            <button class="nav-item" data-page="enquiries" id="navEnquiries">
+                <i class="bi bi-patch-check"></i>
+                <span>Enquiries & Reviews</span>
+                <b class="nav-badge yellow d-none" id="enquiriesBadge">0</b>
             </button>
 
             <button class="nav-item" data-page="anomalies" id="navAnomalies">
@@ -456,7 +491,7 @@
                 <span>STUDENT MANAGEMENT</span>
                 <h2>Add Student Record</h2>
             </div>
-            <button id="closeModal" class="modal-close"><i class="bi bi-x"></i></button>
+            <button id="closeModal" class="modal-close" onclick="closeAddStudentModal()"><i class="bi bi-x"></i></button>
         </div>
 
         <form id="studentForm">
@@ -560,7 +595,7 @@
             </div>
 
             <div class="modal-actions">
-                <button type="button" id="cancelModal" class="secondary-btn">Cancel</button>
+                <button type="button" id="cancelModal" class="secondary-btn" onclick="closeAddStudentModal()">Cancel</button>
                 <button type="submit" class="primary-btn">Add Student Record</button>
             </div>
         </form>
@@ -710,16 +745,18 @@
 <script src="js/config.js?v=14"></script>
 <script src="js/api.js?v=14"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="js/theme.js?v=14"></script>
-<script src="js/chart-theme.js?v=14"></script>
+<script src="js/theme.js?v=15"></script>
+<script src="js/toast.js?v=15"></script>
+<script src="js/chart-theme.js?v=15"></script>
 <script src="js/auth.js?v=14"></script>
 <script src="js/pages/dashboard.js?v=14"></script>
 <script src="js/pages/students.js?v=14"></script>
 <script src="js/pages/student360.js?v=14"></script>
 <script src="js/pages/analytics.js?v=14"></script>
 <script src="js/pages/engagement.js?v=14"></script>
-<script src="js/pages/mentor.js?v=14"></script>
-<script src="js/pages/anomalies.js?v=14"></script>
+<script src="js/pages/mentor.js?v=15"></script>
+<script src="js/pages/enquiries.js?v=15"></script>
+<script src="js/pages/anomalies.js?v=15"></script>
 <script src="js/pages/aiagent.js?v=14"></script>
 <script src="js/pages/notifications.js?v=14"></script>
 <script src="js/pages/reports.js?v=14"></script>

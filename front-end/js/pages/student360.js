@@ -312,19 +312,23 @@ async function renderStudent360() {
                     ${interventions.length === 0 ? '<p class="text-muted small mb-3">No active interventions logged.</p>' : `
                         <div class="d-flex flex-column gap-2 mb-3">
                             ${interventions.map(i => `
-                                <div class="py-2 border-bottom d-flex justify-content-between align-items-center" style="border-color: var(--border-soft) !important;">
+                                <div class="p-2 rounded border-bottom d-flex justify-content-between align-items-center" style="background: var(--bg-sunken); border-color: var(--border-soft) !important;">
                                     <div>
                                         <strong class="small d-block" style="color: var(--text);">${i.action}</strong>
-                                        <small style="color: var(--text-muted);"><i class="bi bi-calendar3 me-1"></i> ${i.date}</small>
+                                        <small style="color: var(--text-muted); font-size: 11.5px;">
+                                            <i class="bi bi-calendar3 me-1"></i> ${i.date}
+                                            ${i.subject_code ? `• ${i.subject_code}` : ''}
+                                            ${i.mentor_name ? `• By: <strong>${i.mentor_name}</strong>` : ''}
+                                        </small>
                                     </div>
-                                    <span class="badge ${i.status === 'Completed' ? 'bg-success' : 'bg-warning text-dark'}">${i.status}</span>
+                                    <span class="badge ${i.status === 'Completed' ? 'bg-success text-white' : 'bg-primary text-white'}" style="font-size: 10.5px;">${i.status}</span>
                                 </div>
                             `).join("")}
                         </div>
                     `}
                     ${role !== 'student' ? `
-                        <button class="primary-btn w-100 btn-sm d-flex align-items-center justify-content-center gap-2" onclick="quickCreateIntervention('${s.id}', '1-on-1 Academic Counseling', 'CS201', 'Moderate')">
-                            <i class="bi bi-plus-circle"></i> Launch New Mentoring Action
+                        <button class="primary-btn w-100 btn-sm d-flex align-items-center justify-content-center gap-2" onclick="navigateTo('mentor'); setTimeout(() => typeof openCustomInterventionModal === 'function' && openCustomInterventionModal('${s.id}'), 250);">
+                            <i class="bi bi-calendar-plus"></i> Book 1-on-1 Mentoring Session
                         </button>
                     ` : ''}
                 </div>
@@ -362,7 +366,7 @@ async function renderStudent360() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { r: { min: 0, max: 100 } },
+                    scales: { r: { min: 0, max: 100, ticks: { display: false, stepSize: 20 } } },
                     plugins: { legend: { position: "bottom", labels: { boxWidth: 10 } } }
                 }
             });
@@ -553,3 +557,13 @@ function highlightMatch(text, query) {
         return text;
     }
 }
+
+// Window Exports for Student 360 Page
+window.viewStudent360 = viewStudent360;
+window.renderStudent360 = renderStudent360;
+window.toggleStudent360Regex = toggleStudent360Regex;
+window.filterStudent360ByRisk = filterStudent360ByRisk;
+window.filterStudent360ByYear = filterStudent360ByYear;
+window.showStudent360Dropdown = showStudent360Dropdown;
+window.filterStudent360Switcher = filterStudent360Switcher;
+window.selectStudent360 = selectStudent360;

@@ -100,12 +100,12 @@
         // Apply full theme (updates buttons)
         applyTheme(savedTheme);
 
-        // Bind click handlers on all theme buttons
-        document.querySelectorAll('.theme-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const theme = this.dataset.themeValue;
-                if (theme) applyTheme(theme);
-            });
+        // Event delegation: handle clicks on any .theme-btn anywhere in DOM
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.theme-btn');
+            if (btn && btn.dataset.themeValue) {
+                applyTheme(btn.dataset.themeValue);
+            }
         });
 
         // Listen for system preference changes

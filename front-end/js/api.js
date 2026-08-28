@@ -6,7 +6,9 @@
    Signup Requests & Email Audit Logs
 ===================================================== */
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL 
+    ? CONFIG.API_BASE_URL.replace(/\/+$/, "") + "/api" 
+    : "http://localhost:5000/api");
 
 const API = {
 
@@ -253,8 +255,22 @@ const API = {
     },
 
     // ===================== INTERVENTIONS =====================
-    getInterventions() {
-        return this._fetch("/interventions");
+    getInterventions(mentorId = null, studentId = null, role = null, userId = null) {
+        const params = [];
+        if (mentorId && mentorId !== "ALL") params.push(`mentor_id=${encodeURIComponent(mentorId)}`);
+        if (studentId) params.push(`student_id=${encodeURIComponent(studentId)}`);
+        if (role) params.push(`role=${encodeURIComponent(role)}`);
+        if (userId) params.push(`user_id=${encodeURIComponent(userId)}`);
+        const query = params.length ? `?${params.join('&')}` : '';
+        return this._fetch(`/interventions${query}`);
+    },
+
+    getMentors(dept = null, year = null) {
+        const params = [];
+        if (dept) params.push(`department=${encodeURIComponent(dept)}`);
+        if (year) params.push(`year=${encodeURIComponent(year)}`);
+        const query = params.length ? `?${params.join('&')}` : '';
+        return this._fetch(`/mentors${query}`);
     },
 
     getStudentInterventions(studentId) {
@@ -273,6 +289,36 @@ const API = {
             method: "PUT",
             body: JSON.stringify(data)
         });
+    },
+
+    requestInterventionCompletion(interventionId, data) {
+        return this._fetch(`/interventions/${interventionId}/request-completion`, {
+            method: "POST",
+            body: JSON.stringify(data)
+        });
+    },
+
+    approveInterventionCompletion(interventionId, data) {
+        return this._fetch(`/interventions/${interventionId}/approve-completion`, {
+            method: "POST",
+            body: JSON.stringify(data)
+        });
+    },
+
+    rejectInterventionCompletion(interventionId, data) {
+        return this._fetch(`/interventions/${interventionId}/reject-completion`, {
+            method: "POST",
+            body: JSON.stringify(data)
+        });
+    },
+
+    getInterventionEnquiries(role = null, userId = null, status = null) {
+        const params = [];
+        if (role) params.push(`role=${encodeURIComponent(role)}`);
+        if (userId) params.push(`user_id=${encodeURIComponent(userId)}`);
+        if (status) params.push(`status=${encodeURIComponent(status)}`);
+        const query = params.length ? `?${params.join('&')}` : '';
+        return this._fetch(`/interventions/enquiries${query}`);
     },
 
     // ===================== AI AGENT =====================
@@ -309,6 +355,10 @@ const API = {
             method: "POST",
             body: JSON.stringify(data)
         });
+    },
+
+    updateSettings(data) {
+        return this.saveSettings(data);
     },
 
     // ===================== MOCK STORE FALLBACK =====================
