@@ -1,0 +1,11 @@
+id,display_name,role,department,specialization,extra_roles,email,phone
+admin,System Administrator,admin,IT Infrastructure & Administration,Full Platform Control & Institutional AI Operations,Chief System Administrator,admin@vignan.ac.in,+91 90000 00001
+ADM001,Dr. P. Venkateswarlu,admin,Academic Affairs,Institutional Academic Policy & Curriculum Standards,Dean of Academic Affairs,dean.academics@vignan.ac.in,+91 90000 00002
+ADM002,Dr. K. Radhika,admin,CSE,Departmental Governance & Faculty Allocations,Head of Department (CSE),hod.cse@vignan.ac.in,+91 90000 00003
+ADM003,Dr. M. Sridhar,admin,Examination Cell,"Grading Audits, External Exams & Moderation",Controller of Examinations,controller.exams@vignan.ac.in,+91 90000 00004
+ADM004,Prof. S. Nageswara Rao,admin,Student Welfare,"Campus Discipline, Student Wellness & Scholarships",Director of Student Welfare,director.welfare@vignan.ac.in,+91 90000 00005
+ADM005,Dr. B. Chandrasekhar,admin,Internal Quality Assurance Cell (IQAC),Institutional Quality Metrics & NAAC/NBA Compliance,Chief IQAC Coordinator,iqac.lead@vignan.ac.in,+91 90000 00006
+ADM006,Prof. V. Padmavathi,admin,Counseling & Mentorship Directorate,Multi-Tier Academic Counseling Supervision,Chief Mentorship Director,head.mentoring@vignan.ac.in,+91 90000 00007
+ADM007,Dr. T. Sudhir,admin,Admissions & Records,Enrollment Analytics & Student Record Lifecycle,Dean of Admissions,dean.admissions@vignan.ac.in,+91 90000 00008
+ADM008,Prof. G. Ravi Kiran,admin,Academic Audit Cell,Continuous Internal Evaluation (CIE) Verification,Academic Audit Superintendent,audit.superintendent@vignan.ac.in,+91 90000 00009
+ADM009,Dr. L. Himabindu,admin,Accreditation & Compliance,Outcome-Based Education (OBE) Attainment Mapping,OBE & Compliance Lead,accreditation.lead@vignan.ac.in,+91 90000 00010

@@ -1,0 +1,101 @@
+id,name,gender,course,year,cgpa,credits,attendance,lms_score,risk,father,mother,mother_tongue,place,region,country,email,phone
+25CS001,V. Sri Udbhav,Male,CSE,2nd Year,8.4,24,84,88,15,Ramesh Kumar V,Lakshmi V,Telugu,Hyderabad,South India,India,sriudbhav.25cs@vignan.ac.in,+91 98480 12345
+25CS002,Y. Hemanth Reddy,Male,CSE,2nd Year,7.4,23,68,60,32,Reddy Kumar Y,Padma Y,Telugu,Vijayawada,South India,India,hemanth.25cs@vignan.ac.in,+91 98480 23456
+25CS003,T. Gopi,Male,CSE,2nd Year,7.8,22,74,70,26,Srinivas Rao T,Anitha T,Telugu,Guntur,South India,India,gopi.25cs@vignan.ac.in,+91 98480 34567
+25CS004,Sneha Rao,Female,CSE,2nd Year,8.9,25,92,95,8,Rao Kumar,Sunitha Rao,Telugu,Hyderabad,South India,India,sneha.25cs@vignan.ac.in,+91 98480 45678
+25CS005,Arjun Patel,Male,CSE,2nd Year,6.8,20,61,50,39,Mahesh Patel,Kavitha Patel,Hindi,Mumbai,West India,India,arjun.25cs@vignan.ac.in,+91 98480 56789
+25CS006,Mahesh Mikkilineni,Male,CSE (Cyber Security),4th Year,6.69,21,72,59,33,Suhas Mikkilineni,Gayathri Mikkilineni,Tamil,Chennai,South India,India,mahesh.25cs006@vignan.ac.in,+91 98480 83579
+25CS007,Supriya Gottipati,Female,CSE (AI & ML),4th Year,6.62,20,72,56,34,Vamsi Gottipati,Shreya Gottipati,Hindi,Jaipur,North India,India,supriya.25cs007@vignan.ac.in,+91 98480 30033
+25CS008,Archana Gottipati,Female,IT,3rd Year,6.83,20,73,72,29,Ravi Gottipati,Sahithi Gottipati,Telugu,Guntur,South India,India,archana.25cs008@vignan.ac.in,+91 98480 99166
+25CS009,Archana Uppalapati,Female,CSE (Data Science),2nd Year,7.07,20,69,69,30,Ashwin Uppalapati,Harika Uppalapati,Marathi,Mumbai,West India,India,archana.25cs009@vignan.ac.in,+91 98480 44522
+25CS010,Vyshnavi Choudhury,Female,CSE (Data Science),4th Year,9.04,25,96,79,10,Vikram Choudhury,Sindhu Choudhury,Hindi,Patna,East India,India,vyshnavi.25cs010@vignan.ac.in,+91 98480 31174
+25CS011,Pranathi Nalluri,Female,CSE (Cyber Security),2nd Year,9.58,24,83,84,12,Kalyan Nalluri,Preethi Nalluri,Telugu,Hyderabad,South India,India,pranathi.25cs011@vignan.ac.in,+91 98480 17592
+25CS012,Mahesh Reddy,Male,CSE,4th Year,8.22,27,84,90,15,Gautam Reddy,Gayathri Reddy,Telugu,Guntur,South India,India,mahesh.25cs012@vignan.ac.in,+91 98480 31643
+25CS013,Kalyan Gottipati,Male,ECE,4th Year,7.43,22,68,67,30,Rajesh Gottipati,Vyshnavi Gottipati,Tamil,Chennai,South India,India,kalyan.25cs013@vignan.ac.in,+91 98480 67422
+25CS014,Geetha Verma,Female,CSE (Data Science),2nd Year,8.94,24,98,93,6,Tanmay Verma,Swathi Verma,Malayalam,Kochi,South India,India,geetha.25cs014@vignan.ac.in,+91 98480 10942
+25CS015,Vinay Patel,Male,CSE (Data Science),2nd Year,6.81,21,73,70,29,Aditya Patel,Pooja Patel,Malayalam,Kochi,South India,India,vinay.25cs015@vignan.ac.in,+91 98480 80678
+25CS016,Mahesh Vemuri,Male,CSE (Cyber Security),2nd Year,8.16,25,83,88,16,Abhishek Vemuri,Varsha Vemuri,Odia,Bhubaneswar,East India,India,mahesh.25cs016@vignan.ac.in,+91 98480 65519
+25CS017,Gautam Patel,Male,ECE,3rd Year,8.42,27,83,81,17,Arjun Patel,Pavani Patel,Telugu,Visakhapatnam,South India,India,gautam.25cs017@vignan.ac.in,+91 98480 68800
+25CS018,Varun Chowdary,Male,CSE (Cyber Security),4th Year,6.57,20,66,72,33,Abhishek Chowdary,Swathi Chowdary,Bengali,Kolkata,East India,India,varun.25cs018@vignan.ac.in,+91 98480 22224
+25CS019,Nandini Iyer,Female,CSE (AI & ML),3rd Year,6.58,20,79,67,29,Charan Iyer,Varsha Iyer,Hindi,Lucknow,North India,India,nandini.25cs019@vignan.ac.in,+91 98480 61173
+25CS020,Dev Rayapati,Male,ECE,4th Year,7.43,21,75,59,29,Kiran Rayapati,Manasa Rayapati,Marathi,Pune,West India,India,dev.25cs020@vignan.ac.in,+91 98480 48890
+25CS021,Arjun Uppalapati,Male,CSE,2nd Year,4.5,18,46,45,55,Avinash Uppalapati,Preethi Uppalapati,Telugu,Vijayawada,South India,India,arjun.25cs021@vignan.ac.in,+91 98480 30635
+25CS022,Lokesh Reddy,Male,CSE,4th Year,8.69,24,87,93,12,Aditya Reddy,Rupa Reddy,Kannada,Bengaluru,South India,India,lokesh.25cs022@vignan.ac.in,+91 98480 85880
+25CS023,Alekhya Reddy,Female,IT,4th Year,9.59,25,90,81,10,Anil Reddy,Madhuri Reddy,Hindi,Lucknow,North India,India,alekhya.25cs023@vignan.ac.in,+91 98480 41285
+25CS024,Sai Krishna Guduru,Male,CSE,2nd Year,4.8,14,42,36,57,Pranav Guduru,Vyshnavi Guduru,Bengali,Kolkata,East India,India,saikrishna.25cs024@vignan.ac.in,+91 98480 19602
+25CS025,Pallavi Deshmukh,Female,CSE (AI & ML),3rd Year,8.27,25,89,92,12,Chaitanya Deshmukh,Swathi Deshmukh,Telugu,Tirupati,South India,India,pallavi.25cs025@vignan.ac.in,+91 98480 90173
+25CS026,Harika Nalluri,Female,CSE (Data Science),4th Year,7.72,22,66,59,32,Anil Nalluri,Sandhya Nalluri,Telugu,Hyderabad,South India,India,harika.25cs026@vignan.ac.in,+91 98480 25129
+25CS027,Supriya Kandula,Female,IT,2nd Year,6.95,24,76,63,30,Manish Kandula,Mounika Kandula,Telugu,Tirupati,South India,India,supriya.25cs027@vignan.ac.in,+91 98480 74032
+25CS028,Arjun Reddy,Male,CSE,3rd Year,9.08,24,84,83,14,Manish Reddy,Pooja Reddy,Hindi,Lucknow,North India,India,arjun.25cs028@vignan.ac.in,+91 98480 67912
+25CS029,Sushma Kandula,Female,ECE,2nd Year,8.06,27,97,86,11,Siddharth Kandula,Swathi Kandula,Telugu,Hyderabad,South India,India,sushma.25cs029@vignan.ac.in,+91 98480 82420
+25CS030,Sai Krishna Tadepalli,Male,CSE (Data Science),2nd Year,4.02,16,49,21,61,Vamsi Tadepalli,Pooja Tadepalli,Marathi,Pune,West India,India,saikrishna.25cs030@vignan.ac.in,+91 98480 83385
+25CS031,Gowri Nair,Female,CSE (Cyber Security),2nd Year,7.46,23,67,65,31,Karthik Nair,Isha Nair,Malayalam,Kochi,South India,India,gowri.25cs031@vignan.ac.in,+91 98480 97806
+25CS032,Nandini Chowdary,Female,CSE,3rd Year,3.58,15,55,33,57,Dev Chowdary,Manasa Chowdary,Kannada,Bengaluru,South India,India,nandini.25cs032@vignan.ac.in,+91 98480 36158
+25CS033,Rashmi Atluri,Female,CSE (AI & ML),2nd Year,8.68,23,86,83,14,Dev Atluri,Shreya Atluri,Marathi,Pune,West India,India,rashmi.25cs033@vignan.ac.in,+91 98480 46585
+25CS034,Lokesh Penumaka,Male,CSE (Data Science),2nd Year,9.64,23,98,83,6,Hemanth Penumaka,Harini Penumaka,Gujarati,Ahmedabad,West India,India,lokesh.25cs034@vignan.ac.in,+91 98480 24208
+25CS035,Lahari Mikkilineni,Female,CSE,3rd Year,4.71,14,56,26,55,Kalyan Mikkilineni,Pallavi Mikkilineni,Hindi,Lucknow,North India,India,lahari.25cs035@vignan.ac.in,+91 98480 67154
+25CS036,Yash Uppalapati,Male,CSE,4th Year,4.81,14,38,39,58,Vamsi Uppalapati,Sushma Uppalapati,Tamil,Chennai,South India,India,yash.25cs036@vignan.ac.in,+91 98480 49363
+25CS037,Anil Mullapudi,Male,CSE (Data Science),4th Year,8.33,26,84,96,13,Surya Mullapudi,Manasa Mullapudi,Gujarati,Ahmedabad,West India,India,anil.25cs037@vignan.ac.in,+91 98480 98777
+25CS038,Isha Vemuri,Female,CSE,3rd Year,8.36,27,89,93,12,Surya Vemuri,Sandhya Vemuri,Marathi,Pune,West India,India,isha.25cs038@vignan.ac.in,+91 98480 95813
+25CS039,Naveen Daggubati,Male,ECE,2nd Year,8.48,27,82,96,14,Lokesh Daggubati,Varsha Daggubati,Tamil,Chennai,South India,India,naveen.25cs039@vignan.ac.in,+91 98480 53933
+25CS040,Rohit Kulkarni,Male,CSE (AI & ML),2nd Year,4.01,18,29,33,66,Tanmay Kulkarni,Meera Kulkarni,Marathi,Pune,West India,India,rohit.25cs040@vignan.ac.in,+91 98480 19545
+25CS041,Vinay Vemuri,Male,CSE (Cyber Security),3rd Year,6.82,20,71,55,34,Vikas Vemuri,Manasa Vemuri,Tamil,Chennai,South India,India,vinay.25cs041@vignan.ac.in,+91 98480 65724
+25CS042,Yash Nalluri,Male,CSE (AI & ML),2nd Year,3.78,19,42,32,62,Arjun Nalluri,Sandhya Nalluri,Bengali,Kolkata,East India,India,yash.25cs042@vignan.ac.in,+91 98480 79616
+25CS043,Rupa Mikkilineni,Female,IT,3rd Year,8.76,26,97,80,11,Shravan Mikkilineni,Ramya Mikkilineni,Bengali,Kolkata,East India,India,rupa.25cs043@vignan.ac.in,+91 98480 68991
+25CS044,Abhishek Chowdary,Male,CSE (AI & ML),3rd Year,8.13,24,94,84,13,Charan Chowdary,Sindhu Chowdary,Hindi,Patna,East India,India,abhishek.25cs044@vignan.ac.in,+91 98480 45614
+25CS045,Rajesh Reddy,Male,CSE (Cyber Security),4th Year,9.2,26,84,77,15,Praveen Reddy,Shreya Reddy,Telugu,Tirupati,South India,India,rajesh.25cs045@vignan.ac.in,+91 98480 63424
+25CS046,Bhargav Mullapudi,Male,CSE (Cyber Security),4th Year,9.46,26,80,93,12,Rahul Mullapudi,Gowri Mullapudi,Telugu,Vijayawada,South India,India,bhargav.25cs046@vignan.ac.in,+91 98480 72518
+25CS047,Chaitanya Guduru,Male,ECE,4th Year,9.36,26,97,82,8,Teja Guduru,Sirisha Guduru,Hindi,Jaipur,North India,India,chaitanya.25cs047@vignan.ac.in,+91 98480 38760
+25CS048,Charan Yalamanchili,Male,ECE,3rd Year,9.43,27,85,79,13,Deepak Yalamanchili,Aparna Yalamanchili,Hindi,Jaipur,North India,India,charan.25cs048@vignan.ac.in,+91 98480 80008
+25CS049,Surya Vemuri,Male,CSE (Cyber Security),2nd Year,7.1,22,78,56,30,Rohan Vemuri,Harika Vemuri,Telugu,Hyderabad,South India,India,surya.25cs049@vignan.ac.in,+91 98480 59689
+25CS050,Bhargav Mikkilineni,Male,CSE (Data Science),3rd Year,7.59,20,69,70,28,Rohit Mikkilineni,Sahithi Mikkilineni,Gujarati,Ahmedabad,West India,India,bhargav.25cs050@vignan.ac.in,+91 98480 80702
+25CS051,Chaitanya Bhat,Male,CSE,2nd Year,6.76,24,68,55,35,Ashwin Bhat,Harika Bhat,Telugu,Guntur,South India,India,chaitanya.25cs051@vignan.ac.in,+91 98480 29973
+25CS052,Akhil Verma,Male,CSE (Data Science),3rd Year,9.03,24,85,78,15,Bhargav Verma,Manasa Verma,Tamil,Chennai,South India,India,akhil.25cs052@vignan.ac.in,+91 98480 50768
+25CS053,Hemanth Guduru,Male,CSE (AI & ML),2nd Year,9.17,24,98,95,5,Surya Guduru,Jyothi Guduru,Hindi,Jaipur,North India,India,hemanth.25cs053@vignan.ac.in,+91 98480 23356
+25CS054,Tejaswi Verma,Female,CSE (Cyber Security),4th Year,3.64,16,39,38,62,Chaitanya Verma,Sirisha Verma,Telugu,Vijayawada,South India,India,tejaswi.25cs054@vignan.ac.in,+91 98480 11658
+25CS055,Gayathri Rao,Female,CSE (Cyber Security),4th Year,8.74,25,84,91,13,Vamsi Rao,Sindhu Rao,Hindi,Lucknow,North India,India,gayathri.25cs055@vignan.ac.in,+91 98480 90728
+25CS056,Sirisha Chalasani,Female,IT,3rd Year,9.45,25,90,77,12,Kiran Chalasani,Ramya Chalasani,Bengali,Kolkata,East India,India,sirisha.25cs056@vignan.ac.in,+91 98480 69087
+25CS057,Bhargav Vemuri,Male,CSE (Cyber Security),3rd Year,8.83,25,85,86,14,Deepak Vemuri,Ananya Vemuri,Hindi,Jaipur,North India,India,bhargav.25cs057@vignan.ac.in,+91 98480 54608
+25CS058,Kalyan Chowdary,Male,CSE,2nd Year,8.83,26,93,82,11,Suresh Chowdary,Meera Chowdary,Telugu,Hyderabad,South India,India,kalyan.25cs058@vignan.ac.in,+91 98480 94659
+25CS059,Geetha Yalamanchili,Female,CSE (Cyber Security),4th Year,6.9,23,68,66,32,Tarun Yalamanchili,Shreya Yalamanchili,Telugu,Guntur,South India,India,geetha.25cs059@vignan.ac.in,+91 98480 82544
+25CS060,Sushma Kandula,Female,CSE (Cyber Security),3rd Year,8.43,24,89,78,15,Chaitanya Kandula,Manasa Kandula,Gujarati,Ahmedabad,West India,India,sushma.25cs060@vignan.ac.in,+91 98480 51359
+25CS061,Rajesh Choudhury,Male,CSE (Cyber Security),3rd Year,7.27,24,76,71,26,Rahul Choudhury,Supriya Choudhury,Tamil,Chennai,South India,India,rajesh.25cs061@vignan.ac.in,+91 98480 47093
+25CS062,Meera Kolisetty,Female,CSE (Data Science),2nd Year,8.22,23,97,76,13,Vamsi Kolisetty,Isha Kolisetty,Malayalam,Kochi,South India,India,meera.25cs062@vignan.ac.in,+91 98480 82529
+25CS063,Sai Krishna Garikapati,Male,CSE (Data Science),3rd Year,8.75,23,95,80,11,Sri Udbhav Garikapati,Radhika Garikapati,Telugu,Visakhapatnam,South India,India,saikrishna.25cs063@vignan.ac.in,+91 98480 43092
+25CS064,Varsha Verma,Female,CSE,4th Year,8.26,25,81,93,15,Surya Verma,Gayathri Verma,Telugu,Guntur,South India,India,varsha.25cs064@vignan.ac.in,+91 98480 21164
+25CS065,Harini Kandula,Female,IT,2nd Year,8.65,25,96,89,9,Kalyan Kandula,Rupa Kandula,Hindi,Lucknow,North India,India,harini.25cs065@vignan.ac.in,+91 98480 87139
+25CS066,Tejaswi Vemuri,Female,CSE,2nd Year,8.45,24,86,77,17,Shravan Vemuri,Supriya Vemuri,Telugu,Vijayawada,South India,India,tejaswi.25cs066@vignan.ac.in,+91 98480 41439
+25CS067,Aditya Iyer,Male,ECE,4th Year,4.11,16,43,25,62,Teja Iyer,Geetha Iyer,Telugu,Hyderabad,South India,India,aditya.25cs067@vignan.ac.in,+91 98480 47056
+25CS068,Rashmi Sharma,Female,IT,4th Year,8.72,24,86,92,12,Anish Sharma,Sindhu Sharma,Malayalam,Kochi,South India,India,rashmi.25cs068@vignan.ac.in,+91 98480 94886
+25CS069,Manish Nair,Male,CSE (Data Science),4th Year,7.57,23,76,64,27,Arjun Nair,Rhea Nair,Telugu,Guntur,South India,India,manish.25cs069@vignan.ac.in,+91 98480 26299
+25CS070,Harsh Penumaka,Male,CSE (Cyber Security),3rd Year,9.02,25,82,88,14,Lokesh Penumaka,Sirisha Penumaka,Marathi,Mumbai,West India,India,harsh.25cs070@vignan.ac.in,+91 98480 89129
+25CS071,Rohan Bhat,Male,CSE (Data Science),4th Year,5.1,17,29,23,65,Rohit Bhat,Archana Bhat,Telugu,Hyderabad,South India,India,rohan.25cs071@vignan.ac.in,+91 98480 78021
+25CS072,Sanjana Choudhury,Female,CSE,3rd Year,8.69,23,91,85,12,Vinay Choudhury,Gayathri Choudhury,Hindi,Lucknow,North India,India,sanjana.25cs072@vignan.ac.in,+91 98480 31079
+25CS073,Pavan Garikapati,Male,IT,2nd Year,8.15,25,94,83,13,Anil Garikapati,Pavani Garikapati,Marathi,Pune,West India,India,pavan.25cs073@vignan.ac.in,+91 98480 25194
+25CS074,Pavani Bandaru,Female,CSE (Cyber Security),3rd Year,3.89,18,29,29,68,Anil Bandaru,Sirisha Bandaru,Telugu,Hyderabad,South India,India,pavani.25cs074@vignan.ac.in,+91 98480 75338
+25CS075,Vyshnavi Patel,Female,CSE (AI & ML),3rd Year,7.65,20,72,70,27,Manish Patel,Sandhya Patel,Tamil,Chennai,South India,India,vyshnavi.25cs075@vignan.ac.in,+91 98480 13783
+25CS076,Rupa Kulkarni,Female,CSE,4th Year,3.7,14,41,44,60,Harsh Kulkarni,Sandhya Kulkarni,Kannada,Bengaluru,South India,India,rupa.25cs076@vignan.ac.in,+91 98480 70482
+25CS077,Harika Nair,Female,IT,4th Year,7.04,23,69,70,30,Vikas Nair,Mounika Nair,Odia,Bhubaneswar,East India,India,harika.25cs077@vignan.ac.in,+91 98480 41946
+25CS078,Praveen Yarram,Male,ECE,2nd Year,3.65,17,55,42,55,Kalyan Yarram,Pallavi Yarram,Tamil,Chennai,South India,India,praveen.25cs078@vignan.ac.in,+91 98480 54548
+25CS079,Pallavi Chowdary,Female,CSE (Data Science),4th Year,9.7,24,98,90,4,Tarun Chowdary,Ramya Chowdary,Telugu,Hyderabad,South India,India,pallavi.25cs079@vignan.ac.in,+91 98480 68529
+25CS080,Lahari Kondapalli,Female,CSE (AI & ML),4th Year,7.24,23,68,62,32,Bhargav Kondapalli,Preethi Kondapalli,Hindi,Jaipur,North India,India,lahari.25cs080@vignan.ac.in,+91 98480 15720
+25CS081,Akhil Yarram,Male,CSE (AI & ML),3rd Year,3.77,16,29,36,66,Anil Yarram,Harika Yarram,Hindi,Jaipur,North India,India,akhil.25cs081@vignan.ac.in,+91 98480 23154
+25CS082,Geetha Rao,Female,ECE,2nd Year,7.63,20,71,59,30,Bhargav Rao,Sneha Rao,Hindi,Patna,East India,India,geetha.25cs082@vignan.ac.in,+91 98480 71537
+25CS083,Tanvi Kondapalli,Female,CSE (Data Science),4th Year,8.65,26,97,85,10,Suhas Kondapalli,Kavya Kondapalli,Hindi,Jaipur,North India,India,tanvi.25cs083@vignan.ac.in,+91 98480 80912
+25CS084,Aditya Kulkarni,Male,CSE,3rd Year,9.29,26,83,78,15,Tanmay Kulkarni,Supriya Kulkarni,Marathi,Pune,West India,India,aditya.25cs084@vignan.ac.in,+91 98480 31805
+25CS085,Ananya Tadepalli,Female,CSE (Data Science),3rd Year,4.4,18,39,25,63,Dev Tadepalli,Divya Tadepalli,Gujarati,Ahmedabad,West India,India,ananya.25cs085@vignan.ac.in,+91 98480 64008
+25CS086,Isha Iyer,Female,CSE (Cyber Security),4th Year,4.01,15,49,36,57,Rohan Iyer,Alekhya Iyer,Kannada,Bengaluru,South India,India,isha.25cs086@vignan.ac.in,+91 98480 40433
+25CS087,Anish Rayapati,Male,CSE (Cyber Security),3rd Year,8.27,25,97,89,10,Anil Rayapati,Sneha Rayapati,Marathi,Mumbai,West India,India,anish.25cs087@vignan.ac.in,+91 98480 87014
+25CS088,Kiran Deshmukh,Male,CSE (Cyber Security),3rd Year,6.81,24,66,66,33,Harsh Deshmukh,Meera Deshmukh,Bengali,Kolkata,East India,India,kiran.25cs088@vignan.ac.in,+91 98480 48780
+25CS089,Mounika Yalamanchili,Female,IT,4th Year,5.06,18,52,19,57,Manish Yalamanchili,Sneha Yalamanchili,Hindi,Jaipur,North India,India,mounika.25cs089@vignan.ac.in,+91 98480 75107
+25CS090,Mounika Bhat,Female,CSE (AI & ML),4th Year,9.15,24,88,96,9,Tanmay Bhat,Sindhu Bhat,Hindi,New Delhi,North India,India,mounika.25cs090@vignan.ac.in,+91 98480 92345
+25CS091,Vinay Tadepalli,Male,CSE,4th Year,7.45,22,70,57,32,Dev Tadepalli,Geetha Tadepalli,Marathi,Pune,West India,India,vinay.25cs091@vignan.ac.in,+91 98480 52823
+25CS092,Isha Menon,Female,CSE (Data Science),4th Year,5.42,15,44,44,52,Dev Menon,Sirisha Menon,Telugu,Tirupati,South India,India,isha.25cs092@vignan.ac.in,+91 98480 43681
+25CS093,Varsha Kolisetty,Female,CSE (Cyber Security),2nd Year,9.28,26,84,82,13,Yash Kolisetty,Harini Kolisetty,Gujarati,Ahmedabad,West India,India,varsha.25cs093@vignan.ac.in,+91 98480 83048
+25CS094,Dev Penumaka,Male,CSE,3rd Year,9.14,25,91,96,8,Anish Penumaka,Sirisha Penumaka,Telugu,Hyderabad,South India,India,dev.25cs094@vignan.ac.in,+91 98480 86619
+25CS095,Vinay Garlapati,Male,CSE (Cyber Security),2nd Year,8.56,24,97,94,8,Sunil Garlapati,Shreya Garlapati,Telugu,Visakhapatnam,South India,India,vinay.25cs095@vignan.ac.in,+91 98480 94889
+25CS096,Bhargav Guduru,Male,CSE,2nd Year,9.69,23,89,78,11,Siddharth Guduru,Sravani Guduru,Hindi,Lucknow,North India,India,bhargav.25cs096@vignan.ac.in,+91 98480 40775
+25CS097,Sravani Yarram,Female,ECE,4th Year,8.71,26,97,79,11,Vamsi Yarram,Aparna Yarram,Bengali,Kolkata,East India,India,sravani.25cs097@vignan.ac.in,+91 98480 95841
+25CS098,Charan Mullapudi,Male,CSE (Data Science),2nd Year,8.76,25,94,82,11,Gopi Mullapudi,Manasa Mullapudi,Marathi,Mumbai,West India,India,charan.25cs098@vignan.ac.in,+91 98480 23022
+25CS099,Navya Uppalapati,Female,CSE (Data Science),2nd Year,9.61,23,83,89,11,Arjun Uppalapati,Pavani Uppalapati,Hindi,New Delhi,North India,India,navya.25cs099@vignan.ac.in,+91 98480 96870
+25CS100,Vinay Yalamanchili,Male,CSE (AI & ML),2nd Year,4.69,18,53,20,57,Dev Yalamanchili,Aishwarya Yalamanchili,Telugu,Vijayawada,South India,India,vinay.25cs100@vignan.ac.in,+91 98480 37152

@@ -1,0 +1,51 @@
+id,display_name,role,department,assigned_year,subjects,specialization,extra_roles,email,phone
+FAC001,Dr. Ramesh Kumar,faculty,CSE,2nd Year,"CS201,CS202",Database Systems & Mentorship,"Class Teacher, 2nd Year Coordinator",dr.ramesh@vignan.ac.in,+91 90000 11111
+FAC002,Dr. Priya Sharma,faculty,CSE,3rd Year,"CS203,CS204",Software Engineering & Agile Methodologies,Exam Cell Incharge,dr.priya@vignan.ac.in,+91 90000 22222
+FAC003,Prof. Venkat Rao,faculty,Mathematics,1st Year,MA201,Discrete Math & Probability Models,HOD Mathematics,prof.venkat@vignan.ac.in,+91 90000 33333
+FAC004,Prof. Shreya Kondapalli,faculty,CSE (AI & ML),2nd Year,MA201,Full-Stack Web Development & Microservices,NBA / NAAC Criteria Lead,shreya.kond.fac@vignan.ac.in,+91 90000 00004
+FAC005,Dr. Hemanth Gupta,faculty,CSE,2nd Year,CS301,Discrete Mathematics & Quantum Algorithms,Lab Incharge (Data Systems),hemanth.gupt.fac@vignan.ac.in,+91 90000 00005
+FAC006,Dr. Avinash Sharma,faculty,IT,2nd Year,"CS202,CS204",Data Warehousing & Business Intelligence,Curriculum Revision Incharge,avinash.shar.fac@vignan.ac.in,+91 90000 00006
+FAC007,Dr. Suhas Yalamanchili,faculty,CSE,4th Year,"CS302,CS204",Compiler Design & Code Optimization,Exam Cell Incharge,suhas.yala.fac@vignan.ac.in,+91 90000 00007
+FAC008,Dr. Praveen Sharma,faculty,IT,3rd Year,"CS302,MA201",Compiler Design & Code Optimization,Lab Incharge (Data Systems),praveen.shar.fac@vignan.ac.in,+91 90000 00008
+FAC009,Prof. Pavan Verma,faculty,Mathematics,2nd Year,CS302,Cloud Architecture & High-Performance Computing,Student Grievance Redressal Lead,pavan.verm.fac@vignan.ac.in,+91 90000 00009
+FAC010,Dr. Gautam Rao,faculty,CSE (AI & ML),4th Year,"MA201,CS203",Operating Systems & Distributed Computing,Exam Cell Incharge,gautam.rao.fac@vignan.ac.in,+91 90000 00010
+FAC011,Prof. Vikram Garlapati,faculty,CSE,4th Year,CS301,Deep Learning & Natural Language Processing,,vikram.garl.fac@vignan.ac.in,+91 90000 00011
+FAC012,Prof. Sushma Patel,faculty,IT,2nd Year,"CS301,CS201",Computer Networks & Cyber Infrastructure,Department Placement Coordinator,sushma.pate.fac@vignan.ac.in,+91 90000 00012
+FAC013,Dr. Lahari Kandula,faculty,Mathematics,1st Year,"CS204,CS302",Data Warehousing & Business Intelligence,,lahari.kand.fac@vignan.ac.in,+91 90000 00013
+FAC014,Dr. Sanjana Yalamanchili,faculty,CSE,2nd Year,"CS301,CS203",Computer Networks & Cyber Infrastructure,Lab Incharge (Data Systems),sanjana.yala.fac@vignan.ac.in,+91 90000 00014
+FAC015,Dr. Avinash Yalamanchili,faculty,Mathematics,4th Year,CS302,Deep Learning & Natural Language Processing,Academic Audit Committee Member,avinash.yala.fac@vignan.ac.in,+91 90000 00015
+FAC016,Dr. Pranathi Vemuri,faculty,CSE (AI & ML),1st Year,CS203,Operating Systems & Distributed Computing,Lab Incharge (Data Systems),pranathi.vemu.fac@vignan.ac.in,+91 90000 00016
+FAC017,Dr. Naveen Mullapudi,faculty,Mathematics,1st Year,CS301,Discrete Mathematics & Quantum Algorithms,Student Grievance Redressal Lead,naveen.mull.fac@vignan.ac.in,+91 90000 00017
+FAC018,Dr. Harsh Tadepalli,faculty,CSE (AI & ML),3rd Year,CS201,Agile Software Architecture & DevOps,,harsh.tade.fac@vignan.ac.in,+91 90000 00018
+FAC019,Dr. Mounika Mikkilineni,faculty,CSE (AI & ML),4th Year,"CS302,CS202",Full-Stack Web Development & Microservices,,mounika.mikk.fac@vignan.ac.in,+91 90000 00019
+FAC020,Dr. Anil Atluri,faculty,CSE,4th Year,CS302,Operating Systems & Distributed Computing,,anil.atlu.fac@vignan.ac.in,+91 90000 00020
+FAC021,Prof. Radhika Penumaka,faculty,Mathematics,1st Year,"MA201,CS201",Deep Learning & Natural Language Processing,Student Grievance Redressal Lead,radhika.penu.fac@vignan.ac.in,+91 90000 00021
+FAC022,Dr. Navya Reddy,faculty,Mathematics,4th Year,CS204,Full-Stack Web Development & Microservices,Academic Audit Committee Member,navya.redd.fac@vignan.ac.in,+91 90000 00022
+FAC023,Prof. Shreya Kondapalli,faculty,IT,2nd Year,CS202,Deep Learning & Natural Language Processing,NBA / NAAC Criteria Lead,shreya.kond.fac@vignan.ac.in,+91 90000 00023
+FAC024,Dr. Praveen Deshmukh,faculty,CSE (AI & ML),4th Year,CS202,Compiler Design & Code Optimization,,praveen.desh.fac@vignan.ac.in,+91 90000 00024
+FAC025,Dr. Geetha Vemuri,faculty,Mathematics,1st Year,"CS301,CS202",Compiler Design & Code Optimization,Academic Audit Committee Member,geetha.vemu.fac@vignan.ac.in,+91 90000 00025
+FAC026,Dr. Madhuri Patel,faculty,Mathematics,4th Year,MA201,Database Systems & Query Optimization,Academic Audit Committee Member,madhuri.pate.fac@vignan.ac.in,+91 90000 00026
+FAC027,Dr. Rohan Bandaru,faculty,IT,2nd Year,CS303,Deep Learning & Natural Language Processing,Curriculum Revision Incharge,rohan.band.fac@vignan.ac.in,+91 90000 00027
+FAC028,Dr. Arjun Daggubati,faculty,CSE (AI & ML),1st Year,"CS202,MA201",Agile Software Architecture & DevOps,,arjun.dagg.fac@vignan.ac.in,+91 90000 00028
+FAC029,Dr. Lavanya Nalluri,faculty,Mathematics,4th Year,"CS301,CS203",Deep Learning & Natural Language Processing,"Class Teacher, 2nd Year Coordinator",lavanya.nall.fac@vignan.ac.in,+91 90000 00029
+FAC030,Dr. Harika Kondapalli,faculty,Data Science,3rd Year,CS302,Data Warehousing & Business Intelligence,,harika.kond.fac@vignan.ac.in,+91 90000 00030
+MEN001,Prof. Sunitha Devi,mentor,CSE,2nd Year,"CS201,CS203",Academic Mentorship & Core Programming,Senior Counseling Lead,prof.sunitha@vignan.ac.in,+91 90000 44444
+MEN002,Dr. Anil Kumar,mentor,CSE,1st Year,"CS202,CS204",Attendance Recovery & Foundation Mentoring,Hostel Discipline Counselor,dr.anil@vignan.ac.in,+91 90000 55555
+MEN003,Prof. Dinesh Nair,mentor,CSE,2nd Year,"CS204,CS202",First-Year Foundation & Bridge Coaching,Peer Tutor Mentor,dinesh.nair.men@vignan.ac.in,+91 90000 50003
+MEN004,Dr. Aparna Nalluri,mentor,CSE,2nd Year,"MA201,CS203",Emotional Wellness & Academic Resilience,Year Incharge,aparna.nall.men@vignan.ac.in,+91 90000 50004
+MEN005,Dr. Aishwarya Garikapati,mentor,CSE,2nd Year,CS202,Attendance Intervention & Habit Coaching,Senior Mentor,aishwarya.gari.men@vignan.ac.in,+91 90000 50005
+MEN006,Prof. Pranathi Gupta,mentor,Student Counseling Cell,3rd Year,CS202,Remedial Study Planning & Subject Tutoring,,pranathi.gupt.men@vignan.ac.in,+91 90000 50006
+MEN007,Prof. Vamsi Kulkarni,mentor,Student Counseling Cell,2nd Year,"CS204,CS202",Advanced Project & Research Mentorship,Year Incharge,vamsi.kulk.men@vignan.ac.in,+91 90000 50007
+MEN008,Dr. Mahesh Daggubati,mentor,Student Counseling Cell,1st Year,"CS204,MA201",Remedial Study Planning & Subject Tutoring,Peer Tutor Mentor,mahesh.dagg.men@vignan.ac.in,+91 90000 50008
+MEN009,Prof. Akhil Garlapati,mentor,CSE,2nd Year,MA201,Attendance Intervention & Habit Coaching,Year Incharge,akhil.garl.men@vignan.ac.in,+91 90000 50009
+MEN010,Prof. Lokesh Nair,mentor,CSE (AI & ML),2nd Year,CS202,Academic Performance & Retention Counseling,,lokesh.nair.men@vignan.ac.in,+91 90000 50010
+MEN011,Dr. Lokesh Garlapati,mentor,Student Counseling Cell,1st Year,CS203,Peer Mentoring Group Leadership,Senior Mentor,lokesh.garl.men@vignan.ac.in,+91 90000 50011
+MEN012,Prof. Harika Kondapalli,mentor,Academic Welfare,2nd Year,CS201,Remedial Study Planning & Subject Tutoring,,harika.kond.men@vignan.ac.in,+91 90000 50012
+MEN013,Dr. Sri Udbhav Reddy,mentor,CSE (AI & ML),1st Year,CS202,Emotional Wellness & Academic Resilience,Year Incharge,sri udbhav.redd.men@vignan.ac.in,+91 90000 50013
+MEN014,Dr. Arjun Kulkarni,mentor,CSE (AI & ML),3rd Year,"CS201,MA201",Academic Performance & Retention Counseling,Year Incharge,arjun.kulk.men@vignan.ac.in,+91 90000 50014
+MEN015,Dr. Mounika Gottipati,mentor,Student Counseling Cell,3rd Year,"CS202,CS204",Attendance Intervention & Habit Coaching,Peer Tutor Mentor,mounika.gott.men@vignan.ac.in,+91 90000 50015
+MEN016,Dr. Suresh Uppalapati,mentor,CSE (AI & ML),1st Year,CS204,First-Year Foundation & Bridge Coaching,Peer Tutor Mentor,suresh.uppa.men@vignan.ac.in,+91 90000 50016
+MEN017,Prof. Hemanth Atluri,mentor,Academic Welfare,1st Year,"CS202,CS201",Academic Performance & Retention Counseling,Peer Tutor Mentor,hemanth.atlu.men@vignan.ac.in,+91 90000 50017
+MEN018,Prof. Harika Choudhury,mentor,Student Counseling Cell,1st Year,"CS204,CS202",Advanced Project & Research Mentorship,Senior Mentor,harika.chou.men@vignan.ac.in,+91 90000 50018
+MEN019,Prof. Gopi Menon,mentor,CSE (AI & ML),2nd Year,"CS203,CS204",Academic Performance & Retention Counseling,Year Incharge,gopi.meno.men@vignan.ac.in,+91 90000 50019
+MEN020,Prof. Ashwin Patel,mentor,Academic Welfare,2nd Year,"CS203,CS201",First-Year Foundation & Bridge Coaching,,ashwin.pate.men@vignan.ac.in,+91 90000 50020

@@ -254,52 +254,15 @@ def init_db():
     # =====================================================
     # SEED DATA (only if tables are empty)
     # =====================================================
-
-    # -- Seed Students --
     c.execute("SELECT COUNT(*) FROM students")
     if c.fetchone()[0] == 0:
-        students_data = [
-            ("25CS001", "V.Sri Udbhav",    "Male",   "CSE", "2nd Year", 8.2, 24, 82, 88, 18, "Ramesh Kumar",  "Lakshmi Kumar", "Telugu", "Hyderabad",  "South India", "India", "sriudbhav.25cs@vignan.ac.in",  "+91 98480 12345"),
-            ("25CS002", "Y.Hemanth Reddy",  "Male",   "CSE", "2nd Year", 7.4, 23, 68, 60, 55, "Reddy Kumar",   "Padma",         "Telugu", "Vijayawada", "South India", "India", "hemanth.25cs@vignan.ac.in",    "+91 98480 23456"),
-            ("25CS003", "T.Gopi",           "Male",   "CSE", "2nd Year", 7.8, 22, 73, 70, 42, "Srinivas",      "Anitha",        "Telugu", "Guntur",     "South India", "India", "gopi.25cs@vignan.ac.in",       "+91 98480 34567"),
-            ("25CS004", "Sneha Rao",        "Female", "CSE", "2nd Year", 8.7, 25, 91, 95,  8, "Rao Kumar",     "Sunitha",       "Telugu", "Hyderabad",  "South India", "India", "sneha.25cs@vignan.ac.in",      "+91 98480 45678"),
-            ("25CS005", "Arjun Patel",      "Male",   "CSE", "2nd Year", 6.9, 20, 61, 50, 72, "Mahesh Patel",  "Kavitha",       "Hindi",  "Mumbai",     "West India",  "India", "arjun.25cs@vignan.ac.in",      "+91 98480 56789"),
-        ]
-        c.executemany("INSERT INTO students VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", students_data)
-
-    # -- Seed Users (UAC) --
-    c.execute("SELECT COUNT(*) FROM users")
-    if c.fetchone()[0] == 0:
-        users_data = [
-            # Admin
-            ("admin",   "admin123",  "admin",   "System Administrator",  None,      None,              None,                                  "admin@vignan.ac.in",        "+91 90000 00001"),
-            # Faculty
-            ("FAC001",  "FAC001",    "faculty", "Dr. Ramesh Kumar",      None,      "CS201,CS202",     "Class Teacher,2nd Year Coordinator", "dr.ramesh@vignan.ac.in",     "+91 90000 11111"),
-            ("FAC002",  "FAC002",    "faculty", "Dr. Priya Sharma",      None,      "CS203,CS204",     None,                                  "dr.priya@vignan.ac.in",      "+91 90000 22222"),
-            ("FAC003",  "FAC003",    "faculty", "Prof. Venkat Rao",      None,      "MA201",           "HOD Mathematics",                     "prof.venkat@vignan.ac.in",   "+91 90000 33333"),
-            # Mentor
-            ("MEN001",  "MEN001",    "mentor",  "Prof. Sunitha Devi",    None,      "CS201,CS203",     None,                                  "prof.sunitha@vignan.ac.in",  "+91 90000 44444"),
-            ("MEN002",  "MEN002",    "mentor",  "Dr. Anil Kumar",        None,      "CS202,CS204",     None,                                  "dr.anil@vignan.ac.in",       "+91 90000 55555"),
-            # Students (password = their own ID)
-            ("25CS001", "25CS001",   "student", "V.Sri Udbhav",         "25CS001", None,              None,                                  "sriudbhav.25cs@vignan.ac.in","+91 98480 12345"),
-            ("25CS002", "25CS002",   "student", "Y.Hemanth Reddy",      "25CS002", None,              None,                                  "hemanth.25cs@vignan.ac.in",  "+91 98480 23456"),
-            ("25CS003", "25CS003",   "student", "T.Gopi",               "25CS003", None,              None,                                  "gopi.25cs@vignan.ac.in",     "+91 98480 34567"),
-            ("25CS004", "25CS004",   "student", "Sneha Rao",            "25CS004", None,              None,                                  "sneha.25cs@vignan.ac.in",    "+91 98480 45678"),
-            ("25CS005", "25CS005",   "student", "Arjun Patel",          "25CS005", None,              None,                                  "arjun.25cs@vignan.ac.in",    "+91 98480 56789"),
-        ]
-        c.executemany("INSERT INTO users (id, password, role, display_name, linked_student_id, subjects, extra_roles, email, phone) VALUES (?,?,?,?,?,?,?,?,?)", users_data)
-
-    # -- Seed Sample Pending Signup Request --
-    c.execute("SELECT COUNT(*) FROM signup_requests")
-    if c.fetchone()[0] == 0:
-        c.execute("""
-            INSERT INTO signup_requests (user_id, password, role, display_name, email, phone, subjects, extra_roles, status, rejection_reason, created_at, reviewed_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            "FAC004", "Welcome@123", "faculty", "Dr. Kavitha Menon", "kavitha.menon@vignan.ac.in",
-            "+91 98765 43210", "CS301,CS302", "AI Lab Incharge", "Pending", None,
-            datetime.date.today().isoformat(), None
-        ))
+        conn.close()
+        try:
+            import generate_complete_data
+            generate_complete_data.main()
+        except Exception as e:
+            print(f"[DB Init Warning]: Failed to run generate_complete_data: {e}")
+        return
 
     # -- Seed Sample Sent Email Log --
     c.execute("SELECT COUNT(*) FROM email_logs")

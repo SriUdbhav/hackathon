@@ -326,7 +326,7 @@ async function renderMentor() {
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold small" style="color: var(--text);">Venue / Cabin / Meeting Link</label>
-                        <input type="text" id="intSessionLocation" class="form-control" value="Mentorship Cabin 204, CSE Block" placeholder="e.g. Cabin 204 or Google Meet Link">
+                        <input type="text" id="intSessionLocation" class="form-control" value="" placeholder="e.g. Cabin 204, CSE Block or Google Meet Link">
                     </div>
 
                     <div class="mb-3">

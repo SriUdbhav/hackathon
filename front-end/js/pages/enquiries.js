@@ -471,7 +471,7 @@ function renderFilteredEnquiries() {
                 <div class="d-flex flex-wrap gap-3 small mb-2 p-2 rounded" style="background: var(--bg-sunken); border: 1px solid var(--border-soft); color: var(--text); font-size: 11.5px;">
                     <span><i class="bi bi-calendar3 me-1 text-primary"></i> Date: <strong>${eq.date}</strong></span>
                     <span><i class="bi bi-clock me-1 text-primary"></i> ${eq.session_time || '10:00 AM'}</span>
-                    <span><i class="bi bi-geo-alt me-1 text-danger"></i> ${eq.location || 'Mentorship Cabin 204'}</span>
+                    <span><i class="bi bi-geo-alt me-1 text-danger"></i> ${eq.location || 'Not specified'}</span>
                     ${eq.subject_code ? `<span><i class="bi bi-book me-1 text-success"></i> ${eq.subject_code}</span>` : ''}
                     ${eq.completion_requested_at ? `<span><i class="bi bi-send me-1 text-info"></i> Submitted: ${new Date(eq.completion_requested_at).toLocaleDateString()}</span>` : ''}
                 </div>
