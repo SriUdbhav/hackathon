@@ -18,9 +18,14 @@ import random
 import sqlite3
 import csv
 import datetime
-import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
+
+try:
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    HAS_OPENPYXL = True
+except ImportError:
+    HAS_OPENPYXL = False
 
 # Ensure deterministic yet realistic data
 random.seed(42)
@@ -1123,111 +1128,115 @@ def export_csv_and_excel(students, faculty, mentors, admins, subject_marks, stud
         for item in interventions:
             row = {k: item.get(k) for k in writer.fieldnames}
             writer.writerow(row)
-    print(f"✓ Exported: {inv_csv_path}")
+    print(f"[OK] Exported: {inv_csv_path}")
 
     # 7. Multi-Sheet Professional Excel Workbook (.xlsx)
-    excel_path = os.path.join(DATA_DIR, "EduStudent_Sight_Master_Database.xlsx")
-    wb = openpyxl.Workbook()
-    # Remove default sheet
-    wb.remove(wb.active)
+    if HAS_OPENPYXL:
+        try:
+            excel_path = os.path.join(DATA_DIR, "EduStudent_Sight_Master_Database.xlsx")
+            wb = openpyxl.Workbook()
+            # Remove default sheet
+            wb.remove(wb.active)
 
-    header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
-    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
-    data_font = Font(name="Calibri", size=10)
-    border_thin = Border(
-        left=Side(style='thin', color='CBD5E1'),
-        right=Side(style='thin', color='CBD5E1'),
-        top=Side(style='thin', color='CBD5E1'),
-        bottom=Side(style='thin', color='CBD5E1')
-    )
+            header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+            header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+            data_font = Font(name="Calibri", size=10)
+            border_thin = Border(
+                left=Side(style='thin', color='CBD5E1'),
+                right=Side(style='thin', color='CBD5E1'),
+                top=Side(style='thin', color='CBD5E1'),
+                bottom=Side(style='thin', color='CBD5E1')
+            )
 
-    def style_sheet(ws, title, headers, rows):
-        ws.title = title
-        ws.append(headers)
-        for cell in ws[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-        
-        for row in rows:
-            ws.append(row)
+            def style_sheet(ws, title, headers, rows):
+                ws.title = title
+                ws.append(headers)
+                for cell in ws[1]:
+                    cell.fill = header_fill
+                    cell.font = header_font
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+                
+                for row in rows:
+                    ws.append(row)
 
-        for row in ws.iter_rows(min_row=2):
-            for cell in row:
-                cell.font = data_font
-                cell.border = border_thin
-                if isinstance(cell.value, (int, float)):
-                    cell.alignment = Alignment(horizontal="right")
-                else:
-                    cell.alignment = Alignment(horizontal="left")
+                for row in ws.iter_rows(min_row=2):
+                    for cell in row:
+                        cell.font = data_font
+                        cell.border = border_thin
+                        if isinstance(cell.value, (int, float)):
+                            cell.alignment = Alignment(horizontal="right")
+                        else:
+                            cell.alignment = Alignment(horizontal="left")
 
-        # Auto-adjust column widths
-        for col in ws.columns:
-            max_len = max(len(str(cell.value or '')) for cell in col)
-            col_letter = get_column_letter(col[0].column)
-            ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+                # Auto-adjust column widths
+                for col in ws.columns:
+                    max_len = max(len(str(cell.value or '')) for cell in col)
+                    col_letter = get_column_letter(col[0].column)
+                    ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
 
-    # Sheet 1: Students (100)
-    ws_stu = wb.create_sheet()
-    stu_headers = ["Student ID", "Full Name", "Gender", "Course", "Year", "CGPA", "Credits", "Attendance %", "LMS Score %", "Risk %", "Mother Tongue", "City", "Region", "Email", "Mobile"]
-    stu_rows = [
-        [s["id"], s["name"], s["gender"], s["course"], s["year"], s["cgpa"], s["credits"], s["attendance"], s["lms_score"], s["risk"], s["mother_tongue"], s["place"], s["region"], s["email"], s["phone"]]
-        for s in students
-    ]
-    style_sheet(ws_stu, "Students (100)", stu_headers, stu_rows)
+            # Sheet 1: Students (100)
+            ws_stu = wb.create_sheet()
+            stu_headers = ["Student ID", "Full Name", "Gender", "Course", "Year", "CGPA", "Credits", "Attendance %", "LMS Score %", "Risk %", "Mother Tongue", "City", "Region", "Email", "Mobile"]
+            stu_rows = [
+                [s["id"], s["name"], s["gender"], s["course"], s["year"], s["cgpa"], s["credits"], s["attendance"], s["lms_score"], s["risk"], s["mother_tongue"], s["place"], s["region"], s["email"], s["phone"]]
+                for s in students
+            ]
+            style_sheet(ws_stu, "Students (100)", stu_headers, stu_rows)
 
-    # Sheet 2: Faculty & Mentors (50)
-    ws_fac = wb.create_sheet()
-    fac_headers = ["Faculty/Mentor ID", "Display Name", "Role", "Department", "Assigned Year", "Subject Codes", "Specialization Area", "Institutional Responsibility", "Email", "Phone"]
-    fac_rows = [
-        [u["id"], u["display_name"], u["role"].capitalize(), u["department"], u["assigned_year"], u["subjects"], u["specialization"], u["extra_roles"] or "None", u["email"], u["phone"]]
-        for u in (faculty + mentors)
-    ]
-    style_sheet(ws_fac, "Faculty & Mentors (50)", fac_headers, fac_rows)
+            # Sheet 2: Faculty & Mentors (50)
+            ws_fac = wb.create_sheet()
+            fac_headers = ["Faculty/Mentor ID", "Display Name", "Role", "Department", "Assigned Year", "Subject Codes", "Specialization Area", "Institutional Responsibility", "Email", "Phone"]
+            fac_rows = [
+                [u["id"], u["display_name"], u["role"].capitalize(), u["department"], u["assigned_year"], u["subjects"], u["specialization"], u["extra_roles"] or "None", u["email"], u["phone"]]
+                for u in (faculty + mentors)
+            ]
+            style_sheet(ws_fac, "Faculty & Mentors (50)", fac_headers, fac_rows)
 
-    # Sheet 3: Administrators (10)
-    ws_adm = wb.create_sheet()
-    adm_headers = ["Admin ID", "Display Name", "Designation / Role", "Department / Directorate", "Specialization Scope", "Institutional Email", "Mobile Number"]
-    adm_rows = [
-        [a["id"], a["display_name"], a["extra_roles"], a["department"], a["specialization"], a["email"], a["phone"]]
-        for a in admins
-    ]
-    style_sheet(ws_adm, "System Admins (10)", adm_headers, adm_rows)
+            # Sheet 3: Administrators (10)
+            ws_adm = wb.create_sheet()
+            adm_headers = ["Admin ID", "Display Name", "Designation / Role", "Department / Directorate", "Specialization Scope", "Institutional Email", "Mobile Number"]
+            adm_rows = [
+                [a["id"], a["display_name"], a["extra_roles"], a["department"], a["specialization"], a["email"], a["phone"]]
+                for a in admins
+            ]
+            style_sheet(ws_adm, "System Admins (10)", adm_headers, adm_rows)
 
-    # Sheet 4: Subject Marks (500)
-    ws_mrk = wb.create_sheet()
-    mrk_headers = ["Student ID", "Subject Code", "Attendance %", "Internal Marks (30)", "External Marks (70)", "Assignment (100)", "Letter Grade"]
-    mrk_rows = [
-        [m["student_id"], m["subject_code"], m["attendance"], m["internal_marks"], m["external_marks"], m["assignment_score"], m["grade"]]
-        for m in subject_marks
-    ]
-    style_sheet(ws_mrk, "Subject Marks (500)", mrk_headers, mrk_rows)
+            # Sheet 4: Subject Marks (500)
+            ws_mrk = wb.create_sheet()
+            mrk_headers = ["Student ID", "Subject Code", "Attendance %", "Internal Marks (30)", "External Marks (70)", "Assignment (100)", "Letter Grade"]
+            mrk_rows = [
+                [m["student_id"], m["subject_code"], m["attendance"], m["internal_marks"], m["external_marks"], m["assignment_score"], m["grade"]]
+                for m in subject_marks
+            ]
+            style_sheet(ws_mrk, "Subject Marks (500)", mrk_headers, mrk_rows)
 
-    # Sheet 5: Interventions (35)
-    ws_inv = wb.create_sheet()
-    inv_headers = ["ID", "Student ID", "Session Date", "Action Strategy", "Status", "Urgency", "Subject", "Mentor ID", "Created By", "Time", "Location", "Reviewer Status Notes"]
-    inv_rows = [
-        [i["id"], i["student_id"], i["date"], i["action"], i["status"], i["urgency"], i["subject_code"], i["mentor_id"], i["created_by"], i["session_time"], i["location"], i["rejection_reason"] or i["completion_request_notes"] or "Nominal"]
-        for i in interventions
-    ]
-    style_sheet(ws_inv, "Interventions Radar (35)", inv_headers, inv_rows)
+            # Sheet 5: Interventions (35)
+            ws_inv = wb.create_sheet()
+            inv_headers = ["ID", "Student ID", "Session Date", "Action Strategy", "Status", "Urgency", "Subject", "Mentor ID", "Created By", "Time", "Location", "Reviewer Status Notes"]
+            inv_rows = [
+                [i["id"], i["student_id"], i["date"], i["action"], i["status"], i["urgency"], i["subject_code"], i["mentor_id"], i["created_by"], i["session_time"], i["location"], i["rejection_reason"] or i["completion_request_notes"] or "Nominal"]
+                for i in interventions
+            ]
+            style_sheet(ws_inv, "Interventions Radar (35)", inv_headers, inv_rows)
 
-    # Sheet 6: Master Credentials Access Sheet
-    ws_crd = wb.create_sheet()
-    crd_headers = ["User ID", "Login Password", "Access Level", "Display Name", "Official Email", "Assigned Unit / Cohort", "Telemetry Overview"]
-    crd_rows = []
-    for a in admins:
-        crd_rows.append([a["id"], a["password"], "ADMINISTRATOR", a["display_name"], a["email"], a["department"], a["extra_roles"]])
-    for f_item in faculty:
-        crd_rows.append([f_item["id"], f_item["id"], "FACULTY", f_item["display_name"], f_item["email"], f_item["department"], f_item["specialization"]])
-    for m in mentors:
-        crd_rows.append([m["id"], m["id"], "MENTOR", m["display_name"], m["email"], m["department"], m["specialization"]])
-    for s in students:
-        crd_rows.append([s["id"], s["id"], "STUDENT", s["name"], s["email"], f"{s['course']} {s['year']}", f"Risk: {s['risk']}% | CGPA: {s['cgpa']} | Attd: {s['attendance']}%"])
-    style_sheet(ws_crd, "Master Credentials (160)", crd_headers, crd_rows)
+            # Sheet 6: Master Credentials Access Sheet
+            ws_crd = wb.create_sheet()
+            crd_headers = ["User ID", "Login Password", "Access Level", "Display Name", "Official Email", "Assigned Unit / Cohort", "Telemetry Overview"]
+            crd_rows = []
+            for a in admins:
+                crd_rows.append([a["id"], a["password"], "ADMINISTRATOR", a["display_name"], a["email"], a["department"], a["extra_roles"]])
+            for f_item in faculty:
+                crd_rows.append([f_item["id"], f_item["id"], "FACULTY", f_item["display_name"], f_item["email"], f_item["department"], f_item["specialization"]])
+            for m in mentors:
+                crd_rows.append([m["id"], m["id"], "MENTOR", m["display_name"], m["email"], m["department"], m["specialization"]])
+            for s in students:
+                crd_rows.append([s["id"], s["id"], "STUDENT", s["name"], s["email"], f"{s['course']} {s['year']}", f"Risk: {s['risk']}% | CGPA: {s['cgpa']} | Attd: {s['attendance']}%"])
+            style_sheet(ws_crd, "Master Credentials (160)", crd_headers, crd_rows)
 
-    wb.save(excel_path)
-    print(f"✓ Exported Multi-Tab Excel Workbook: {excel_path}")
+            wb.save(excel_path)
+            print(f"[OK] Exported Multi-Tab Excel Workbook: {excel_path}")
+        except Exception as e:
+            print(f"[Warning] Excel export skipped: {e}")
 
 
 # -------------------------------------------------------------
@@ -1246,13 +1255,13 @@ def main():
     student_activities = generate_student_activities(students)
     interventions = generate_interventions(students, faculty, mentors)
 
-    print(f"✓ Generated {len(students)} Student profiles")
-    print(f"✓ Generated {len(faculty)} Faculty members")
-    print(f"✓ Generated {len(mentors)} Mentors")
-    print(f"✓ Generated {len(admins)} Administrators")
-    print(f"✓ Generated {len(subject_marks)} Subject Marks records")
-    print(f"✓ Generated {len(student_activities)} Student Activity memberships")
-    print(f"✓ Generated {len(interventions)} Interventions & Enquiries")
+    print(f"[OK] Generated {len(students)} Student profiles")
+    print(f"[OK] Generated {len(faculty)} Faculty members")
+    print(f"[OK] Generated {len(mentors)} Mentors")
+    print(f"[OK] Generated {len(admins)} Administrators")
+    print(f"[OK] Generated {len(subject_marks)} Subject Marks records")
+    print(f"[OK] Generated {len(student_activities)} Student Activity memberships")
+    print(f"[OK] Generated {len(interventions)} Interventions & Enquiries")
 
     print("\nSeeding SQLite Database...")
     seed_database(students, faculty, mentors, admins, subject_marks, student_activities, interventions)

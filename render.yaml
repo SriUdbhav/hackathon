@@ -1,4 +1,5 @@
 services:
+  # 1. Backend REST API Web Service (Flask + Gunicorn)
   - type: web
     name: edustudent-sight-api
     runtime: python
@@ -21,4 +22,29 @@ services:
       - key: OPENAI_API_KEY
         sync: false
     healthCheckPath: /
+    autoDeploy: true
+
+  # 2. Frontend Static Web App (HTML5 / Vanilla CSS & JS)
+  - type: web
+    name: edustudent-sight
+    runtime: static
+    region: oregon
+    plan: free
+    rootDir: front-end
+    buildCommand: ""
+    publishDir: "."
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://hackathon-v8tb.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
     autoDeploy: true
