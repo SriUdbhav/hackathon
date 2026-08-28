@@ -15,7 +15,7 @@
 // ── Production Backend URL ──────────────────────────
 // Replace this with your actual Render backend URL after deploying.
 // Example: "https://edustudent-sight-api.onrender.com"
-const RENDER_BACKEND_URL = "https://edustudent-sight-api.onrender.com";
+const RENDER_BACKEND_URL = "https://hackathon-v8tb.onrender.com";
 
 const CONFIG = (() => {
     const hostname = window.location.hostname;
