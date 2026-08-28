@@ -1139,6 +1139,117 @@ def recalculate_risks():
 
 
 # =====================================================
+# 2.1 24-HOUR AUTOMATED ATTENDANCE PROGRESSION ENGINE (+2%)
+# =====================================================
+
+def _run_daily_attendance_increment(force=False, increment_pct=2.0):
+    conn = db.get_db_connection()
+    c = conn.cursor()
+    
+    # Read last progression time
+    row = c.execute("SELECT value FROM settings WHERE key = 'last_attendance_progression'").fetchone()
+    last_progression_str = row["value"] if row else None
+    
+    now = datetime.datetime.now()
+    should_run = force
+    
+    if not force:
+        if not last_progression_str:
+            should_run = True
+        else:
+            try:
+                last_dt = datetime.datetime.fromisoformat(last_progression_str)
+                if (now - last_dt).total_seconds() >= 86400:  # 24 hours
+                    should_run = True
+            except Exception:
+                should_run = True
+
+    if not should_run:
+        conn.close()
+        return {
+            "applied": False,
+            "reason": "Less than 24 hours since last progression",
+            "last_progression": last_progression_str,
+            "next_in_seconds": max(0, 86400 - int((now - datetime.datetime.fromisoformat(last_progression_str)).total_seconds())) if last_progression_str else 0
+        }
+
+    thresholds = _get_thresholds()
+    students_rows = c.execute("SELECT id, attendance, cgpa, lms_score FROM students").fetchall()
+    updated_count = 0
+    
+    for s in students_rows:
+        curr_att = float(s["attendance"] or 0)
+        new_att = min(100.0, round(curr_att + increment_pct, 1))
+        risk_info = ai_engine.calculate_risk_score(new_att, s["cgpa"], s["lms_score"], **thresholds)
+        c.execute("UPDATE students SET attendance = ?, risk = ? WHERE id = ?", (int(new_att), risk_info["risk_score"], s["id"]))
+        c.execute("UPDATE subject_marks SET attendance = MIN(100, attendance + ?) WHERE student_id = ?", (int(increment_pct), s["id"]))
+        updated_count += 1
+
+    c.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('last_attendance_progression', ?)", (now.isoformat(),))
+    
+    # Audit log notification
+    c.execute("""
+        INSERT INTO notifications (title, message, type, date, student_id, read)
+        VALUES (?, ?, 'info', ?, NULL, 0)
+    """, (
+        f"Daily Attendance Progression (+{increment_pct}%)",
+        f"24-Hour Cycle: Attendance increased by +{increment_pct}% for {updated_count} students. AI risk scores recalibrated.",
+        now.strftime("%b %d, %Y %I:%M %p")
+    ))
+    
+    conn.commit()
+    conn.close()
+    
+    return {
+        "applied": True,
+        "students_updated": updated_count,
+        "increment_pct": increment_pct,
+        "timestamp": now.isoformat(),
+        "message": f"Successfully increased attendance by +{increment_pct}% for {updated_count} students."
+    }
+
+
+@app.route("/api/attendance/advance-day", methods=["POST"])
+def advance_attendance_day():
+    """Manual/Automated trigger: Advance calendar by 1 day (+24h) and increase attendance by +2%."""
+    data = request.get_json() or {}
+    increment_pct = float(data.get("increment_pct", 2.0))
+    res = _run_daily_attendance_increment(force=True, increment_pct=increment_pct)
+    return jsonify({"success": True, **res})
+
+
+@app.route("/api/attendance/status", methods=["GET"])
+def get_attendance_progression_status():
+    """Returns the last 24h attendance progression timestamp and next scheduled trigger."""
+    conn = db.get_db_connection()
+    row = conn.execute("SELECT value FROM settings WHERE key = 'last_attendance_progression'").fetchone()
+    conn.close()
+    
+    last_str = row["value"] if row else None
+    now = datetime.datetime.now()
+    hours_since = None
+    next_in_hours = 0
+    
+    if last_str:
+        try:
+            last_dt = datetime.datetime.fromisoformat(last_str)
+            elapsed_sec = (now - last_dt).total_seconds()
+            hours_since = round(elapsed_sec / 3600.0, 1)
+            next_in_hours = max(0.0, round((86400 - elapsed_sec) / 3600.0, 1))
+        except Exception:
+            pass
+
+    return jsonify({
+        "success": True,
+        "last_progression": last_str,
+        "hours_since_last": hours_since,
+        "next_in_hours": next_in_hours,
+        "increment_rate": "+2.0% per 24 hours"
+    })
+
+
+
+# =====================================================
 # 3. SUBJECTS & MARKS
 # =====================================================
 

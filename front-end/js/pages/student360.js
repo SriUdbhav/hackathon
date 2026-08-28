@@ -78,7 +78,7 @@ async function renderStudent360() {
                 <p class="small mb-0" style="color: var(--text-soft);">Demographic factors, subject-wise internal tests, extracurricular engagement & AI diagnostic</p>
             </div>
             ${role !== 'student' ? `
-                <div class="d-flex flex-column gap-1" style="min-width: 360px;">
+                <div class="d-flex flex-column gap-1 flex-grow-1" style="max-width: 520px; min-width: 260px;">
                     <div class="position-relative">
                         <div class="input-group">
                             <span class="input-group-text" style="background: var(--bg-sunken); border-color: var(--border);"><i class="bi bi-search" style="color: var(--accent);"></i></span>
@@ -98,11 +98,20 @@ async function renderStudent360() {
                             <!-- Dynamic results populated by JS -->
                         </div>
                     </div>
-                    <div class="d-flex gap-1 flex-wrap mt-1">
-                        <button class="btn btn-sm s360-filter-btn ${window._s360RiskFilter === 'ALL' ? 'btn-dark active' : 'btn-outline-secondary'}" data-level="ALL" onclick="filterStudent360ByRisk('ALL')">All (${students.length})</button>
-                        <button class="btn btn-sm s360-filter-btn ${window._s360RiskFilter === 'HIGH' ? 'btn-danger active' : 'btn-outline-danger'}" data-level="HIGH" onclick="filterStudent360ByRisk('HIGH')">High Risk (${highCount})</button>
-                        <button class="btn btn-sm s360-filter-btn ${window._s360RiskFilter === 'MEDIUM' ? 'btn-warning text-dark active' : 'btn-outline-warning'}" data-level="MEDIUM" onclick="filterStudent360ByRisk('MEDIUM')">Moderate (${medCount})</button>
-                        <button class="btn btn-sm s360-filter-btn ${window._s360RiskFilter === 'LOW' ? 'btn-success active' : 'btn-outline-success'}" data-level="LOW" onclick="filterStudent360ByRisk('LOW')">Low Risk (${lowCount})</button>
+                    <div class="d-flex gap-1 flex-wrap mt-1 justify-content-between">
+                        <div class="d-flex gap-1 flex-wrap">
+                            <button class="btn btn-sm s360-filter-btn ${window._s360RiskFilter === 'ALL' ? 'btn-dark active' : 'btn-outline-secondary'}" data-level="ALL" onclick="filterStudent360ByRisk('ALL')">All (${students.length})</button>
+                            <button class="btn btn-sm s360-filter-btn ${window._s360RiskFilter === 'HIGH' ? 'btn-danger active' : 'btn-outline-danger'}" data-level="HIGH" onclick="filterStudent360ByRisk('HIGH')">High (${highCount})</button>
+                            <button class="btn btn-sm s360-filter-btn ${window._s360RiskFilter === 'MEDIUM' ? 'btn-warning text-dark active' : 'btn-outline-warning'}" data-level="MEDIUM" onclick="filterStudent360ByRisk('MEDIUM')">Mod (${medCount})</button>
+                            <button class="btn btn-sm s360-filter-btn ${window._s360RiskFilter === 'LOW' ? 'btn-success active' : 'btn-outline-success'}" data-level="LOW" onclick="filterStudent360ByRisk('LOW')">Low (${lowCount})</button>
+                        </div>
+                        <select class="form-select form-select-sm" id="s360YearSelect" style="width: auto; font-size: 11.5px; padding: 2px 8px; background: var(--bg-sunken); color: var(--text); border-color: var(--border);" onchange="filterStudent360ByYear(this.value)">
+                            <option value="ALL">All Years</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                        </select>
                     </div>
                 </div>
             ` : ''}
@@ -118,11 +127,15 @@ async function renderStudent360() {
                 </div>
             </div>
             <div class="text-end">
-                <span class="risk-badge ${badgeClass} fs-6 mb-2">
-                    <i class="bi ${s.risk >= 60 ? 'bi-exclamation-octagon-fill' : (s.risk >= 30 ? 'bi-exclamation-triangle-fill' : 'bi-shield-check')}"></i>
-                    ${s.risk}% (${riskStatus})
-                </span>
-                <p class="small mb-0" style="color: var(--text-soft);"><i class="bi bi-cpu me-1 text-primary"></i> Monitored by Autonomous AI Engine</p>
+                <div class="d-inline-flex flex-column align-items-md-end align-items-start gap-1">
+                    <span class="risk-badge ${badgeClass} fs-6 cursor-pointer" onclick="openStudentRiskBreakdownModal('${s.id}')" title="Click to view full AI risk calculation formula & breakdown">
+                        <i class="bi ${s.risk >= 60 ? 'bi-exclamation-octagon-fill' : (s.risk >= 30 ? 'bi-exclamation-triangle-fill' : 'bi-shield-check')}"></i>
+                        ${s.risk}% (${riskStatus})
+                    </span>
+                    <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 risk-calc-trigger" onclick="openStudentRiskBreakdownModal('${s.id}')" style="font-size: 11px; border-radius: 20px; padding: 3px 10px; font-weight: 600;">
+                        <i class="bi bi-calculator"></i> How is this calculated?
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -402,6 +415,14 @@ function filterStudent360ByRisk(level) {
     showStudent360Dropdown();
 }
 
+function filterStudent360ByYear(year) {
+    window._s360YearFilter = year;
+    const select = document.getElementById("s360YearSelect");
+    if (select) select.value = year;
+    showStudent360Dropdown();
+}
+window.filterStudent360ByYear = filterStudent360ByYear;
+
 function showStudent360Dropdown() {
     const dropdown = document.getElementById("student360Dropdown");
     if (dropdown) {
@@ -418,6 +439,19 @@ function filterStudent360Switcher(query) {
     query = (query || "").trim();
 
     let filtered = [...students];
+
+    // Year filter
+    if (window._s360YearFilter && window._s360YearFilter !== 'ALL') {
+        const yrTarget = window._s360YearFilter.toLowerCase();
+        filtered = filtered.filter(s => {
+            const sYr = (s.year || '').toLowerCase();
+            if (yrTarget.includes("1")) return sYr.includes("1");
+            if (yrTarget.includes("2")) return sYr.includes("2");
+            if (yrTarget.includes("3")) return sYr.includes("3");
+            if (yrTarget.includes("4")) return sYr.includes("4");
+            return sYr === yrTarget;
+        });
+    }
 
     // Risk filter
     if (window._s360RiskFilter === 'HIGH') filtered = filtered.filter(s => s.risk >= 60);

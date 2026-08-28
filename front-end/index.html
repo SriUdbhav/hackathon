@@ -246,6 +246,9 @@
 ===================================================== -->
 <div id="app" class="app d-none">
 
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
+
     <!-- =================================================
          SIDEBAR
     ================================================= -->
@@ -258,6 +261,9 @@
                 <h2>EduStudent Sight</h2>
                 <span id="sidebarRoleSubtitle">AI Academic Intelligence</span>
             </div>
+            <button type="button" class="sidebar-mobile-close" id="sidebarMobileClose" onclick="toggleSidebar(false)" title="Close navigation menu">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
 
         <div class="sidebar-scroll">
@@ -674,6 +680,22 @@
             <button class="modal-close" onclick="closeViewApplicationModal()"><i class="bi bi-x"></i></button>
         </div>
         <div class="p-3" id="viewAppModalContent">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+</div>
+
+<!-- 6. EXPLAINABLE AI RISK CALCULATION BREAKDOWN MODAL -->
+<div id="riskBreakdownModal" class="modal-overlay">
+    <div class="student-modal" style="max-width: 720px;">
+        <div class="modal-head">
+            <div>
+                <span class="badge bg-primary text-white mb-1"><i class="bi bi-cpu me-1"></i> EXPLAINABLE AI DIAGNOSTIC</span>
+                <h2 id="riskModalTitle">Academic Risk Calculation Breakdown</h2>
+            </div>
+            <button class="modal-close" onclick="closeStudentRiskModal()"><i class="bi bi-x"></i></button>
+        </div>
+        <div id="riskBreakdownModalContent" class="p-1">
             <!-- Populated via JS -->
         </div>
     </div>

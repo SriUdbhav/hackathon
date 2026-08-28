@@ -1368,15 +1368,37 @@ async function renderStudentDashboard(content, user) {
             <div class="profile-avatar-box">
                 <div class="profile-avatar">${(s.name || 'S').charAt(0)}</div>
                 <div class="profile-info">
-                    <h2>Welcome, ${s.name}! <span class="badge bg-light text-dark fs-6 ms-2">${s.id}</span></h2>
-                    <p><i class="bi bi-book me-1"></i> ${s.course} • ${s.year} • CGPA: <strong>${s.cgpa}</strong></p>
+                    <h2>Welcome, ${s.name}! <span class="badge bg-light text-dark fs-6 ms-2 border">${s.id}</span></h2>
+                    <p class="mb-0"><i class="bi bi-book me-1 text-primary"></i> ${s.course} • ${s.year} • CGPA: <strong>${s.cgpa}</strong> • Credits: <strong>${s.credits || 24}</strong></p>
                 </div>
             </div>
             <div class="text-end">
-                <span class="risk-badge ${badgeClass} fs-6 mb-2">${s.risk}% Risk (${riskStatus})</span>
-                <p class="text-light-50 small mb-0"><i class="bi bi-shield-check me-1"></i> Personalized Student Portal</p>
+                <div class="d-inline-flex flex-column align-items-md-end align-items-start gap-1">
+                    <span class="risk-badge ${badgeClass} fs-6 cursor-pointer" onclick="openStudentRiskBreakdownModal('${s.id}')" title="Click to view full AI risk calculation formula & breakdown">
+                        <i class="bi ${s.risk >= 60 ? 'bi-exclamation-octagon-fill' : (s.risk >= 30 ? 'bi-exclamation-triangle-fill' : 'bi-shield-check')}"></i>
+                        ${s.risk}% Risk (${riskStatus})
+                    </span>
+                    <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 risk-calc-trigger" onclick="openStudentRiskBreakdownModal('${s.id}')" style="font-size: 11.5px; border-radius: 20px; padding: 4px 12px; font-weight: 600;">
+                        <i class="bi bi-calculator"></i> How is this calculated?
+                    </button>
+                </div>
             </div>
         </div>
+
+        ${s.risk >= 30 ? `
+            <div class="alert ${s.risk >= 60 ? 'alert-danger' : 'alert-warning'} d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm border">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi ${s.risk >= 60 ? 'bi-exclamation-octagon-fill fs-4 text-danger' : 'bi-exclamation-triangle-fill fs-4 text-warning'}"></i>
+                    <div>
+                        <strong>Academic Risk Indicator: ${s.risk}% (${riskStatus})</strong>
+                        <p class="small mb-0 text-muted">${s.risk >= 60 ? 'Multi-signal analysis detected metric deficits. Check formula breakdown for remediation steps.' : 'Your academic signals require monitoring to ensure optimal exam eligibility.'}</p>
+                    </div>
+                </div>
+                <button class="btn btn-sm ${s.risk >= 60 ? 'btn-danger' : 'btn-warning'} fw-semibold d-flex align-items-center gap-1" onclick="openStudentRiskBreakdownModal('${s.id}')">
+                    <i class="bi bi-info-circle-fill"></i> View Calculation Details
+                </button>
+            </div>
+        ` : ''}
 
         <!-- MY METRICS CARDS -->
         <div class="row g-3 mb-4">

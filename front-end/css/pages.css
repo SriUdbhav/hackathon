@@ -1063,8 +1063,9 @@
     color: var(--risk-high) !important;
 }
 
-/* FACULTY BULK ACTION TOOLBAR */
-.faculty-bulk-toolbar {
+/* FACULTY & STUDENTS BULK ACTION TOOLBAR */
+.faculty-bulk-toolbar,
+.students-bulk-toolbar {
     background: var(--bg-elevated);
     border: 1px solid var(--accent);
     border-radius: 10px;
@@ -1076,6 +1077,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 /* ---- SIDE DRAWER (DETAIL VIEW) ---- */
@@ -1369,14 +1371,120 @@
     margin-bottom: 14px;
 }
 
-/* RESPONSIVE BREAKPOINTS */
-@media (max-width: 992px) {
-    .faculty-drawer {
-        width: 100vw;
+/* =====================================================
+   COMPREHENSIVE RESPONSIVE BREAKPOINTS FOR ALL PAGES
+   ===================================================== */
+
+/* 1. Large Tablets & Small Desktops (<= 1199px) */
+@media (max-width: 1199px) {
+    .faculty-stat-card {
+        padding: 14px 16px;
     }
 }
 
+/* 2. Tablets (<= 991px) */
+@media (max-width: 991px) {
+    .faculty-drawer {
+        width: 100vw;
+        max-width: 100vw;
+    }
+
+    .profile-hero {
+        padding: 24px 20px !important;
+    }
+
+    #aiAgentLayoutRow > div {
+        margin-bottom: 20px;
+    }
+}
+
+/* 3. Mobile Phones (<= 768px) */
 @media (max-width: 768px) {
+    /* Login Page */
+    .login-page {
+        padding: 16px 12px;
+    }
+
+    .login-box {
+        padding: 22px 16px;
+        border-radius: var(--radius-lg, 16px);
+    }
+
+    .brand-login {
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .brand-logo {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    .brand-login h1 {
+        font-size: 18px;
+    }
+
+    .demo-login-btn {
+        padding: 8px 10px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .demo-creds {
+        margin-left: 0;
+    }
+
+    /* Student & Profile Header */
+    .profile-header {
+        padding: 16px 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .profile-avatar-box {
+        gap: 12px;
+        width: 100%;
+    }
+
+    .profile-avatar {
+        width: 52px;
+        height: 52px;
+        font-size: 22px;
+    }
+
+    .profile-info h2 {
+        font-size: 17px;
+    }
+
+    .profile-info p {
+        font-size: 12px;
+    }
+
+    .profile-header .text-end {
+        text-align: left !important;
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    /* Stat Cards */
+    .stat-card-modern,
+    .stat-card {
+        padding: 14px 12px;
+    }
+
+    .stat-card-modern h2,
+    .stat-card h2 {
+        font-size: 22px;
+    }
+
+    /* Faculty & Mentors */
     .faculty-info-row {
         flex-direction: column;
         gap: 6px;
@@ -1402,5 +1510,65 @@
     .faculty-mini-stat-value {
         font-size: 17px;
     }
+
+    /* Student 360 */
+    .student360-dropdown {
+        max-width: 100vw;
+    }
+
+    /* AI Agent */
+    .ai-chat-box {
+        height: calc(100vh - 280px);
+        min-height: 420px;
+    }
+
+    .ai-prompt-chip-container {
+        overflow-x: auto;
+        flex-wrap: nowrap !important;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ai-chat-bubble {
+        max-width: 90% !important;
+    }
+
+    /* Notifications */
+    .notif-card {
+        padding: 12px;
+    }
+
+    .notif-card h6 {
+        font-size: 13px;
+    }
+
+    /* Reports & Settings */
+    .report-actions-bar {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .report-actions-bar button {
+        width: 100%;
+    }
 }
+
+/* 4. Extra Small Phones (<= 480px) */
+@media (max-width: 480px) {
+    .auth-tab-btn {
+        padding: 7px 10px;
+        font-size: 12px;
+    }
+
+    .profile-hero {
+        padding: 18px 14px !important;
+    }
+
+    .profile-hero .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px !important;
+    }
+}
+
 

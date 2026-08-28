@@ -3,12 +3,17 @@
    Comprehensive Student Roster & Record Management
    Supports: Horizontal Smooth Scroll, All 16 Demographic &
              Academic Fields, Full CRUD, Fuzzy & Regex Search,
-             Interactive Column Sorting, Bulk CSV/Excel Import
+             Interactive Column Sorting, Bulk CSV/Excel Import,
+             Persistent Multi-Select & Bulk Deletion
 ===================================================== */
 
 let studentsSortColumn = "risk";
 let studentsSortAsc = false;
 let studentsRegexMode = false;
+
+if (!window._selectedStudentIds) {
+    window._selectedStudentIds = new Set();
+}
 
 async function renderStudents() {
     const content = document.getElementById("pageContent");
@@ -27,6 +32,15 @@ async function renderStudents() {
         await loadLatestStudents();
     }
 
+    const selectedCount = window._selectedStudentIds ? window._selectedStudentIds.size : 0;
+    if (!window._selectedYearFilter) window._selectedYearFilter = "ALL";
+
+    const y1Count = students.filter(s => (s.year || '').includes('1')).length;
+    const y2Count = students.filter(s => (s.year || '').includes('2')).length;
+    const y3Count = students.filter(s => (s.year || '').includes('3')).length;
+    const y4Count = students.filter(s => (s.year || '').includes('4')).length;
+    const totalCount = students.length;
+
     content.innerHTML = `
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <div>
@@ -34,14 +48,70 @@ async function renderStudents() {
                 <p class="text-muted small mb-0">Complete cohort records with demographic info, multi-signal indicators & risk indices</p>
             </div>
             <div class="d-flex gap-2 flex-wrap align-items-center">
-                <button class="btn btn-outline-danger btn-sm d-none" id="bulkDeleteBtn" onclick="handleBulkDeleteStudents()" style="border-radius: 8px; font-weight: 600;">
-                    <i class="bi bi-trash3"></i> Delete Selected (<span id="bulkDeleteCount">0</span>)
+                <button class="btn btn-outline-danger btn-sm ${selectedCount > 0 ? '' : 'd-none'}" id="bulkDeleteBtn" onclick="handleBulkDeleteStudents()" style="border-radius: 8px; font-weight: 600;">
+                    <i class="bi bi-trash3"></i> Delete Selected (<span id="bulkDeleteCount">${selectedCount}</span>)
                 </button>
                 <button class="secondary-btn" onclick="openImportStudentsModal()">
                     <i class="bi bi-file-earmark-arrow-up text-success"></i> Import CSV/Excel
                 </button>
                 <button class="primary-btn" onclick="openAddStudentModal()">
                     <i class="bi bi-person-plus-fill"></i> Add Student Record
+                </button>
+            </div>
+        </div>
+
+        <!-- YEAR-WISE SEGREGATION TABS & ATTENDANCE SIMULATION BAR -->
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div class="d-flex gap-1 flex-wrap align-items-center" id="studentsYearTabsContainer">
+                <span class="text-muted small me-2 fw-semibold"><i class="bi bi-mortarboard-fill text-primary me-1"></i> Academic Year:</span>
+                <button type="button" class="btn btn-sm ${window._selectedYearFilter === 'ALL' ? 'btn-primary active' : 'btn-outline-secondary'}" onclick="filterStudentsByYear('ALL')">
+                    All Years (${totalCount})
+                </button>
+                <button type="button" class="btn btn-sm ${window._selectedYearFilter === '1st Year' ? 'btn-primary active' : 'btn-outline-secondary'}" onclick="filterStudentsByYear('1st Year')">
+                    1st Year (${y1Count})
+                </button>
+                <button type="button" class="btn btn-sm ${window._selectedYearFilter === '2nd Year' ? 'btn-primary active' : 'btn-outline-secondary'}" onclick="filterStudentsByYear('2nd Year')">
+                    2nd Year (${y2Count})
+                </button>
+                <button type="button" class="btn btn-sm ${window._selectedYearFilter === '3rd Year' ? 'btn-primary active' : 'btn-outline-secondary'}" onclick="filterStudentsByYear('3rd Year')">
+                    3rd Year (${y3Count})
+                </button>
+                <button type="button" class="btn btn-sm ${window._selectedYearFilter === '4th Year' ? 'btn-primary active' : 'btn-outline-secondary'}" onclick="filterStudentsByYear('4th Year')">
+                    4th Year (${y4Count})
+                </button>
+            </div>
+
+            <!-- AUTOMATED ATTENDANCE SIMULATION BUTTON -->
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm fw-semibold" id="advanceAttdBtn" onclick="handleAdvanceAttendanceDay()" title="Advance calendar by 24h: Increases attendance for all students by +2% and recalibrates AI risk scores">
+                    <i class="bi bi-clock-history"></i> Advance 24h (+2% Daily Attd)
+                </button>
+            </div>
+        </div>
+
+        <!-- BULK ACTION TOOLBAR (Appears smoothly when rows are selected) -->
+        <div id="studentsBulkToolbar" class="students-bulk-toolbar ${selectedCount > 0 ? '' : 'd-none'}">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge bg-primary fs-6 px-3 py-2" id="studentsBulkCountBadge">${selectedCount} Selected</span>
+                <span class="text-muted small" id="studentsBulkBannerText">
+                    ${selectedCount >= students.length 
+                        ? `All <strong>${students.length}</strong> students across all pages are selected.` 
+                        : `<strong>${selectedCount}</strong> student record${selectedCount === 1 ? '' : 's'} selected.`
+                    }
+                </span>
+                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-underline fw-bold ${selectedCount < students.length ? '' : 'd-none'}" id="selectAllAcrossPagesBtn" onclick="selectAllAcrossAllPages()">
+                    Select all ${students.length} students across all pages
+                </button>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button class="btn btn-sm btn-outline-secondary" onclick="clearStudentSelection()">
+                    <i class="bi bi-x-circle me-1"></i> Clear Selection
+                </button>
+                <button class="btn btn-sm btn-outline-primary" onclick="exportSelectedStudentsCSV()">
+                    <i class="bi bi-download me-1"></i> Export Selected
+                </button>
+                <button class="btn btn-sm btn-danger fw-semibold d-flex align-items-center gap-1" onclick="handleBulkDeleteStudents()">
+                    <i class="bi bi-trash3-fill"></i> Delete Selected (<span id="bulkDeleteToolbarCount">${selectedCount}</span>)
                 </button>
             </div>
         </div>
@@ -80,8 +150,22 @@ async function renderStudents() {
                 <table class="custom-table" id="studentsTable" style="white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th style="width: 40px; text-align: center; background: var(--bg-sunken);">
-                                <input type="checkbox" id="selectAllStudents" onchange="toggleSelectAllStudents(this)" style="cursor: pointer; width: 16px; height: 16px;">
+                            <th style="width: 55px; text-align: center; background: var(--bg-sunken); position: relative;">
+                                <div class="d-flex align-items-center justify-content-center gap-1">
+                                    <input type="checkbox" id="selectAllStudents" onchange="toggleSelectAllStudents(this)" style="cursor: pointer; width: 16px; height: 16px;" title="Select / Deselect Visible Page">
+                                    <button class="btn btn-sm p-0 border-0 text-muted" type="button" onclick="toggleSelectDropdown(event)" title="Selection options" style="font-size: 10px; line-height: 1;">
+                                        <i class="bi bi-caret-down-fill"></i>
+                                    </button>
+                                </div>
+                                <div id="selectionDropdownMenu" class="dropdown-menu dropdown-menu-start shadow-sm border p-1" style="font-size: 12px; min-width: 200px; position: absolute; top: 100%; left: 0; z-index: 1050; display: none;">
+                                    <button class="dropdown-item py-1 px-2 rounded" type="button" onclick="selectAllOnCurrentPage()"><i class="bi bi-file-earmark me-2 text-primary"></i> Select This Page</button>
+                                    <button class="dropdown-item py-1 px-2 rounded fw-bold text-primary" type="button" onclick="selectAllAcrossAllPages()"><i class="bi bi-check-all me-2"></i> Select All Across All Pages (${students.length})</button>
+                                    <div class="dropdown-divider my-1"></div>
+                                    <button class="dropdown-item py-1 px-2 rounded text-danger" type="button" onclick="selectAllByRiskTier('HIGH')"><i class="bi bi-exclamation-octagon me-2"></i> Select All High Risk</button>
+                                    <button class="dropdown-item py-1 px-2 rounded text-warning text-dark" type="button" onclick="selectAllByRiskTier('MEDIUM')"><i class="bi bi-exclamation-triangle me-2"></i> Select All Moderate</button>
+                                    <div class="dropdown-divider my-1"></div>
+                                    <button class="dropdown-item py-1 px-2 rounded text-muted" type="button" onclick="clearStudentSelection()"><i class="bi bi-x-circle me-2"></i> Deselect All</button>
+                                </div>
                             </th>
                             <th class="sticky-start cursor-pointer" onclick="sortStudentsBy('id')" style="background: var(--bg-sunken); color: var(--text);">
                                 Student ID ${getSortIcon('id')}
@@ -267,6 +351,43 @@ async function renderStudents() {
                 </div>
             </div>
         </div>
+
+        <!-- BULK DELETE CONFIRMATION MODAL -->
+        <div id="studentBulkDeleteModal" class="modal-overlay">
+            <div class="student-modal" style="max-width: 520px;">
+                <div class="modal-head" style="border-bottom: 2px solid var(--risk-high);">
+                    <div>
+                        <span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon-fill me-1"></i> PERMANENT REMOVAL</span>
+                        <h2 class="text-danger">Bulk Delete Students</h2>
+                    </div>
+                    <button class="modal-close" onclick="closeStudentBulkDeleteModal()"><i class="bi bi-x"></i></button>
+                </div>
+                <div class="p-4">
+                    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-trash3-fill fs-3 text-danger flex-shrink-0"></i>
+                        <div>
+                            <strong>Warning: Permanent Deletion</strong>
+                            <p class="small mb-0">You are about to permanently delete <strong id="bulkDeleteConfirmCount">0</strong> student record(s).</p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Selected Student Accounts:</label>
+                        <div id="bulkDeleteStudentList" class="p-2 border rounded bg-light" style="max-height: 170px; overflow-y: auto; font-size: 13px;">
+                            <!-- populated dynamically by JS -->
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1 text-danger"></i> All associated semester subject marks, attendance telemetry, login credentials, and AI intervention logs will be erased.
+                    </p>
+                </div>
+                <div class="modal-actions p-3 border-top bg-light d-flex justify-content-end gap-2">
+                    <button type="button" class="secondary-btn" onclick="closeStudentBulkDeleteModal()">Cancel</button>
+                    <button type="button" class="btn btn-danger fw-semibold d-flex align-items-center gap-2" id="confirmBulkDeleteBtn" onclick="executeBulkDeleteStudents()">
+                        <i class="bi bi-trash3-fill"></i> Confirm Permanent Delete
+                    </button>
+                </div>
+            </div>
+        </div>
     `;
 
     // Bind Edit Form
@@ -360,10 +481,11 @@ function generateStudentsTableRows(dataList) {
     return dataList.map(s => {
         let badgeClass = s.risk >= 60 ? "high" : (s.risk >= 30 ? "medium" : "low");
         let riskLabel = s.risk >= 60 ? "High Risk" : (s.risk >= 30 ? "Moderate" : "Low Risk");
+        const isChecked = window._selectedStudentIds && window._selectedStudentIds.has(s.id);
         return `
-            <tr>
+            <tr class="${isChecked ? 'table-active' : ''}">
                 <td style="text-align: center;">
-                    <input type="checkbox" class="student-select-cb" data-student-id="${s.id}" data-student-name="${s.name}" onchange="updateBulkDeleteCount()" style="cursor: pointer; width: 16px; height: 16px;">
+                    <input type="checkbox" class="student-select-cb" data-student-id="${s.id}" data-student-name="${s.name}" onchange="handleStudentCheckboxChange(this)" ${isChecked ? 'checked' : ''} style="cursor: pointer; width: 16px; height: 16px;">
                 </td>
                 <td class="sticky-start" style="background: var(--bg-elevated); color: var(--text);"><code>${s.id}</code></td>
                 <td><strong>${s.name}</strong></td>
@@ -378,7 +500,7 @@ function generateStudentsTableRows(dataList) {
                 <td><strong>${s.cgpa}</strong></td>
                 <td>${s.credits || 24}</td>
                 <td>${s.lms_score || s.attendance}%</td>
-                <td><span class="risk-badge ${badgeClass}">${s.risk}% (${riskLabel})</span></td>
+                <td><span class="risk-badge ${badgeClass} cursor-pointer" onclick="openStudentRiskBreakdownModal('${s.id}')" title="Click to view AI risk calculation breakdown">${s.risk}% (${riskLabel})</span></td>
                 <td>${s.father || 'N/A'}</td>
                 <td>${s.mother || 'N/A'}</td>
                 <td>${s.mother_tongue || s.motherTongue || 'Telugu'}</td>
@@ -393,15 +515,15 @@ function generateStudentsTableRows(dataList) {
                     </div>
                 </td>
                 <td>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-primary btn-sm" onclick="viewStudent360('${s.id}')" title="360° Profile">
-                            <i class="bi bi-person-vcard"></i>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewStudent360('${s.id}')" title="Open 360 Profile">
+                            <i class="bi bi-person-lines-fill"></i>
                         </button>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal('${s.id}')" title="Edit Record">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="openEditModal('${s.id}')" title="Edit Student">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="handleDeleteStudent('${s.id}', '${s.name}')" title="Delete Record">
-                            <i class="bi bi-trash"></i>
+                        <button class="btn btn-sm btn-outline-danger" onclick="handleDeleteStudent('${s.id}')" title="Delete Student">
+                            <i class="bi bi-trash3"></i>
                         </button>
                     </div>
                 </td>
@@ -503,7 +625,18 @@ function filterStudentsTable() {
         if (riskFilter === "MEDIUM") matchesRisk = s.risk >= 30 && s.risk < 60;
         if (riskFilter === "LOW") matchesRisk = s.risk < 30;
 
-        return matchesQuery && matchesRisk;
+        let matchesYear = true;
+        if (window._selectedYearFilter && window._selectedYearFilter !== "ALL") {
+            const yrTarget = window._selectedYearFilter.toLowerCase();
+            const sYr = (s.year || "").toLowerCase();
+            if (yrTarget.includes("1")) matchesYear = sYr.includes("1");
+            else if (yrTarget.includes("2")) matchesYear = sYr.includes("2");
+            else if (yrTarget.includes("3")) matchesYear = sYr.includes("3");
+            else if (yrTarget.includes("4")) matchesYear = sYr.includes("4");
+            else matchesYear = sYr === yrTarget;
+        }
+
+        return matchesQuery && matchesRisk && matchesYear;
     });
 
     const sorted = getSortedStudents(filtered);
@@ -532,7 +665,58 @@ function filterStudentsTable() {
     }
 
     renderStudentsPaginationControls(currentPage, totalPages);
+    updateBulkDeleteCount();
 }
+
+function filterStudentsByYear(year) {
+    window._selectedYearFilter = year;
+    if (window._studentsPageState) window._studentsPageState.page = 1;
+    
+    // Update active class on year tabs
+    const container = document.getElementById("studentsYearTabsContainer");
+    if (container) {
+        container.querySelectorAll("button").forEach(btn => {
+            if (btn.textContent.includes(year) || (year === 'ALL' && btn.textContent.includes('All Years'))) {
+                btn.className = "btn btn-sm btn-primary active";
+            } else {
+                btn.className = "btn btn-sm btn-outline-secondary";
+            }
+        });
+    }
+    filterStudentsTable();
+}
+window.filterStudentsByYear = filterStudentsByYear;
+
+async function handleAdvanceAttendanceDay() {
+    const btn = document.getElementById("advanceAttdBtn");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Advancing 24h (+2%)...`;
+    }
+
+    try {
+        const res = await API.advanceAttendanceDay(2.0);
+        if (res && res.success) {
+            await loadLatestStudents();
+            renderStudents();
+            alert(`🎉 24-Hour Cycle Advanced!\n\nAttendance has been increased by +2.0% for all ${res.students_updated || 'active'} students.\nAI Risk scores and subject attendance have been updated dynamically.`);
+        } else {
+            alert("Attendance advancement failed: " + (res?.message || "Unknown error"));
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-clock-history"></i> Advance 24h (+2% Daily Attd)`;
+            }
+        }
+    } catch (e) {
+        console.error("Advance attendance error:", e);
+        alert("Error connecting to server. Please try again.");
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-clock-history"></i> Advance 24h (+2% Daily Attd)`;
+        }
+    }
+}
+window.handleAdvanceAttendanceDay = handleAdvanceAttendanceDay;
 
 function openEditModal(studentId) {
     const s = students.find(item => item.id === studentId);
@@ -713,78 +897,353 @@ function initStudentModalEvents() {
 
 
 // =====================================================
-// MASS DELETE / BULK DELETE
+// PERSISTENT MULTI-SELECT & BULK ACTIONS (ALL PAGES)
 // =====================================================
 
-function toggleSelectAllStudents(masterCheckbox) {
-    const checked = masterCheckbox.checked;
-    document.querySelectorAll(".student-select-cb").forEach(cb => {
-        cb.checked = checked;
-    });
+function toggleSelectDropdown(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    const menu = document.getElementById("selectionDropdownMenu");
+    if (!menu) return;
+    const isShowing = menu.style.display === "block";
+    menu.style.display = isShowing ? "none" : "block";
+
+    if (!isShowing) {
+        const dismissHandler = function(evt) {
+            if (!menu.contains(evt.target)) {
+                menu.style.display = "none";
+                document.removeEventListener("click", dismissHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener("click", dismissHandler), 10);
+    }
+}
+window.toggleSelectDropdown = toggleSelectDropdown;
+
+function handleStudentCheckboxChange(cb) {
+    if (!window._selectedStudentIds) window._selectedStudentIds = new Set();
+    const sid = cb.dataset.studentId;
+    if (cb.checked) {
+        window._selectedStudentIds.add(sid);
+    } else {
+        window._selectedStudentIds.delete(sid);
+    }
+
+    // Highlight row
+    const row = cb.closest("tr");
+    if (row) {
+        if (cb.checked) row.classList.add("table-active");
+        else row.classList.remove("table-active");
+    }
+
     updateBulkDeleteCount();
 }
+window.handleStudentCheckboxChange = handleStudentCheckboxChange;
 
-function updateBulkDeleteCount() {
-    const selected = document.querySelectorAll(".student-select-cb:checked");
-    const count = selected.length;
-    const btn = document.getElementById("bulkDeleteBtn");
-    const countSpan = document.getElementById("bulkDeleteCount");
-    if (btn) {
-        if (count > 0) {
-            btn.classList.remove("d-none");
+function toggleSelectAllStudents(masterCheckbox) {
+    if (!window._selectedStudentIds) window._selectedStudentIds = new Set();
+    const isChecked = masterCheckbox.checked;
+
+    const cbs = document.querySelectorAll(".student-select-cb");
+    cbs.forEach(cb => {
+        cb.checked = isChecked;
+        const sid = cb.dataset.studentId;
+        const row = cb.closest("tr");
+        if (isChecked) {
+            window._selectedStudentIds.add(sid);
+            if (row) row.classList.add("table-active");
         } else {
-            btn.classList.add("d-none");
+            window._selectedStudentIds.delete(sid);
+            if (row) row.classList.remove("table-active");
         }
-    }
-    if (countSpan) countSpan.textContent = count;
+    });
 
-    // Update select-all checkbox state
-    const all = document.querySelectorAll(".student-select-cb");
+    updateBulkDeleteCount();
+}
+window.toggleSelectAllStudents = toggleSelectAllStudents;
+
+function selectAllOnCurrentPage() {
+    if (!window._selectedStudentIds) window._selectedStudentIds = new Set();
+    const cbs = document.querySelectorAll(".student-select-cb");
+    cbs.forEach(cb => {
+        cb.checked = true;
+        const sid = cb.dataset.studentId;
+        window._selectedStudentIds.add(sid);
+        const row = cb.closest("tr");
+        if (row) row.classList.add("table-active");
+    });
+    const menu = document.getElementById("selectionDropdownMenu");
+    if (menu) menu.style.display = "none";
+    updateBulkDeleteCount();
+}
+window.selectAllOnCurrentPage = selectAllOnCurrentPage;
+
+function selectAllAcrossAllPages() {
+    if (!window._selectedStudentIds) window._selectedStudentIds = new Set();
+
+    // Get all students currently in memory
+    students.forEach(s => {
+        if (s && s.id) {
+            window._selectedStudentIds.add(s.id);
+        }
+    });
+
+    // Update checkboxes on current page
+    document.querySelectorAll(".student-select-cb").forEach(cb => {
+        cb.checked = true;
+        const row = cb.closest("tr");
+        if (row) row.classList.add("table-active");
+    });
+
     const selectAll = document.getElementById("selectAllStudents");
     if (selectAll) {
-        selectAll.checked = all.length > 0 && count === all.length;
-        selectAll.indeterminate = count > 0 && count < all.length;
+        selectAll.checked = true;
+        selectAll.indeterminate = false;
+    }
+
+    const menu = document.getElementById("selectionDropdownMenu");
+    if (menu) menu.style.display = "none";
+
+    updateBulkDeleteCount();
+}
+window.selectAllAcrossAllPages = selectAllAcrossAllPages;
+
+function selectAllByRiskTier(tier) {
+    if (!window._selectedStudentIds) window._selectedStudentIds = new Set();
+    
+    students.forEach(s => {
+        let matches = false;
+        if (tier === 'HIGH') matches = (s.risk >= 60);
+        else if (tier === 'MEDIUM') matches = (s.risk >= 30 && s.risk < 60);
+        else if (tier === 'LOW') matches = (s.risk < 30);
+        if (matches) {
+            window._selectedStudentIds.add(s.id);
+        }
+    });
+
+    // Update visible checkboxes
+    document.querySelectorAll(".student-select-cb").forEach(cb => {
+        const sid = cb.dataset.studentId;
+        const checked = window._selectedStudentIds.has(sid);
+        cb.checked = checked;
+        const row = cb.closest("tr");
+        if (row) {
+            if (checked) row.classList.add("table-active");
+            else row.classList.remove("table-active");
+        }
+    });
+
+    const menu = document.getElementById("selectionDropdownMenu");
+    if (menu) menu.style.display = "none";
+
+    updateBulkDeleteCount();
+}
+window.selectAllByRiskTier = selectAllByRiskTier;
+
+function clearStudentSelection() {
+    if (window._selectedStudentIds) window._selectedStudentIds.clear();
+    document.querySelectorAll(".student-select-cb").forEach(cb => {
+        cb.checked = false;
+        const row = cb.closest("tr");
+        if (row) row.classList.remove("table-active");
+    });
+    const selectAll = document.getElementById("selectAllStudents");
+    if (selectAll) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+    }
+    const menu = document.getElementById("selectionDropdownMenu");
+    if (menu) menu.style.display = "none";
+    updateBulkDeleteCount();
+}
+window.clearStudentSelection = clearStudentSelection;
+
+function updateBulkDeleteCount() {
+    const count = window._selectedStudentIds ? window._selectedStudentIds.size : 0;
+    const totalStudents = students.length;
+
+    const btn = document.getElementById("bulkDeleteBtn");
+    const countSpan = document.getElementById("bulkDeleteCount");
+    const toolbar = document.getElementById("studentsBulkToolbar");
+    const toolbarCount = document.getElementById("bulkDeleteToolbarCount");
+    const badge = document.getElementById("studentsBulkCountBadge");
+    const bannerText = document.getElementById("studentsBulkBannerText");
+    const selectAllPagesBtn = document.getElementById("selectAllAcrossPagesBtn");
+
+    if (btn) {
+        if (count > 0) btn.classList.remove("d-none");
+        else btn.classList.add("d-none");
+    }
+    if (toolbar) {
+        if (count > 0) toolbar.classList.remove("d-none");
+        else toolbar.classList.add("d-none");
+    }
+    if (countSpan) countSpan.textContent = count;
+    if (toolbarCount) toolbarCount.textContent = count;
+    if (badge) badge.textContent = `${count} Selected`;
+
+    if (bannerText) {
+        if (count >= totalStudents && totalStudents > 0) {
+            bannerText.innerHTML = `All <strong>${totalStudents}</strong> students across all pages are selected.`;
+        } else {
+            bannerText.innerHTML = `<strong>${count}</strong> student record${count === 1 ? '' : 's'} selected.`;
+        }
+    }
+
+    if (selectAllPagesBtn) {
+        if (count > 0 && count < totalStudents) {
+            selectAllPagesBtn.classList.remove("d-none");
+            selectAllPagesBtn.textContent = `Select all ${totalStudents} students across all pages`;
+        } else {
+            selectAllPagesBtn.classList.add("d-none");
+        }
+    }
+
+    // Master checkbox state based on visible page items
+    const pageCbs = document.querySelectorAll(".student-select-cb");
+    const checkedPageCbs = document.querySelectorAll(".student-select-cb:checked");
+    const selectAll = document.getElementById("selectAllStudents");
+    if (selectAll) {
+        if (count >= totalStudents && totalStudents > 0) {
+            selectAll.checked = true;
+            selectAll.indeterminate = false;
+        } else if (pageCbs.length > 0 && checkedPageCbs.length === pageCbs.length) {
+            selectAll.checked = true;
+            selectAll.indeterminate = false;
+        } else if (checkedPageCbs.length > 0 || (count > 0 && count < totalStudents)) {
+            selectAll.checked = false;
+            selectAll.indeterminate = true;
+        } else {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        }
     }
 }
+window.updateBulkDeleteCount = updateBulkDeleteCount;
 
-async function handleBulkDeleteStudents() {
-    const selected = document.querySelectorAll(".student-select-cb:checked");
-    const ids = Array.from(selected).map(cb => cb.dataset.studentId);
-    const count = ids.length;
+function exportSelectedStudentsCSV() {
+    if (!window._selectedStudentIds || window._selectedStudentIds.size === 0) {
+        alert("No students selected for export.");
+        return;
+    }
+    const selectedList = students.filter(s => window._selectedStudentIds.has(s.id));
+    const headers = ["id", "name", "gender", "course", "year", "attendance", "cgpa", "credits", "lms_score", "risk", "father", "mother", "mother_tongue", "place", "region", "country", "email", "phone"];
+    
+    let csvContent = headers.join(",") + "\n";
+    selectedList.forEach(s => {
+        const row = headers.map(h => {
+            let val = s[h] !== undefined ? s[h] : (s[h === 'mother_tongue' ? 'motherTongue' : ''] || '');
+            let str = String(val).replace(/"/g, '""');
+            return `"${str}"`;
+        });
+        csvContent += row.join(",") + "\n";
+    });
 
-    if (count === 0) return;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `selected_students_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+window.exportSelectedStudentsCSV = exportSelectedStudentsCSV;
 
-    // Safety confirmation — type DELETE
-    const confirmText = prompt(
-        `⚠️ You are about to permanently delete ${count} student record${count > 1 ? 's' : ''} ` +
-        `and ALL associated data (marks, activities, interventions, notifications).\n\n` +
-        `This action CANNOT be undone.\n\n` +
-        `Type "DELETE" to confirm:`
-    );
-    if (confirmText !== "DELETE") {
-        if (confirmText !== null) {
-            alert("Deletion cancelled. You must type exactly \"DELETE\" to confirm.");
-        }
+// =====================================================
+// BULK DELETE SAFETY MODAL & EXECUTION
+// =====================================================
+
+function handleBulkDeleteStudents() {
+    const count = window._selectedStudentIds ? window._selectedStudentIds.size : 0;
+    if (count === 0) {
+        alert("Please select at least one student record to delete.");
         return;
     }
 
-    const btn = document.getElementById("bulkDeleteBtn");
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Deleting ${count} records...`;
+    const modal = document.getElementById("studentBulkDeleteModal");
+    const listContainer = document.getElementById("bulkDeleteStudentList");
+    const countSpan = document.getElementById("bulkDeleteConfirmCount");
+
+    if (countSpan) countSpan.textContent = count;
+
+    if (listContainer) {
+        const selectedList = students.filter(s => window._selectedStudentIds.has(s.id));
+        const previewItems = selectedList.slice(0, 15);
+        const remaining = selectedList.length - previewItems.length;
+
+        listContainer.innerHTML = `
+            <ul class="list-unstyled mb-0 d-flex flex-column gap-1">
+                ${previewItems.map(s => {
+                    const badgeClass = s.risk >= 60 ? 'bg-danger' : (s.risk >= 30 ? 'bg-warning text-dark' : 'bg-success');
+                    return `
+                        <li class="d-flex justify-content-between align-items-center p-2 rounded" style="background: var(--bg-sunken); border: 1px solid var(--border-soft);">
+                            <div>
+                                <strong style="color: var(--text);">${s.name}</strong> 
+                                <code class="ms-1" style="background: var(--bg-elevated);">${s.id}</code>
+                                <span class="text-muted small ms-2">(${s.course || 'CSE'} • ${s.year || '2nd Year'})</span>
+                            </div>
+                            <span class="badge ${badgeClass}">${s.risk}% Risk</span>
+                        </li>
+                    `;
+                }).join("")}
+                ${remaining > 0 ? `
+                    <li class="p-2 text-center text-muted fw-semibold rounded" style="background: var(--bg-sunken);">
+                        <i class="bi bi-three-dots"></i> and ${remaining} more student records across all pages
+                    </li>
+                ` : ''}
+            </ul>
+        `;
     }
 
-    const res = await API.bulkDeleteStudents(ids);
+    if (modal) modal.classList.add("active");
+}
+window.handleBulkDeleteStudents = handleBulkDeleteStudents;
 
-    if (res && res.success) {
-        alert(`Successfully deleted ${res.deleted} student records.`);
-        await loadLatestStudents();
-        renderStudents();
-    } else {
-        alert("Bulk delete failed: " + (res?.message || "Unknown error"));
+function closeStudentBulkDeleteModal() {
+    const modal = document.getElementById("studentBulkDeleteModal");
+    if (modal) modal.classList.remove("active");
+}
+window.closeStudentBulkDeleteModal = closeStudentBulkDeleteModal;
+
+async function executeBulkDeleteStudents() {
+    const count = window._selectedStudentIds ? window._selectedStudentIds.size : 0;
+    if (count === 0) return;
+
+    const btn = document.getElementById("confirmBulkDeleteBtn");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Deleting ${count} Student Records...`;
+    }
+
+    const ids = Array.from(window._selectedStudentIds);
+    try {
+        const res = await API.bulkDeleteStudents(ids);
+        if (res && res.success) {
+            closeStudentBulkDeleteModal();
+            if (window._selectedStudentIds) window._selectedStudentIds.clear();
+            await loadLatestStudents();
+            renderStudents();
+            alert(`Successfully deleted ${res.deleted || count} student record(s) and all associated data.`);
+        } else {
+            alert("Bulk delete failed: " + (res?.message || "Unknown error"));
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-trash3-fill"></i> Confirm Permanent Delete`;
+            }
+        }
+    } catch (err) {
+        console.error("Bulk delete execution error:", err);
+        alert("An error occurred while executing bulk delete. Please try again.");
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = `<i class="bi bi-trash3"></i> Delete Selected (<span id="bulkDeleteCount">${count}</span>)`;
+            btn.innerHTML = `<i class="bi bi-trash3-fill"></i> Confirm Permanent Delete`;
         }
     }
 }
+window.executeBulkDeleteStudents = executeBulkDeleteStudents;
+
+

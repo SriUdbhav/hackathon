@@ -207,6 +207,17 @@ const API = {
         return this._fetch("/recalculate-risks", { method: "POST" });
     },
 
+    advanceAttendanceDay(incrementPct = 2.0) {
+        return this._fetch("/attendance/advance-day", {
+            method: "POST",
+            body: JSON.stringify({ increment_pct: incrementPct })
+        });
+    },
+
+    getAttendanceStatus() {
+        return this._fetch("/attendance/status");
+    },
+
     importStudentsCSV(formData) {
         return this._upload("/students/import", formData);
     },

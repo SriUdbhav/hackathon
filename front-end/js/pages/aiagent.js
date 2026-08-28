@@ -1,42 +1,157 @@
 /* =====================================================
    AIAGENT.JS
-   Autonomous Agent Studio, In-Chat Model Switcher,
-   Persistent Context & Multi-turn Chat
+   Autonomous Agent Studio, Multi-Session Chat History,
+   In-Chat Model Switcher & Result Reset Tools
    UAC: Students locked to own data, no model switching
-        Faculty can use AI but not change settings
+        Faculty/Mentor can use AI but not change settings
 ===================================================== */
 
-// Persistent chat conversation history across renders and model switches
-function getChatStorageKey() {
+// Session Storage Keys
+function getChatSessionsKey() {
     const user = (typeof getCurrentUser === "function") ? getCurrentUser() : null;
     const uid = user ? (user.id || user.username || "user") : "user";
-    return "eduAiChatHistory_" + uid;
+    return "eduAiSessions_" + uid;
+}
+
+function getActiveSessionIdKey() {
+    const user = (typeof getCurrentUser === "function") ? getCurrentUser() : null;
+    const uid = user ? (user.id || user.username || "user") : "user";
+    return "eduAiActiveSessId_" + uid;
+}
+
+// 1. Session & History Store Helpers
+function loadAllAiSessions() {
+    try {
+        const key = getChatSessionsKey();
+        const stored = localStorage.getItem(key) || sessionStorage.getItem(key);
+        if (stored) {
+            return JSON.parse(stored) || [];
+        }
+    } catch (e) {
+        console.error("Error reading AI sessions:", e);
+    }
+    return [];
+}
+
+function saveAllAiSessions(sessions) {
+    try {
+        const key = getChatSessionsKey();
+        const data = JSON.stringify(sessions || []);
+        localStorage.setItem(key, data);
+        sessionStorage.setItem(key, data);
+    } catch (e) {
+        console.error("Error saving AI sessions:", e);
+    }
+}
+
+function getActiveSessionId() {
+    try {
+        const key = getActiveSessionIdKey();
+        return sessionStorage.getItem(key) || localStorage.getItem(key) || null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function setActiveSessionId(id) {
+    try {
+        const key = getActiveSessionIdKey();
+        if (id) {
+            sessionStorage.setItem(key, id);
+            localStorage.setItem(key, id);
+        } else {
+            sessionStorage.removeItem(key);
+            localStorage.removeItem(key);
+        }
+    } catch (e) {}
 }
 
 function loadChatConversationHistory() {
-    try {
-        const key = getChatStorageKey();
-        const stored = sessionStorage.getItem(key) || localStorage.getItem(key);
-        if (stored) {
-            window.chatConversationHistory = JSON.parse(stored);
-            return;
-        }
-    } catch (e) {
-        console.error("Error loading chat history from storage:", e);
+    const sessions = loadAllAiSessions();
+    let activeId = getActiveSessionId();
+    
+    let activeSession = sessions.find(s => s.id === activeId);
+    if (!activeSession && sessions.length > 0) {
+        activeSession = sessions[0];
+        activeId = activeSession.id;
+        setActiveSessionId(activeId);
     }
-    if (!window.chatConversationHistory) {
+
+    if (activeSession && Array.isArray(activeSession.messages)) {
+        window.chatConversationHistory = activeSession.messages;
+        window.currentAiSessionId = activeSession.id;
+    } else {
         window.chatConversationHistory = [];
+        window.currentAiSessionId = null;
     }
 }
 
 function saveChatConversationHistory() {
-    try {
-        const key = getChatStorageKey();
-        const data = JSON.stringify(window.chatConversationHistory || []);
-        sessionStorage.setItem(key, data);
-        localStorage.setItem(key, data);
-    } catch (e) {
-        console.error("Error saving chat history to storage:", e);
+    const messages = window.chatConversationHistory || [];
+    let sessions = loadAllAiSessions();
+    let activeId = window.currentAiSessionId || getActiveSessionId();
+
+    if (messages.length === 0) {
+        return;
+    }
+
+    // Auto-generate title from first user query
+    let title = "New Conversation";
+    const firstUserMsg = messages.find(m => m.role === "user");
+    if (firstUserMsg && firstUserMsg.content) {
+        title = firstUserMsg.content.trim().slice(0, 45) + (firstUserMsg.content.length > 45 ? "..." : "");
+    }
+
+    const currentEngine = window.activeChatEngine || "gemini";
+    const now = new Date();
+    const timeStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " " + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    if (!activeId) {
+        activeId = "sess_" + Date.now();
+        window.currentAiSessionId = activeId;
+        setActiveSessionId(activeId);
+        sessions.unshift({
+            id: activeId,
+            title: title,
+            timestamp: timeStr,
+            engine: currentEngine,
+            messages: messages
+        });
+    } else {
+        const idx = sessions.findIndex(s => s.id === activeId);
+        if (idx >= 0) {
+            sessions[idx].messages = messages;
+            sessions[idx].title = title;
+            sessions[idx].timestamp = timeStr;
+            sessions[idx].engine = currentEngine;
+            // Move to top
+            const updated = sessions.splice(idx, 1)[0];
+            sessions.unshift(updated);
+        } else {
+            sessions.unshift({
+                id: activeId,
+                title: title,
+                timestamp: timeStr,
+                engine: currentEngine,
+                messages: messages
+            });
+        }
+    }
+
+    // Keep max 30 sessions in storage
+    if (sessions.length > 30) {
+        sessions = sessions.slice(0, 30);
+    }
+
+    saveAllAiSessions(sessions);
+    updateHistoryCountBadge();
+}
+
+function updateHistoryCountBadge() {
+    const badge = document.getElementById("aiHistoryCountBadge");
+    if (badge) {
+        const sessions = loadAllAiSessions();
+        badge.textContent = sessions.length;
     }
 }
 
@@ -46,6 +161,10 @@ loadChatConversationHistory();
 if (!window.activeChatEngine) {
     window.activeChatEngine = null;
 }
+
+// =====================================================
+// 2. MAIN PAGE RENDER
+// =====================================================
 
 function renderAIAgent() {
     const content = document.getElementById("pageContent");
@@ -60,9 +179,9 @@ function renderAIAgent() {
     const isStudent = role === "student";
     const isMentor = role === "mentor";
 
-    // Faculty, Mentor, and Admin can run the autonomous intervention loop; Students get the personalized assistant
     const showAutonomousLoop = !isStudent;
     const showModelSwitcher = isAdmin;
+    const sessions = loadAllAiSessions();
     
     // Assistant title per role
     let assistantTitle = "Faculty AI Assistant";
@@ -79,42 +198,85 @@ function renderAIAgent() {
     }
 
     content.innerHTML = `
+        <!-- AI CONVERSATION HISTORY DRAWER (OFF-CANVAS) -->
+        <div id="aiHistoryBackdrop" class="ai-history-backdrop" onclick="toggleAiHistoryDrawer(false)"></div>
+        <div id="aiHistoryDrawer" class="ai-history-drawer">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history fs-5 text-primary"></i>
+                    <h5 class="fw-bold mb-0 text-dark">Chat History</h5>
+                    <span class="badge bg-primary" id="aiHistoryDrawerBadge">${sessions.length}</span>
+                </div>
+                <button type="button" class="btn-close" onclick="toggleAiHistoryDrawer(false)" title="Close History"></button>
+            </div>
+            
+            <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center gap-2" onclick="startNewAiChatSession(); toggleAiHistoryDrawer(false);">
+                    <i class="bi bi-plus-lg"></i> Start New Conversation
+                </button>
+            </div>
+
+            <div class="flex-grow-1 p-3 overflow-y-auto" id="aiSessionsListContainer">
+                ${renderAiSessionsListHtml()}
+            </div>
+
+            <div class="p-3 border-top bg-light d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1" onclick="clearAllAiSessions()">
+                    <i class="bi bi-trash3"></i> Delete All History
+                </button>
+            </div>
+        </div>
+
+        <!-- PAGE HEADER -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div>
                 <h1 class="h3 fw-bold mb-1">${assistantTitle}</h1>
                 <p class="text-muted small mb-0">${assistantSubtitle}</p>
             </div>
-            ${showAutonomousLoop ? `
-                <button type="button" class="primary-btn bg-danger border-0 d-flex align-items-center gap-2" id="runAgentLoopBtn" onclick="triggerAutonomousAgentLoop(event)">
-                    <i class="bi bi-play-circle-fill"></i> Run Autonomous Intervention Loop
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button type="button" class="secondary-btn" onclick="toggleAiHistoryDrawer(true)" title="View Past Conversations">
+                    <i class="bi bi-clock-history me-1 text-primary"></i> History 
+                    <span class="badge bg-secondary ms-1" id="aiHistoryCountBadge">${sessions.length}</span>
                 </button>
-            ` : ''}
+                ${showAutonomousLoop ? `
+                    <button type="button" class="primary-btn bg-danger border-0 d-flex align-items-center gap-2" id="runAgentLoopBtn" onclick="triggerAutonomousAgentLoop(event)">
+                        <i class="bi bi-play-circle-fill"></i> Run Autonomous Loop
+                    </button>
+                ` : ''}
+            </div>
         </div>
 
         <div class="row g-4" id="aiAgentLayoutRow">
             <!-- AUTONOMOUS AGENT ACTION TRACE STREAM (Faculty, Mentor & Admin) -->
             ${!isStudent ? `
                 <div class="${window._chatIsExpanded ? 'col-lg-6 d-none' : 'col-lg-6'}" id="aiAgentTraceCol">
-                    <div class="card-box p-4 h-100">
-                        <div class="card-head border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
+                    <div class="card-box p-4 h-100 d-flex flex-column">
+                        <div class="card-head border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <div>
                                 <h3 class="d-flex align-items-center gap-2 mb-1">
                                     <i class="bi bi-cpu-fill text-primary"></i> 
-                                    Agent Perception & Tool Calling Stream
+                                    Agent Perception & Tools Stream
                                 </h3>
                                 <span class="text-muted small">Live trace of autonomous decisions and tool invocations</span>
                             </div>
-                            <span class="badge bg-success" id="agentStatusBadge">Agent Idle & Ready</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success" id="agentStatusBadge">${window._latestTracesBadge || 'Agent Idle & Ready'}</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearAutonomousAgentResults()" title="Reset Results & Clear Stream" style="font-size: 11.5px; border-radius: 8px;">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                </button>
+                            </div>
                         </div>
 
-                        <div id="agentTraceContainer" style="max-height: calc(100vh - 300px); min-height: 480px; overflow-y: auto;">
-                            <div class="text-center py-5" style="color: var(--text-muted);">
-                                <i class="bi bi-cpu fs-1 d-block mb-3 text-primary"></i>
-                                <h5 style="color: var(--text);">Ready to Execute Autonomous Loop</h5>
-                                <p class="small" style="max-width: 420px; margin: auto; color: var(--text-soft);">
-                                    Click <strong>"Run Autonomous Intervention Loop"</strong> to make the AI Agent inspect all students, diagnose root causes, and autonomously execute tools.
-                                </p>
-                            </div>
+                        <div id="agentTraceContainer" class="flex-grow-1" style="max-height: calc(100vh - 300px); min-height: 480px; overflow-y: auto;">
+                            ${window._latestTracesHtml || `
+                                <div class="text-center py-5" style="color: var(--text-muted);">
+                                    <i class="bi bi-cpu fs-1 d-block mb-3 text-primary"></i>
+                                    <h5 style="color: var(--text);">Ready to Execute Autonomous Loop</h5>
+                                    <p class="small" style="max-width: 420px; margin: auto; color: var(--text-soft);">
+                                        Click <strong>"Run Autonomous Loop"</strong> to make the AI Agent inspect all students, diagnose root causes, and autonomously execute remediation tools.
+                                    </p>
+                                </div>
+                            `}
                         </div>
                     </div>
                 </div>
@@ -133,8 +295,23 @@ function renderAIAgent() {
                         </div>
 
                         <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <!-- New Chat Button -->
+                            <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" onclick="startNewAiChatSession()" title="Start a fresh conversation">
+                                <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline">New Chat</span>
+                            </button>
+
+                            <!-- Chat History Button -->
+                            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" onclick="toggleAiHistoryDrawer(true)" title="Open Conversation History">
+                                <i class="bi bi-clock-history"></i> <span class="d-none d-sm-inline">History</span>
+                            </button>
+
+                            <!-- Clear Active Chat Button -->
+                            <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" onclick="clearCurrentChat()" title="Clear Current Chat Result">
+                                <i class="bi bi-trash3"></i> <span class="d-none d-sm-inline">Clear</span>
+                            </button>
+
                             ${!isStudent ? `
-                                <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" id="btnToggleChatExpand" onclick="toggleChatExpand(event)" title="Toggle Wide Full View / Split View">
+                                <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="btnToggleChatExpand" onclick="toggleChatExpand(event)" title="Toggle Wide Full View / Split View">
                                     <i class="bi ${window._chatIsExpanded ? 'bi-arrows-angle-contract' : 'bi-arrows-angle-expand'}" id="chatExpandIcon"></i> 
                                     <span id="chatExpandText" class="d-none d-sm-inline">${window._chatIsExpanded ? 'Split View' : 'Full View'}</span>
                                 </button>
@@ -150,10 +327,6 @@ function renderAIAgent() {
                                     <option value="local">Local Agent (Rule-Based)</option>
                                 </select>
                             ` : ''}
-
-                            <button type="button" class="btn btn-sm" style="background: var(--bg-sunken); color: var(--text-soft); border: 1px solid var(--border);" onclick="clearChatHistory()" title="Clear Conversation">
-                                <i class="bi bi-trash3"></i>
-                            </button>
                         </div>
                     </div>
 
@@ -165,7 +338,7 @@ function renderAIAgent() {
                     <!-- INPUT BAR -->
                     <div class="chat-input-bar d-flex gap-2">
                         <input type="text" id="aiAgentInput" class="form-control" placeholder="${isStudent ? 'Ask about your performance, study tips, exam prep...' : (isMentor ? 'Ask mentor radar (e.g. \'List students with high risk and recommend 1-on-1 counseling steps\')...' : 'Ask AI (e.g. \'Provide a comprehensive intervention plan for at-risk students\')...')}" onkeydown="if(event.key==='Enter') sendAiQuery()" style="background: var(--bg-sunken); color: var(--text); border: 1px solid var(--border);">
-                        <button class="primary-btn px-4" onclick="sendAiQuery()" id="sendAiBtn">
+                        <button class="primary-btn px-4" onclick="sendAiQuery()" id="sendAiBtn" title="Send Query">
                             <i class="bi bi-send-fill"></i>
                         </button>
                     </div>
@@ -184,6 +357,212 @@ function renderAIAgent() {
         if (badge) badge.textContent = `Model: ${prov.toUpperCase()}`;
     });
 }
+window.renderAIAgent = renderAIAgent;
+
+// =====================================================
+// 3. HISTORY DRAWER CONTROLLERS
+// =====================================================
+
+function toggleAiHistoryDrawer(open) {
+    const drawer = document.getElementById("aiHistoryDrawer");
+    const backdrop = document.getElementById("aiHistoryBackdrop");
+    if (!drawer) return;
+
+    const willOpen = typeof open === "boolean" ? open : !drawer.classList.contains("active");
+    if (willOpen) {
+        const container = document.getElementById("aiSessionsListContainer");
+        if (container) container.innerHTML = renderAiSessionsListHtml();
+        const badge = document.getElementById("aiHistoryDrawerBadge");
+        if (badge) badge.textContent = loadAllAiSessions().length;
+        
+        drawer.classList.add("active");
+        backdrop?.classList.add("active");
+    } else {
+        drawer.classList.remove("active");
+        backdrop?.classList.remove("active");
+    }
+}
+window.toggleAiHistoryDrawer = toggleAiHistoryDrawer;
+
+function renderAiSessionsListHtml() {
+    const sessions = loadAllAiSessions();
+    const activeId = window.currentAiSessionId || getActiveSessionId();
+
+    if (!sessions || sessions.length === 0) {
+        return `
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-chat-square-dots fs-1 d-block mb-2 text-secondary"></i>
+                <h6 class="fw-semibold">No Saved Conversations</h6>
+                <p class="small text-muted mb-0">Your conversation history with the AI Assistant will appear here.</p>
+            </div>
+        `;
+    }
+
+    return sessions.map((s) => {
+        const isActive = s.id === activeId;
+        const msgCount = Array.isArray(s.messages) ? s.messages.length : 0;
+        const lastMsg = msgCount > 0 ? s.messages[msgCount - 1].content : "No messages";
+        const preview = lastMsg.replace(/[#*`_]/g, "").slice(0, 80) + (lastMsg.length > 80 ? "..." : "");
+
+        return `
+            <div class="ai-session-card mb-2 ${isActive ? 'active' : ''}" onclick="loadAiSession('${s.id}')">
+                <div class="d-flex justify-content-between align-items-start mb-1 gap-2">
+                    <h6 class="ai-session-title mb-0 flex-grow-1">${s.title || 'Conversation'}</h6>
+                    <button type="button" class="btn btn-sm btn-link text-danger p-0 border-0" onclick="deleteAiSession('${s.id}', event)" title="Delete session">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="ai-session-preview mb-2">${preview}</div>
+                <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 11px;">
+                    <span><i class="bi bi-clock me-1"></i>${s.timestamp || 'Recent'}</span>
+                    <div class="d-flex gap-1 align-items-center">
+                        <span class="badge border" style="font-size: 9.5px; background: var(--bg-elevated); color: var(--text);">${(s.engine || 'AI').toUpperCase()}</span>
+                        <span class="badge bg-secondary" style="font-size: 9.5px;">${msgCount} msg${msgCount === 1 ? '' : 's'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function loadAiSession(sessionId) {
+    const sessions = loadAllAiSessions();
+    const target = sessions.find(s => s.id === sessionId);
+    if (!target) return;
+
+    window.chatConversationHistory = target.messages || [];
+    window.currentAiSessionId = target.id;
+    setActiveSessionId(target.id);
+
+    const historyEl = document.getElementById("chatHistory");
+    if (historyEl) {
+        historyEl.innerHTML = renderChatHistoryHtml();
+        historyEl.scrollTop = historyEl.scrollHeight;
+    }
+
+    toggleAiHistoryDrawer(false);
+}
+window.loadAiSession = loadAiSession;
+
+function deleteAiSession(sessionId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    let sessions = loadAllAiSessions();
+    sessions = sessions.filter(s => s.id !== sessionId);
+    saveAllAiSessions(sessions);
+
+    if (window.currentAiSessionId === sessionId) {
+        startNewAiChatSession();
+    }
+
+    const container = document.getElementById("aiSessionsListContainer");
+    if (container) container.innerHTML = renderAiSessionsListHtml();
+    updateHistoryCountBadge();
+}
+window.deleteAiSession = deleteAiSession;
+
+function clearAllAiSessions() {
+    if (confirm("Are you sure you want to delete all saved AI conversation sessions?")) {
+        saveAllAiSessions([]);
+        startNewAiChatSession();
+        toggleAiHistoryDrawer(false);
+        updateHistoryCountBadge();
+    }
+}
+window.clearAllAiSessions = clearAllAiSessions;
+
+// =====================================================
+// 4. NEW CHAT & CLEAR RESULTS CONTROLLERS
+// =====================================================
+
+function startNewAiChatSession() {
+    // If current chat had messages, save it to history before starting new
+    if (window.chatConversationHistory && window.chatConversationHistory.length > 0) {
+        saveChatConversationHistory();
+    }
+
+    // Reset active conversation
+    window.chatConversationHistory = [];
+    window.currentAiSessionId = null;
+    setActiveSessionId(null);
+
+    // Clear input
+    const input = document.getElementById("aiAgentInput");
+    if (input) input.value = "";
+
+    // Re-render chat stream
+    const historyEl = document.getElementById("chatHistory");
+    if (historyEl) {
+        historyEl.innerHTML = renderChatHistoryHtml();
+    }
+    updateHistoryCountBadge();
+}
+window.startNewAiChatSession = startNewAiChatSession;
+
+function clearCurrentChat() {
+    window.chatConversationHistory = [];
+    
+    // If active session exists, update it in storage
+    if (window.currentAiSessionId) {
+        let sessions = loadAllAiSessions();
+        sessions = sessions.filter(s => s.id !== window.currentAiSessionId);
+        saveAllAiSessions(sessions);
+        window.currentAiSessionId = null;
+        setActiveSessionId(null);
+    }
+
+    // Clear input
+    const input = document.getElementById("aiAgentInput");
+    if (input) input.value = "";
+
+    // Re-render clean welcome stream
+    const historyEl = document.getElementById("chatHistory");
+    if (historyEl) {
+        historyEl.innerHTML = renderChatHistoryHtml();
+    }
+    updateHistoryCountBadge();
+}
+window.clearCurrentChat = clearCurrentChat;
+window.clearChatHistory = clearCurrentChat;
+
+function clearAutonomousAgentResults() {
+    const container = document.getElementById("agentTraceContainer");
+    const badge = document.getElementById("agentStatusBadge");
+    const btn = document.getElementById("runAgentLoopBtn");
+
+    window._allTracesData = [];
+    window._latestTracesHtml = null;
+    window._latestTracesBadge = null;
+    window._renderedTraceCount = 0;
+
+    if (badge) {
+        badge.className = "badge bg-success";
+        badge.textContent = "Agent Idle & Ready";
+    }
+
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-play-circle-fill"></i> Run Autonomous Loop`;
+    }
+
+    if (container) {
+        container.innerHTML = `
+            <div class="text-center py-5" style="color: var(--text-muted);">
+                <i class="bi bi-cpu fs-1 d-block mb-3 text-primary"></i>
+                <h5 style="color: var(--text);">Ready to Execute Autonomous Loop</h5>
+                <p class="small" style="max-width: 420px; margin: auto; color: var(--text-soft);">
+                    Click <strong>"Run Autonomous Loop"</strong> to make the AI Agent inspect all students, diagnose root causes, and autonomously execute remediation tools.
+                </p>
+            </div>
+        `;
+    }
+}
+window.clearAutonomousAgentResults = clearAutonomousAgentResults;
+
+// =====================================================
+// 5. QUICK PROMPTS & CHAT HELPERS
+// =====================================================
 
 function setQuickAiPrompt(text) {
     const input = document.getElementById("aiAgentInput");
@@ -254,7 +633,7 @@ function renderChatHistoryHtml() {
         `;
     }
 
-    return window.chatConversationHistory.map((msg, idx) => {
+    return window.chatConversationHistory.map((msg) => {
         if (msg.role === "user") {
             return `
                 <div class="d-flex justify-content-end mb-3">
@@ -288,41 +667,6 @@ function renderChatHistoryHtml() {
     }).join("");
 }
 
-function toggleChatExpand() {
-    window._chatIsExpanded = !window._chatIsExpanded;
-    const traceCol = document.getElementById("aiAgentTraceCol");
-    const chatCol = document.getElementById("aiAgentChatCol");
-    const chatCard = document.getElementById("aiAgentChatCard");
-    const icon = document.getElementById("chatExpandIcon");
-    const text = document.getElementById("chatExpandText");
-
-    if (window._chatIsExpanded) {
-        if (traceCol) traceCol.classList.add("d-none");
-        if (chatCol) {
-            chatCol.classList.remove("col-lg-5");
-            chatCol.classList.add("col-lg-12");
-        }
-        if (chatCard) {
-            chatCard.style.height = "calc(100vh - 200px)";
-            chatCard.style.minHeight = "680px";
-        }
-        if (icon) icon.className = "bi bi-arrows-angle-contract";
-        if (text) text.textContent = "Split View";
-    } else {
-        if (traceCol) traceCol.classList.remove("d-none");
-        if (chatCol) {
-            chatCol.classList.remove("col-lg-12");
-            chatCol.classList.add("col-lg-5");
-        }
-        if (chatCard) {
-            chatCard.style.height = "640px";
-            chatCard.style.minHeight = "520px";
-        }
-        if (icon) icon.className = "bi bi-arrows-angle-expand";
-        if (text) text.textContent = "Expand View";
-    }
-}
-
 function copyAiBubbleText(btn) {
     try {
         const encoded = btn.getAttribute("data-content");
@@ -336,6 +680,7 @@ function copyAiBubbleText(btn) {
         console.error("Clipboard copy failed:", e);
     }
 }
+window.copyAiBubbleText = copyAiBubbleText;
 
 function toggleChatExpand(e) {
     if (e && typeof e.preventDefault === "function") {
@@ -365,7 +710,6 @@ function toggleChatExpand(e) {
     }
 }
 window.toggleChatExpand = toggleChatExpand;
-window.copyAiBubbleText = copyAiBubbleText;
 
 function switchChatModel(newModel) {
     window.activeChatEngine = newModel;
@@ -375,21 +719,12 @@ function switchChatModel(newModel) {
     // Save to settings in database so it persists across refreshes
     API.saveSettings({ ai_provider: newModel });
 }
+window.switchChatModel = switchChatModel;
 
-function clearChatHistory() {
-    if (confirm("Clear current conversation history?")) {
-        window.chatConversationHistory = [];
-        try {
-            const key = getChatStorageKey();
-            sessionStorage.removeItem(key);
-            localStorage.removeItem(key);
-        } catch (e) {}
-        const historyEl = document.getElementById("chatHistory");
-        if (historyEl) historyEl.innerHTML = renderChatHistoryHtml();
-    }
-}
+// =====================================================
+// 6. AUTONOMOUS CYCLE TRIGGER & BATCHING
+// =====================================================
 
-// 1. Trigger Full Autonomous Cycle
 async function triggerAutonomousAgentLoop(event) {
     if (event && typeof event.preventDefault === "function") {
         event.preventDefault();
@@ -408,22 +743,24 @@ async function triggerAutonomousAgentLoop(event) {
         badge.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Agent Reasoning & Calling Tools...`;
     }
 
-    container.innerHTML = `
-        <div class="ai-trace-card p-3 mb-3 border rounded" style="background: var(--bg-sunken); border-color: var(--border) !important;">
-            <div class="d-flex align-items-center gap-2 mb-2">
-                <span class="spinner-border spinner-border-sm text-primary"></span>
-                <h6 class="text-primary fw-bold mb-0">Multi-Signal Perception & Cohort Reasoning</h6>
+    if (container) {
+        container.innerHTML = `
+            <div class="ai-trace-card p-3 mb-3 border rounded" style="background: var(--bg-sunken); border-color: var(--border) !important;">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="spinner-border spinner-border-sm text-primary"></span>
+                    <h6 class="text-primary fw-bold mb-0">Multi-Signal Perception & Cohort Reasoning</h6>
+                </div>
+                <p class="small text-muted mb-0">Scanning attendance telemetry, LMS streaks, risk baseline, and subject failures across the full cohort...</p>
             </div>
-            <p class="small text-muted mb-0">Scanning attendance telemetry, LMS streaks, risk baseline, and subject failures across the full cohort...</p>
-        </div>
-    `;
+        `;
+    }
 
     try {
         const result = await API.runAutonomousAgent();
 
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = `<i class="bi bi-play-circle-fill"></i> Run Autonomous Intervention Loop`;
+            btn.innerHTML = `<i class="bi bi-play-circle-fill"></i> Run Autonomous Loop`;
         }
 
         if (!result || !result.traces || result.traces.length === 0) {
@@ -431,11 +768,13 @@ async function triggerAutonomousAgentLoop(event) {
                 badge.className = "badge bg-success";
                 badge.textContent = "Cohort Healthy";
             }
-            container.innerHTML = `
-                <div class="alert alert-info">
-                    <i class="bi bi-check-circle me-2"></i> All student signals are currently healthy. No autonomous interventions required.
-                </div>
-            `;
+            if (container) {
+                container.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="bi bi-check-circle me-2"></i> All student signals are currently healthy. No autonomous interventions required.
+                    </div>
+                `;
+            }
             return;
         }
 
@@ -443,7 +782,7 @@ async function triggerAutonomousAgentLoop(event) {
 
         if (badge) {
             badge.className = "badge bg-success";
-            badge.textContent = `Completed (${actionsCount} Actions Executed)`;
+            badge.textContent = `Completed (${actionsCount} Actions)`;
         }
 
         window._allTracesData = result.traces || [];
@@ -454,19 +793,22 @@ async function triggerAutonomousAgentLoop(event) {
         console.error("Autonomous Loop Error:", err);
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = `<i class="bi bi-play-circle-fill"></i> Run Autonomous Intervention Loop`;
+            btn.innerHTML = `<i class="bi bi-play-circle-fill"></i> Run Autonomous Loop`;
         }
         if (badge) {
             badge.className = "badge bg-danger";
             badge.textContent = "Error Occurred";
         }
-        container.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="bi bi-exclamation-triangle me-2"></i> Encountered an issue running the autonomous loop. Please try again.
-            </div>
-        `;
+        if (container) {
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i> Encountered an issue running the autonomous loop. Please try again.
+                </div>
+            `;
+        }
     }
 }
+window.triggerAutonomousAgentLoop = triggerAutonomousAgentLoop;
 
 function renderNextTraceBatch(container, batchSize = 15) {
     if (!container) container = document.getElementById("agentTraceContainer");
@@ -556,7 +898,10 @@ function renderNextTraceBatch(container, batchSize = 15) {
 }
 window.renderNextTraceBatch = renderNextTraceBatch;
 
-// 2. Interactive Multi-turn Chat
+// =====================================================
+// 7. SEND QUERY & MULTI-TURN CHAT
+// =====================================================
+
 async function sendAiQuery() {
     const input = document.getElementById("aiAgentInput");
     const historyEl = document.getElementById("chatHistory");
@@ -582,17 +927,17 @@ async function sendAiQuery() {
     saveChatConversationHistory();
 
     // Render User message
-    const userBubble = document.createElement("div");
-    userBubble.className = "chat-bubble user mb-2 p-3 bg-primary text-white rounded shadow-sm text-end align-self-end";
-    userBubble.textContent = userText;
-    historyEl.appendChild(userBubble);
+    const userWrapper = document.createElement("div");
+    userWrapper.className = "d-flex justify-content-end mb-3";
+    userWrapper.innerHTML = `<div class="ai-bubble-user">${userText}</div>`;
+    historyEl.appendChild(userWrapper);
     historyEl.scrollTop = historyEl.scrollHeight;
 
     // Show typing placeholder
     const currentEngine = window.activeChatEngine || "gemini";
     const typingBubble = document.createElement("div");
-    typingBubble.className = "ai-bubble-bot mb-2 p-2 small align-self-start";
-    typingBubble.innerHTML = `<span class="spinner-border spinner-border-sm me-1" style="width: 14px; height: 14px;"></span> AI Assistant (${currentEngine.toUpperCase()}) is reasoning...`;
+    typingBubble.className = "ai-bubble-bot mb-3 align-self-start";
+    typingBubble.innerHTML = `<span class="spinner-border spinner-border-sm me-2" style="width: 14px; height: 14px;"></span> AI Assistant (${currentEngine.toUpperCase()}) is reasoning...`;
     historyEl.appendChild(typingBubble);
     historyEl.scrollTop = historyEl.scrollHeight;
     if (sendBtn) sendBtn.disabled = true;
@@ -609,25 +954,28 @@ async function sendAiQuery() {
     window.chatConversationHistory.push({ role: "assistant", content: responseContent, engine: currentEngine });
     saveChatConversationHistory();
 
-    const botBubble = document.createElement("div");
-    botBubble.className = "ai-bubble-bot mb-2 align-self-start";
+    const botWrapper = document.createElement("div");
+    botWrapper.className = "d-flex justify-content-start mb-3";
     
     const parsedHtml = window.marked ? marked.parse(responseContent) : responseContent.replace(/\n/g, '<br>');
     const encodedText = encodeURIComponent(responseContent || "");
-    botBubble.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-            <div class="fw-bold text-primary small d-flex align-items-center gap-2">
-                <i class="bi bi-stars fs-6"></i> AI Academic Assistant 
-                <span class="badge border ms-1" style="font-size: 10px; background: var(--bg-sunken); color: var(--text);">${currentEngine.toUpperCase()}</span>
+    botWrapper.innerHTML = `
+        <div class="ai-bubble-bot">
+            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <div class="fw-bold text-primary small d-flex align-items-center gap-2">
+                    <i class="bi bi-stars fs-6"></i> AI Academic Assistant 
+                    <span class="badge border ms-1" style="font-size: 10px; background: var(--bg-sunken); color: var(--text);">${currentEngine.toUpperCase()}</span>
+                </div>
+                <button class="btn btn-sm btn-light border py-0 px-2 text-muted copy-ai-btn" onclick="copyAiBubbleText(this)" data-content="${encodedText}" style="font-size: 11px;" title="Copy complete generated answer to clipboard">
+                    <i class="bi bi-clipboard me-1"></i> Copy Full Answer
+                </button>
             </div>
-            <button class="btn btn-sm btn-light border py-0 px-2 text-muted copy-ai-btn" onclick="copyAiBubbleText(this)" data-content="${encodedText}" style="font-size: 11px;" title="Copy complete generated answer to clipboard">
-                <i class="bi bi-clipboard me-1"></i> Copy Full Answer
-            </button>
-        </div>
-        <div class="markdown-body small" style="color: var(--text);">
-            ${parsedHtml}
+            <div class="markdown-body small" style="color: var(--text);">
+                ${parsedHtml}
+            </div>
         </div>
     `;
-    historyEl.appendChild(botBubble);
+    historyEl.appendChild(botWrapper);
     historyEl.scrollTop = historyEl.scrollHeight;
 }
+window.sendAiQuery = sendAiQuery;

@@ -752,6 +752,332 @@ async function handleDeleteUser(userId) {
     }
 }
 
+// =====================================================
+// MOBILE SIDEBAR & USER MENU CONTROLLERS
+// =====================================================
+
+function toggleSidebar(forceState) {
+    const sidebar = document.getElementById("sidebar");
+    const backdrop = document.getElementById("sidebarBackdrop");
+    if (!sidebar) return;
+
+    const isMobile = window.innerWidth <= 991;
+
+    if (isMobile) {
+        const willOpen = typeof forceState === "boolean" ? forceState : !sidebar.classList.contains("mobile-open");
+        if (willOpen) {
+            sidebar.classList.add("mobile-open");
+            backdrop?.classList.add("active");
+            document.body.style.overflow = "hidden";
+        } else {
+            sidebar.classList.remove("mobile-open");
+            backdrop?.classList.remove("active");
+            document.body.style.overflow = "";
+        }
+    } else {
+        const willCollapse = typeof forceState === "boolean" ? forceState : !sidebar.classList.contains("collapsed");
+        if (willCollapse) {
+            sidebar.classList.add("collapsed");
+        } else {
+            sidebar.classList.remove("collapsed");
+        }
+    }
+}
+window.toggleSidebar = toggleSidebar;
+
+function toggleUserDropdown(forceState) {
+    const menu = document.getElementById("userDropdownMenu");
+    if (!menu) return;
+    if (typeof forceState === "boolean") {
+        if (forceState) menu.classList.remove("d-none");
+        else menu.classList.add("d-none");
+    } else {
+        menu.classList.toggle("d-none");
+    }
+}
+window.toggleUserDropdown = toggleUserDropdown;
+
+// Close dropdown on clicking outside
+document.addEventListener("click", function(e) {
+    const pill = document.getElementById("userProfilePill");
+    const menu = document.getElementById("userDropdownMenu");
+    if (menu && !menu.classList.contains("d-none")) {
+        if (pill && !pill.contains(e.target) && !menu.contains(e.target)) {
+            menu.classList.add("d-none");
+        }
+    }
+});
+
+// Handle window resize
+window.addEventListener("resize", function() {
+    if (window.innerWidth > 991) {
+        document.getElementById("sidebar")?.classList.remove("mobile-open");
+        document.getElementById("sidebarBackdrop")?.classList.remove("active");
+        document.body.style.overflow = "";
+    }
+});
+
+// =====================================================
+// EXPLAINABLE AI RISK BREAKDOWN MODAL & SIMULATOR
+// =====================================================
+
+async function openStudentRiskBreakdownModal(studentId) {
+    const modal = document.getElementById("riskBreakdownModal");
+    const content = document.getElementById("riskBreakdownModalContent");
+    const title = document.getElementById("riskModalTitle");
+    if (!modal || !content) return;
+
+    // Show loading
+    modal.classList.add("active");
+    content.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted small">Computing explainable multi-signal risk breakdown...</p></div>`;
+
+    let s = null;
+    try {
+        s = await API.getStudentDetail(studentId);
+    } catch (e) {
+        s = null;
+    }
+    if (!s || s.error) {
+        s = students.find(item => item.id === studentId);
+    }
+
+    if (!s) {
+        content.innerHTML = `<div class="alert alert-warning">Student data for [${studentId}] could not be loaded.</div>`;
+        return;
+    }
+
+    const attendance = Number(s.attendance || 0);
+    const cgpa = Number(s.cgpa || 0);
+    const lms = Number(s.lms_score || s.attendance || 0);
+    const risk = Number(s.risk || 0);
+
+    // Dynamic weights from AI engine formula
+    const attdWeight = 0.40;
+    const cgpaWeight = 0.35;
+    const lmsWeight = 0.25;
+
+    const attdPts = Number((attendance * attdWeight).toFixed(2));
+    const cgpaScaled = Number((cgpa * 10).toFixed(1));
+    const cgpaPts = Number((cgpaScaled * cgpaWeight).toFixed(2));
+    const lmsPts = Number((lms * lmsWeight).toFixed(2));
+    const engagementSum = Number((attdPts + cgpaPts + lmsPts).toFixed(2));
+
+    const badgeClass = risk >= 60 ? "high" : (risk >= 30 ? "medium" : "low");
+    const riskTier = risk >= 60 ? "High Risk (Immediate Intervention Required)" : (risk >= 30 ? "Moderate Warning (Needs Guidance)" : "Low Risk (Healthy Standing)");
+    const reasons = s.ai_analysis?.reasons || [];
+    const marks = s.subject_marks || [];
+
+    if (title) {
+        title.innerHTML = `AI Risk Diagnostics for ${s.name} <span class="badge bg-light text-dark fs-6 ms-1 border">${s.id}</span>`;
+    }
+
+    content.innerHTML = `
+        <!-- 1. OVERALL RISK METER -->
+        <div class="risk-meter-container mb-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Current Calculated Academic Risk</span>
+                    <h3 class="fw-bold mb-0 ${risk >= 60 ? 'text-danger' : (risk >= 30 ? 'text-warning' : 'text-success')}">
+                        ${risk}% <span class="fs-6 fw-normal text-muted">/ 100%</span>
+                    </h3>
+                </div>
+                <div class="text-end">
+                    <span class="risk-badge ${badgeClass} fs-6">${riskTier}</span>
+                </div>
+            </div>
+            
+            <div class="risk-meter-bar position-relative">
+                <div class="risk-meter-indicator" style="left: ${Math.min(98, Math.max(2, risk))}%;" title="Risk Position: ${risk}%"></div>
+            </div>
+            <div class="d-flex justify-content-between text-muted" style="font-size: 11px;">
+                <span><i class="bi bi-check-circle text-success me-1"></i> Low (&lt;30%)</span>
+                <span><i class="bi bi-exclamation-triangle text-warning me-1"></i> Moderate (30%-59%)</span>
+                <span><i class="bi bi-exclamation-octagon text-danger me-1"></i> High (&ge;60%)</span>
+            </div>
+        </div>
+
+        <!-- 2. THE MULTI-SIGNAL FORMULA EXPLANATION -->
+        <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-calculator text-primary fs-5"></i>
+                <h6 class="fw-bold mb-0 text-dark">Multi-Signal Formula Logic</h6>
+            </div>
+            <p class="small text-muted mb-2">
+                The institutional AI Engine calculates <strong>Academic Risk</strong> as the mathematical inverse of a student's composite <strong>Multi-Signal Engagement Index</strong>:
+            </p>
+            <div class="p-2 rounded bg-white border font-mono small mb-2 text-center" style="font-size: 12px; color: var(--text);">
+                <strong>Academic Risk (%)</strong> = 100 - [ (Attendance% &times; 0.40) + (CGPA &times; 10 &times; 0.35) + (LMS Activity% &times; 0.25) ]
+            </div>
+        </div>
+
+        <!-- 3. PERSONALIZED BREAKDOWN CARDS -->
+        <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-pie-chart text-primary me-1"></i> Personalized Factor Breakdown</h6>
+        <div class="row g-2 mb-3">
+            <!-- Attendance -->
+            <div class="col-md-4">
+                <div class="risk-pillar-card h-100 ${attendance < 75 ? 'border-danger' : 'border-success'}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="fw-bold small">1. Attendance</span>
+                        <span class="badge bg-primary">40% Weight</span>
+                    </div>
+                    <h4 class="fw-bold mb-1 ${attendance < 75 ? 'text-danger' : 'text-success'}">${attendance}%</h4>
+                    <p class="small text-muted mb-2" style="font-size: 11px;">
+                        Math: <code>${attendance} &times; 0.40</code> = <strong>+${attdPts} pts</strong> (out of 40.0)
+                    </p>
+                    <span class="badge ${attendance < 75 ? 'bg-danger text-white' : 'bg-success text-white'}" style="font-size: 10px;">
+                        ${attendance < 75 ? '<i class="bi bi-x-circle me-1"></i>Below 75% Cutoff' : '<i class="bi bi-check2 me-1"></i>Cutoff Satisfied'}
+                    </span>
+                </div>
+            </div>
+
+            <!-- CGPA -->
+            <div class="col-md-4">
+                <div class="risk-pillar-card h-100 ${cgpa < 7.5 ? 'border-warning' : 'border-success'}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="fw-bold small">2. CGPA Scaled</span>
+                        <span class="badge bg-primary">35% Weight</span>
+                    </div>
+                    <h4 class="fw-bold mb-1 text-primary">${cgpa} <span class="fs-6 text-muted">/ 10</span></h4>
+                    <p class="small text-muted mb-2" style="font-size: 11px;">
+                        Math: <code>(${cgpa} &times; 10) &times; 0.35</code> = <strong>+${cgpaPts} pts</strong> (out of 35.0)
+                    </p>
+                    <span class="badge ${cgpa < 7.5 ? 'bg-warning text-dark' : 'bg-success text-white'}" style="font-size: 10px;">
+                        ${cgpa < 7.5 ? '<i class="bi bi-exclamation-circle me-1"></i>Below 7.5 Target' : '<i class="bi bi-check2 me-1"></i>Above 7.5 Benchmark'}
+                    </span>
+                </div>
+            </div>
+
+            <!-- LMS Engagement -->
+            <div class="col-md-4">
+                <div class="risk-pillar-card h-100 ${lms < 60 ? 'border-warning' : 'border-success'}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="fw-bold small">3. LMS Portal</span>
+                        <span class="badge bg-primary">25% Weight</span>
+                    </div>
+                    <h4 class="fw-bold mb-1 text-warning">${lms}%</h4>
+                    <p class="small text-muted mb-2" style="font-size: 11px;">
+                        Math: <code>${lms} &times; 0.25</code> = <strong>+${lmsPts} pts</strong> (out of 25.0)
+                    </p>
+                    <span class="badge ${lms < 60 ? 'bg-warning text-dark' : 'bg-success text-white'}" style="font-size: 10px;">
+                        ${lms < 60 ? '<i class="bi bi-clock-history me-1"></i>Low Portal Activity' : '<i class="bi bi-check2 me-1"></i>Active LMS Portal'}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. TOTAL MATH AUDIT TIE-UP -->
+        <div class="risk-math-box mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span>Engagement Index Score:</span>
+                <strong>${attdPts} + ${cgpaPts} + ${lmsPts} = ${engagementSum} / 100</strong>
+            </div>
+            <div class="d-flex justify-content-between align-items-center text-danger">
+                <span>Final Academic Risk Calculation:</span>
+                <strong>100 - ${engagementSum} = ${risk}% Risk</strong>
+            </div>
+        </div>
+
+        <!-- 5. ACTIVE AI DIAGNOSTIC TRIGGERS -->
+        <div class="card-box p-3 mb-3">
+            <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-stars text-danger me-1"></i> Active AI Diagnostic Triggers & Anomalies</h6>
+            ${reasons.length === 0 ? '<p class="text-muted small mb-0">No active anomaly triggers identified for this profile.</p>' : `
+                <ul class="mb-0 ps-3 small text-muted">
+                    ${reasons.map(r => `<li class="mb-1 text-dark"><strong>${r}</strong></li>`).join("")}
+                </ul>
+            `}
+        </div>
+
+        <!-- 6. INTERACTIVE "WHAT-IF" RECOVERY SIMULATOR -->
+        <div class="card-box p-3 mb-2" style="border-left: 4px solid var(--accent); background: var(--bg-sunken);">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-sliders text-primary me-1"></i> Interactive Risk Recovery Simulator</h6>
+                <span class="badge bg-success" id="simRiskBadge">Simulated Risk: ${risk}%</span>
+            </div>
+            <p class="small text-muted mb-3">
+                Adjust the sliders below to simulate how improving your attendance or GPA will lower your risk score in real time:
+            </p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold d-flex justify-content-between mb-1">
+                        <span>Simulated Attendance:</span>
+                        <span class="text-primary fw-bold" id="simAttdVal">${attendance}%</span>
+                    </label>
+                    <input type="range" class="form-range risk-sim-slider" id="simAttdSlider" min="0" max="100" value="${attendance}" oninput="runRiskSimulation()">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold d-flex justify-content-between mb-1">
+                        <span>Simulated CGPA:</span>
+                        <span class="text-primary fw-bold" id="simCgpaVal">${cgpa}</span>
+                    </label>
+                    <input type="range" class="form-range risk-sim-slider" id="simCgpaSlider" min="0" max="10" step="0.1" value="${cgpa}" oninput="runRiskSimulation()">
+                </div>
+            </div>
+            <div class="mt-2 text-muted small" id="simPredictionNote" style="font-size: 11.5px;">
+                <i class="bi bi-lightbulb-fill text-warning me-1"></i> Moving attendance above <strong>75%</strong> will significantly lower your risk tier.
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-3">
+            <button type="button" class="primary-btn" onclick="closeStudentRiskModal()">
+                <i class="bi bi-check-lg"></i> Done
+            </button>
+        </div>
+    `;
+}
+window.openStudentRiskBreakdownModal = openStudentRiskBreakdownModal;
+window.showStudentRiskModal = openStudentRiskBreakdownModal;
+
+function closeStudentRiskModal() {
+    const modal = document.getElementById("riskBreakdownModal");
+    if (modal) modal.classList.remove("active");
+}
+window.closeStudentRiskModal = closeStudentRiskModal;
+
+function runRiskSimulation() {
+    const attdInput = document.getElementById("simAttdSlider");
+    const cgpaInput = document.getElementById("simCgpaSlider");
+    const attdVal = document.getElementById("simAttdVal");
+    const cgpaVal = document.getElementById("simCgpaVal");
+    const simBadge = document.getElementById("simRiskBadge");
+    const note = document.getElementById("simPredictionNote");
+
+    if (!attdInput || !cgpaInput || !simBadge) return;
+
+    const attd = Number(attdInput.value);
+    const cgpa = Number(cgpaInput.value);
+    const lms = 70; // baseline LMS
+
+    if (attdVal) attdVal.textContent = `${attd}%`;
+    if (cgpaVal) cgpaVal.textContent = `${cgpa}`;
+
+    const engagement = (attd * 0.40) + ((cgpa * 10) * 0.35) + (lms * 0.25);
+    const simRisk = Math.round(Math.max(0, Math.min(100, 100 - engagement)));
+
+    let badgeClass = 'bg-success text-white';
+    let label = 'Low Risk';
+    if (simRisk >= 60) {
+        badgeClass = 'bg-danger text-white';
+        label = 'High Risk';
+    } else if (simRisk >= 30) {
+        badgeClass = 'bg-warning text-dark';
+        label = 'Moderate Risk';
+    }
+
+    simBadge.className = `badge ${badgeClass}`;
+    simBadge.textContent = `Simulated Risk: ${simRisk}% (${label})`;
+
+    if (note) {
+        if (simRisk < 30) {
+            note.innerHTML = `<i class="bi bi-trophy-fill text-success me-1"></i> <strong>Excellent!</strong> At ${attd}% attendance and ${cgpa} CGPA, your risk is <strong>${simRisk}%</strong> (Good Standing).`;
+        } else if (simRisk < 60) {
+            note.innerHTML = `<i class="bi bi-info-circle-fill text-warning me-1"></i> Improving CGPA to <strong>8.0</strong> or attendance to <strong>80%</strong> will bring your risk below 30%.`;
+        } else {
+            note.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> <strong>Critical:</strong> Attendance under 70% keeps your risk in the High Risk category.`;
+        }
+    }
+}
+window.runRiskSimulation = runRiskSimulation;
+
 document.addEventListener("DOMContentLoaded", function() {
     // Initialize Auth Session & Event Listeners
     initAuth();
@@ -769,22 +1095,17 @@ document.addEventListener("DOMContentLoaded", function() {
         button.addEventListener("click", function() {
             const page = this.dataset.page;
             navigateTo(page);
-            if (window.innerWidth <= 750) {
-                document.getElementById("sidebar")?.classList.remove("mobile-open");
+            if (window.innerWidth <= 991) {
+                toggleSidebar(false);
             }
         });
     });
 
-    // Sidebar collapse toggle button
+    // Sidebar collapse / mobile drawer toggle button
     const sidebarToggle = document.getElementById("sidebarToggle");
     if (sidebarToggle) {
         sidebarToggle.addEventListener("click", function() {
-            const sidebar = document.getElementById("sidebar");
-            if (window.innerWidth <= 750) {
-                sidebar.classList.toggle("mobile-open");
-            } else {
-                sidebar.classList.toggle("collapsed");
-            }
+            toggleSidebar();
         });
     }
 
@@ -806,3 +1127,4 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
