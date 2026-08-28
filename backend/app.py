@@ -20,20 +20,28 @@ import os
 # =====================================================
 def _load_dotenv(path=None):
     """Load key=value pairs from a .env file into os.environ."""
-    if path is None:
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-    if not os.path.exists(path):
-        return
-    with open(path, "r") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, value = line.partition("=")
-            key = key.strip()
-            value = value.strip().strip('"').strip("'")
-            if key and value:
-                os.environ[key] = value
+    candidates = [
+        path,
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"),
+        "/etc/secrets/.env",
+        os.path.join(os.getcwd(), ".env"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    ]
+    for p in candidates:
+        if p and os.path.exists(p):
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#") or "=" not in line:
+                            continue
+                        key, _, value = line.partition("=")
+                        key = key.strip()
+                        value = value.strip().strip('"').strip("'")
+                        if key and value and key not in os.environ:
+                            os.environ[key] = value
+            except Exception as e:
+                print(f"[Warning] Failed to load .env from {p}: {e}")
 
 _load_dotenv()
 
