@@ -15,6 +15,63 @@ class LLMProvider:
     """
 
     @staticmethod
+    def _resolve_api_key(provider, settings=None):
+        """Resolves API key from Settings DB, os.environ, Render /etc/secrets, or local .env."""
+        if settings and settings.get("api_key") and "•" not in settings.get("api_key"):
+            return settings.get("api_key").strip()
+
+        env_map = {
+            "gemini": "GEMINI_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "groq": "GROQ_API_KEY",
+            "openrouter": "OPENROUTER_API_KEY",
+            "deepseek": "DEEPSEEK_API_KEY"
+        }
+        var_name = env_map.get((provider or "").lower(), "")
+        if not var_name:
+            return ""
+
+        # 1. Direct from os.environ
+        key = os.environ.get(var_name, "").strip()
+        if key and "•" not in key:
+            return key
+
+        # 2. Check secret files and .env candidate paths
+        candidates = [
+            f"/etc/secrets/{var_name}",
+            "/etc/secrets/.env",
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"),
+            os.path.join(os.getcwd(), ".env"),
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+        ]
+        for p in candidates:
+            if p and os.path.exists(p):
+                try:
+                    if os.path.isfile(p):
+                        if p.endswith(var_name):
+                            with open(p, "r", encoding="utf-8") as f:
+                                val = f.read().strip()
+                                if val and "•" not in val:
+                                    os.environ[var_name] = val
+                                    return val
+                        with open(p, "r", encoding="utf-8") as f:
+                            for line in f:
+                                line = line.strip()
+                                if not line or line.startswith("#") or "=" not in line:
+                                    continue
+                                k, _, v = line.partition("=")
+                                k = k.strip()
+                                v = v.strip().strip('"').strip("'")
+                                if k and v:
+                                    os.environ[k] = v
+                                    if k == var_name:
+                                        return v
+                except Exception as e:
+                    print(f"[Warning] Error reading secret {p}: {e}")
+
+        return os.environ.get(var_name, "").strip()
+
+    @staticmethod
     def call_ai(prompt, system_prompt="You are an AI Academic Intervention Agent.", settings=None, history=None):
         if settings is None:
             settings = {}
@@ -22,18 +79,7 @@ class LLMProvider:
             history = []
 
         provider = (settings.get("ai_provider") or "local").lower()
-        api_key = settings.get("api_key", "").strip()
-
-        # Fallback: resolve API key from .env if not set in DB
-        if not api_key:
-            env_map = {
-                "gemini": "GEMINI_API_KEY",
-                "openai": "OPENAI_API_KEY",
-                "groq": "GROQ_API_KEY",
-                "openrouter": "OPENROUTER_API_KEY",
-                "deepseek": "DEEPSEEK_API_KEY"
-            }
-            api_key = os.environ.get(env_map.get(provider, ""), "")
+        api_key = LLMProvider._resolve_api_key(provider, settings)
 
         # 1. Google Gemini API (Supports Gemini 3.5 Flash, Flash Lite, Gemma 4)
         if provider == "gemini" and api_key:

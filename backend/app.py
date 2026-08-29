@@ -1954,18 +1954,9 @@ def get_settings():
 
 def _resolve_api_key(provider):
     """Get the real (unmasked) API key for a given provider from DB or .env."""
+    from llm_provider import LLMProvider
     settings = db.get_system_settings()
-    raw_key = (settings.get("api_key") or "").strip()
-    if not raw_key:
-        env_map = {
-            "gemini": "GEMINI_API_KEY",
-            "openai": "OPENAI_API_KEY",
-            "groq": "GROQ_API_KEY",
-            "openrouter": "OPENROUTER_API_KEY",
-            "deepseek": "DEEPSEEK_API_KEY"
-        }
-        raw_key = os.environ.get(env_map.get(provider, ""), "")
-    return raw_key
+    return LLMProvider._resolve_api_key(provider, settings)
 
 
 @app.route("/api/settings", methods=["POST"])
