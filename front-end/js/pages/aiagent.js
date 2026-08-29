@@ -358,8 +358,34 @@ function renderAIAgent() {
         if (selector) selector.value = prov;
         if (badge) badge.textContent = `Model: ${prov.toUpperCase()}`;
     });
+
+    // Render LaTeX math formulas in chat history
+    setTimeout(() => {
+        renderLatexInElement(document.getElementById("chatHistory"));
+    }, 60);
 }
 window.renderAIAgent = renderAIAgent;
+
+function renderLatexInElement(element) {
+    if (!element) return;
+    if (window.renderMathInElement) {
+        try {
+            renderMathInElement(element, {
+                delimiters: [
+                    {left: "$$", right: "$$", display: true},
+                    {left: "$", right: "$", display: false},
+                    {left: "\\(", right: "\\)", display: false},
+                    {left: "\\[", right: "\\]", display: true}
+                ],
+                throwOnError: false,
+                ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+            });
+        } catch (e) {
+            console.warn("KaTeX rendering notice:", e);
+        }
+    }
+}
+window.renderLatexInElement = renderLatexInElement;
 
 // =====================================================
 // 3. HISTORY DRAWER CONTROLLERS
@@ -440,6 +466,7 @@ function loadAiSession(sessionId) {
     if (historyEl) {
         historyEl.innerHTML = renderChatHistoryHtml();
         historyEl.scrollTop = historyEl.scrollHeight;
+        renderLatexInElement(historyEl);
     }
 
     toggleAiHistoryDrawer(false);
@@ -986,6 +1013,7 @@ async function sendAiQuery() {
         </div>
     `;
     historyEl.appendChild(botWrapper);
+    renderLatexInElement(botWrapper);
     historyEl.scrollTop = historyEl.scrollHeight;
 }
 
