@@ -312,11 +312,16 @@ class LLMProvider:
         # 2. Try pinging /api/tags across candidate hosts to verify connection & discover models
         working_host = None
         available_models = []
+        ngrok_headers = {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "1",
+            "User-Agent": "EduStudentSight/1.0"
+        }
         for host in candidate_hosts:
             try:
                 tags_url = f"{host}/api/tags"
-                req = urllib.request.Request(tags_url, headers={"User-Agent": "EduStudentSight"})
-                with urllib.request.urlopen(req, timeout=3) as resp:
+                req = urllib.request.Request(tags_url, headers=ngrok_headers)
+                with urllib.request.urlopen(req, timeout=5) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
                     available_models = [m.get("name") for m in data.get("models", []) if m.get("name")]
                     working_host = host
@@ -352,14 +357,14 @@ class LLMProvider:
                 "prompt": prompt_with_history,
                 "stream": False,
                 "options": {
-                    "num_predict": 4096,
+                    "num_predict": 1024,
                     "temperature": 0.3
                 }
             }
             try:
                 data = json.dumps(payload).encode("utf-8")
-                req = urllib.request.Request(gen_url, data=data, headers={"Content-Type": "application/json"})
-                with urllib.request.urlopen(req, timeout=60) as response:
+                req = urllib.request.Request(gen_url, data=data, headers=ngrok_headers)
+                with urllib.request.urlopen(req, timeout=90) as response:
                     res_json = json.loads(response.read().decode("utf-8"))
                     ans = res_json.get("response", "").strip()
                     if ans:
@@ -371,8 +376,8 @@ class LLMProvider:
                     try:
                         payload["model"] = "llama3.2:1b"
                         data = json.dumps(payload).encode("utf-8")
-                        req = urllib.request.Request(gen_url, data=data, headers={"Content-Type": "application/json"})
-                        with urllib.request.urlopen(req, timeout=60) as response2:
+                        req = urllib.request.Request(gen_url, data=data, headers=ngrok_headers)
+                        with urllib.request.urlopen(req, timeout=90) as response2:
                             res_json2 = json.loads(response2.read().decode("utf-8"))
                             ans2 = res_json2.get("response", "").strip()
                             if ans2:
